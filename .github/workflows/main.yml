@@ -35,8 +35,6 @@ jobs:
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install git+https://github.com/PSLmodels/microdf.git
-        python -m pip install git+https://github.com/PolicyEngine/scf.git || true
         python -m pip install git+https://github.com/PolicyEngine/policyengine-us-data.git || true
         python -m pip install -e .[dev]
     
