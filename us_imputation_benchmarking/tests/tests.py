@@ -1,7 +1,7 @@
-from comparisons.data import preprocess_data
-from comparisons.imputations import get_imputations
-from comparisons.quantile_loss import compare_quantile_loss
-from comparisons.plot import plot_loss_comparison
+from us_imputation_benchmarking.comparisons.data import preprocess_data
+from us_imputation_benchmarking.comparisons.imputations import get_imputations
+from us_imputation_benchmarking.comparisons.quantile_loss import compare_quantile_loss
+from us_imputation_benchmarking.comparisons.plot import plot_loss_comparison
 
 X, X_test, PREDICTORS, IMPUTED_VARIABLES = preprocess_data(full_data=False)
 Y_test = X_test[IMPUTED_VARIABLES]
