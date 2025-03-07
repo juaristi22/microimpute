@@ -11,11 +11,10 @@ dependencies = [
     "seaborn",
     "scikit-learn",
     "statsmodels",
-    "microdf",
-    "scf",
-    "policyengine_us_data",
     "scipy",
     "rpy2",
+    "requests",
+    "zipfile",
 ]
 
 [project.optional-dependencies]
