@@ -10,12 +10,9 @@ dependencies = [
     "matplotlib",
     "seaborn",
     "scikit-learn",
-    "statsmodels",
-    "microdf",
-    "scf",
-    "policyengine_us_data",
     "scipy",
     "rpy2",
+    "requests",
 ]
 
 [project.optional-dependencies]
