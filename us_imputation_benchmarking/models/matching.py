@@ -75,11 +75,3 @@ class Matching:
             imputations[q] = fused0_pd[self.imputed_variables]
             
         return imputations
-
-
-# Legacy function for backward compatibility
-def impute_matching(X, test_X, predictors, imputed_variables, quantiles, 
-                    matching_hotdeck=nnd_hotdeck_using_rpy2):
-    model = Matching(matching_hotdeck=matching_hotdeck)
-    model.fit(X, predictors, imputed_variables)
-    return model.predict(test_X, quantiles)

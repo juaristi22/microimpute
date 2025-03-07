@@ -58,23 +58,3 @@ class QRF:
             imputations[q] = imputation
             
         return imputations
-
-
-# Legacy function for backward compatibility
-def impute_qrf(X, test_X, predictors, imputed_variables, quantiles):
-    """
-    Legacy function for QRF imputation.
-    
-    Args:
-        X: Training data.
-        test_X: Test data.
-        predictors: List of predictor column names.
-        imputed_variables: List of column names to impute.
-        quantiles: List of quantiles to predict.
-        
-    Returns:
-        Dict: Mapping of quantiles to predicted values.
-    """
-    model = QRF()
-    model.fit(X, predictors, imputed_variables)
-    return model.predict(test_X, quantiles)

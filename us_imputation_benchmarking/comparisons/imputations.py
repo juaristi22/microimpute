@@ -1,7 +1,7 @@
-from us_imputation_benchmarking.models.qrf import impute_qrf
-from us_imputation_benchmarking.models.ols import impute_ols
-from us_imputation_benchmarking.models.quantreg import impute_quantreg
-from us_imputation_benchmarking.models.matching import impute_matching
+from us_imputation_benchmarking.models.qrf import QRF
+from us_imputation_benchmarking.models.ols import OLS
+from us_imputation_benchmarking.models.quantreg import QuantReg
+from us_imputation_benchmarking.models.matching import Matching
 from sklearn.model_selection import KFold
 import numpy as np
 
@@ -13,7 +13,7 @@ def get_imputations(methods, X, test_X, predictors, imputed_variables, data=None
     for method in methods:
         method_imputations[method] = dict()
 
-    # Cross-validation option
+    # Cross-validation option
     if data:
         for method in methods:
             for q in QUANTILES:
@@ -22,52 +22,70 @@ def get_imputations(methods, X, test_X, predictors, imputed_variables, data=None
         kf = KFold(n_splits=K, shuffle=True, random_state=42)
         for train_idx, test_idx in kf.split(data):
             X, test_X = data.iloc[train_idx], data.iloc[test_idx]
-            # QRF
+            
+            # QRF
             if "QRF" in methods:
-                imputations = impute_qrf(X, test_X, predictors, imputed_variables, QUANTILES)
+                model = QRF()
+                model.fit(X, predictors, imputed_variables)
+                imputations = model.predict(test_X, QUANTILES)
                 for q in QUANTILES:
                     method_imputations["QRF"][q].append(imputations[q])
 
-            # Matching
+            # Matching
             if "Matching" in methods:   
-                imputations = impute_matching(X, test_X, predictors, imputed_variables, QUANTILES)
+                model = Matching()
+                model.fit(X, predictors, imputed_variables)
+                imputations = model.predict(test_X, QUANTILES)
                 for q in QUANTILES:
                     method_imputations["Matching"][q].append(imputations[q])
 
-            # OLS
+            # OLS
             if "OLS" in methods:
-                imputations = impute_ols(X, test_X, predictors, imputed_variables, QUANTILES)
+                model = OLS()
+                model.fit(X, predictors, imputed_variables)
+                imputations = model.predict(test_X, QUANTILES)
                 for q in QUANTILES:
                     method_imputations["OLS"][q].append(imputations[q])
 
-            # QuantReg
+            # QuantReg
             if "QuantReg" in methods:
-                imputations = impute_quantreg(X, test_X, predictors, imputed_variables, QUANTILES)
+                model = QuantReg()
+                model.fit(X, predictors, imputed_variables, QUANTILES)
+                imputations = model.predict(test_X, QUANTILES)
                 for q in QUANTILES:
                     method_imputations["QuantReg"][q].append(imputations[q])
+                    
         for method in methods:
             for q in QUANTILES:
                 method_imputations[method][q] = np.mean(method_imputations[method][q])
     
     else:
-        # QRF
+        # QRF
         if "QRF" in methods:
-            imputations = impute_qrf(X, test_X, predictors, imputed_variables, QUANTILES)
+            model = QRF()
+            model.fit(X, predictors, imputed_variables)
+            imputations = model.predict(test_X, QUANTILES)
             method_imputations["QRF"] = imputations
 
-        # Matching
+        # Matching
         if "Matching" in methods:   
-            imputations = impute_matching(X, test_X, predictors, imputed_variables, QUANTILES)
+            model = Matching()
+            model.fit(X, predictors, imputed_variables)
+            imputations = model.predict(test_X, QUANTILES)
             method_imputations["Matching"] = imputations
 
-        # OLS
+        # OLS
         if "OLS" in methods:
-            imputations = impute_ols(X, test_X, predictors, imputed_variables, QUANTILES)
+            model = OLS()
+            model.fit(X, predictors, imputed_variables)
+            imputations = model.predict(test_X, QUANTILES)
             method_imputations["OLS"] = imputations
 
-        # QuantReg
+        # QuantReg
         if "QuantReg" in methods:
-            imputations = impute_quantreg(X, test_X, predictors, imputed_variables, QUANTILES)
+            model = QuantReg()
+            model.fit(X, predictors, imputed_variables, QUANTILES)
+            imputations = model.predict(test_X, QUANTILES)
             method_imputations["QuantReg"] = imputations
 
     return method_imputations

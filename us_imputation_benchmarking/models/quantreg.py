@@ -65,23 +65,3 @@ class QuantReg:
             imputations[q] = imputation
             
         return imputations
-
-
-# Legacy function for backward compatibility
-def impute_quantreg(X, test_X, predictors, imputed_variables, quantiles):
-    """
-    Legacy function for Quantile Regression imputation.
-    
-    Args:
-        X: Training data.
-        test_X: Test data.
-        predictors: List of predictor column names.
-        imputed_variables: List of column names to impute.
-        quantiles: List of quantiles to predict.
-        
-    Returns:
-        Dict: Mapping of quantiles to predicted values.
-    """
-    model = QuantReg()
-    model.fit(X, predictors, imputed_variables, quantiles)
-    return model.predict(test_X)
