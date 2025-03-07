@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import logging
 from rpy2.robjects import pandas2ri
+from typing import List, Dict, Optional, Callable, Tuple, Any
 
 
 log = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ class Matching:
     distance hot deck matching for imputation.
     """
     
-    def __init__(self, matching_hotdeck=nnd_hotdeck_using_rpy2):
+    def __init__(self, matching_hotdeck: Callable = nnd_hotdeck_using_rpy2):
         """
         Initialize the matching model.
         
@@ -25,11 +26,11 @@ class Matching:
                 Defaults to nnd_hotdeck_using_rpy2.
         """
         self.matching_hotdeck = matching_hotdeck
-        self.predictors = None
-        self.imputed_variables = None
-        self.donor_data = None
+        self.predictors: Optional[List[str]] = None
+        self.imputed_variables: Optional[List[str]] = None
+        self.donor_data: Optional[pd.DataFrame] = None
         
-    def fit(self, X, predictors, imputed_variables):
+    def fit(self, X: pd.DataFrame, predictors: List[str], imputed_variables: List[str]) -> 'Matching':
         """
         Fit the matching model by storing the donor data and variable names.
         
@@ -46,7 +47,7 @@ class Matching:
         self.imputed_variables = imputed_variables
         return self
         
-    def predict(self, test_X, quantiles):
+    def predict(self, test_X: pd.DataFrame, quantiles: List[float]) -> Dict[float, pd.DataFrame]:
         """
         Predict imputed values using the matching model.
         
@@ -57,7 +58,7 @@ class Matching:
         Returns:
             Dict: Mapping of quantiles to imputed values.
         """
-        imputations = {}
+        imputations: Dict[float, pd.DataFrame] = {}
         test_X_copy = test_X.copy()
         test_X_copy.drop(self.imputed_variables, axis=1, inplace=True, errors='ignore')
         

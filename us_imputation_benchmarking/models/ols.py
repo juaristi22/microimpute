@@ -1,6 +1,8 @@
 import statsmodels.api as sm
 import numpy as np
+import pandas as pd
 from scipy.stats import norm
+from typing import List, Dict, Union, Optional
 
 
 class OLS:
@@ -14,10 +16,10 @@ class OLS:
     def __init__(self):
         """Initialize the OLS model."""
         self.model = None
-        self.predictors = None
-        self.imputed_variables = None
+        self.predictors: Optional[List[str]] = None
+        self.imputed_variables: Optional[List[str]] = None
         
-    def fit(self, X, predictors, imputed_variables):
+    def fit(self, X: pd.DataFrame, predictors: List[str], imputed_variables: List[str]) -> 'OLS':
         """
         Fit the OLS model to the training data.
         
@@ -38,7 +40,7 @@ class OLS:
         self.model = sm.OLS(Y, X_with_const).fit()
         return self
         
-    def predict(self, test_X, quantiles):
+    def predict(self, test_X: pd.DataFrame, quantiles: List[float]) -> Dict[float, np.ndarray]:
         """
         Predict values at specified quantiles using the OLS model.
         
@@ -49,7 +51,7 @@ class OLS:
         Returns:
             Dict: Mapping of quantiles to predicted values.
         """
-        imputations = {}
+        imputations: Dict[float, np.ndarray] = {}
         test_X_with_const = sm.add_constant(test_X[self.predictors])
         
         for q in quantiles:
@@ -58,7 +60,7 @@ class OLS:
             
         return imputations
     
-    def _predict_quantile(self, X, q):
+    def _predict_quantile(self, X: pd.DataFrame, q: float) -> np.ndarray:
         """
         Predict values at a specified quantile.
         

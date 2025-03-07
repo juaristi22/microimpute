@@ -1,5 +1,7 @@
 from us_imputation_benchmarking.utils import qrf
 import numpy as np
+import pandas as pd
+from typing import List, Dict, Optional, Any, Union
 
 
 class QRF:
@@ -10,7 +12,7 @@ class QRF:
     The underlying QRF implementation is from utils.qrf.
     """
     
-    def __init__(self, seed=0):
+    def __init__(self, seed: int = 0):
         """
         Initialize the QRF model.
         
@@ -18,10 +20,10 @@ class QRF:
             seed: Random seed for reproducibility. Defaults to 0.
         """
         self.qrf = qrf.QRF(seed=seed)
-        self.predictors = None
-        self.imputed_variables = None
+        self.predictors: Optional[List[str]] = None
+        self.imputed_variables: Optional[List[str]] = None
         
-    def fit(self, X, predictors, imputed_variables, **qrf_kwargs):
+    def fit(self, X: pd.DataFrame, predictors: List[str], imputed_variables: List[str], **qrf_kwargs: Any) -> 'QRF':
         """
         Fit the QRF model to the training data.
         
@@ -40,7 +42,7 @@ class QRF:
         self.qrf.fit(X[predictors], X[imputed_variables], **qrf_kwargs)
         return self
         
-    def predict(self, test_X, quantiles):
+    def predict(self, test_X: pd.DataFrame, quantiles: List[float]) -> Dict[float, np.ndarray]:
         """
         Predict values at specified quantiles using the QRF model.
         
@@ -51,7 +53,7 @@ class QRF:
         Returns:
             Dict: Mapping of quantiles to predicted values.
         """
-        imputations = {}
+        imputations: Dict[float, np.ndarray] = {}
         
         for q in quantiles:
             imputation = self.qrf.predict(test_X[self.predictors], mean_quantile=q)

@@ -1,4 +1,7 @@
 import statsmodels.api as sm
+import pandas as pd
+import numpy as np
+from typing import List, Dict, Optional, Union, Collection
 
 
 class QuantReg:
@@ -11,11 +14,11 @@ class QuantReg:
     
     def __init__(self):
         """Initialize the Quantile Regression model."""
-        self.models = {}
-        self.predictors = None
-        self.imputed_variables = None
+        self.models: Dict[float, Any] = {}
+        self.predictors: Optional[List[str]] = None
+        self.imputed_variables: Optional[List[str]] = None
         
-    def fit(self, X, predictors, imputed_variables, quantiles):
+    def fit(self, X: pd.DataFrame, predictors: List[str], imputed_variables: List[str], quantiles: List[float]) -> 'QuantReg':
         """
         Fit the Quantile Regression model to the training data.
         
@@ -39,7 +42,7 @@ class QuantReg:
             
         return self
         
-    def predict(self, test_X, quantiles=None):
+    def predict(self, test_X: pd.DataFrame, quantiles: Optional[List[float]] = None) -> Dict[float, np.ndarray]:
         """
         Predict values at specified quantiles using the Quantile Regression model.
         
@@ -51,11 +54,11 @@ class QuantReg:
         Returns:
             Dict: Mapping of quantiles to predicted values.
         """
-        imputations = {}
+        imputations: Dict[float, np.ndarray] = {}
         test_X_with_const = sm.add_constant(test_X[self.predictors])
         
         if quantiles is None:
-            quantiles = self.models.keys()
+            quantiles = list(self.models.keys())
             
         for q in quantiles:
             if q not in self.models:

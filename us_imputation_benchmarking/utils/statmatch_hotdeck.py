@@ -8,12 +8,14 @@ from rpy2.robjects.packages import importr
 from rpy2.robjects import pandas2ri
 import rpy2.robjects as ro
 from rpy2.robjects import numpy2ri
+from typing import List, Dict, Optional, Union, Any, Tuple
 # Enable R-Python DataFrame and array conversion
 pandas2ri.activate()
 numpy2ri.activate()
 utils = importr('utils')
 utils.chooseCRANmirror(ind=1)
 StatMatch = importr("StatMatch")
+
 
 log = logging.getLogger(__name__)
 
@@ -38,13 +40,33 @@ match.vars: A character vector with the names of the matching variables. It has 
 All other vars (no need to specify)     
 """
 
-def nnd_hotdeck_using_rpy2(receiver=None, donor=None, matching_variables=None,
-        z_variables=None, donor_classes=None):
+def nnd_hotdeck_using_rpy2(
+    receiver: Optional[pd.DataFrame] = None, 
+    donor: Optional[pd.DataFrame] = None, 
+    matching_variables: Optional[List[str]] = None,
+    z_variables: Optional[List[str]] = None, 
+    donor_classes: Optional[Union[str, List[str]]] = None
+) -> Tuple[Any, Any]:
+    """
+    Performs nearest neighbor distance hot deck matching using R's StatMatch package.
+    
+    Args:
+        receiver: DataFrame containing recipient data.
+        donor: DataFrame containing donor data.
+        matching_variables: List of column names to use for matching.
+        z_variables: List of column names to donate from donor to recipient.
+        donor_classes: Column name(s) used to define classes in the donor data.
+        
+    Returns:
+        Tuple containing two fused datasets:
+        - First without duplication of matching variables
+        - Second with duplication of matching variables
+    """
     from rpy2.robjects.packages import importr
     from rpy2.robjects import pandas2ri
 
-    assert receiver is not None and donor is not None
-    assert matching_variables is not None
+    assert receiver is not None and donor is not None, "Receiver and donor must be provided"
+    assert matching_variables is not None, "Matching variables must be provided"
 
     pandas2ri.activate()
     StatMatch = importr("StatMatch")
@@ -90,7 +112,6 @@ def nnd_hotdeck_using_rpy2(receiver=None, donor=None, matching_variables=None,
 
     # create synthetic data.set, without the
     # duplication of the matching variables
-
     fused_0 = StatMatch.create_fused(
             data_rec=receiver,
             data_don=donor,
@@ -100,7 +121,6 @@ def nnd_hotdeck_using_rpy2(receiver=None, donor=None, matching_variables=None,
 
     # create synthetic data.set, with the "duplication"
     # of the matching variables
-
     fused_1 = StatMatch.create_fused(
             data_rec=receiver,
             data_don=donor,

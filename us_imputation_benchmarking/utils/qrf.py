@@ -5,15 +5,24 @@ except ImportError:
 import pandas as pd
 import numpy as np
 import pickle
+from typing import List, Optional, Dict, Any, Union, Tuple
 
 
 class QRF:
-    categorical_columns: list = None
-    encoded_columns: list = None
-    output_columns: list = None
+    categorical_columns: Optional[List[str]] = None
+    encoded_columns: Optional[List[str]] = None
+    output_columns: Optional[List[str]] = None
 
-    def __init__(self, seed=0, file_path=None):
+    def __init__(self, seed: int = 0, file_path: Optional[str] = None):
+        """
+        Initialize Quantile Random Forest.
+        
+        Args:
+            seed: Random seed for reproducibility. Defaults to 0.
+            file_path: Path to a pickled model file to load. Defaults to None.
+        """
         self.seed = seed
+        self.qrf = None
 
         if file_path is not None:
             with open(file_path, "rb") as f:
@@ -24,7 +33,15 @@ class QRF:
             self.output_columns = data["output_columns"]
             self.qrf = data["qrf"]
 
-    def fit(self, X, y, **qrf_kwargs):
+    def fit(self, X: pd.DataFrame, y: pd.DataFrame, **qrf_kwargs: Any) -> None:
+        """
+        Fit the Quantile Random Forest model.
+        
+        Args:
+            X: Feature DataFrame.
+            y: Target DataFrame.
+            **qrf_kwargs: Additional keyword arguments to pass to RandomForestQuantileRegressor.
+        """
         self.categorical_columns = X.select_dtypes(include=["object"]).columns
         X = pd.get_dummies(
             X, columns=self.categorical_columns, drop_first=True
@@ -36,7 +53,18 @@ class QRF:
         )
         self.qrf.fit(X, y)
 
-    def predict(self, X, count_samples=10, mean_quantile=0.5):
+    def predict(self, X: pd.DataFrame, count_samples: int = 10, mean_quantile: float = 0.5) -> pd.DataFrame:
+        """
+        Make predictions with the Quantile Random Forest model.
+        
+        Args:
+            X: Feature DataFrame.
+            count_samples: Number of quantile samples. Defaults to 10.
+            mean_quantile: Target quantile for predictions. Defaults to 0.5.
+            
+        Returns:
+            DataFrame with predictions.
+        """
         X = pd.get_dummies(
             X, columns=self.categorical_columns, drop_first=True
         )
@@ -56,7 +84,13 @@ class QRF:
             predictions = pred[np.arange(len(pred)), :, input_quantiles]
         return pd.DataFrame(predictions, columns=self.output_columns)
 
-    def save(self, path):
+    def save(self, path: str) -> None:
+        """
+        Save the model to disk.
+        
+        Args:
+            path: File path to save the pickled model.
+        """
         with open(path, "wb") as f:
             pickle.dump(
                 {

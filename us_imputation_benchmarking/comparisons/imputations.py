@@ -4,14 +4,23 @@ from us_imputation_benchmarking.models.quantreg import QuantReg
 from us_imputation_benchmarking.models.matching import Matching
 from sklearn.model_selection import KFold
 import numpy as np
+import pandas as pd
+from typing import List, Dict, Optional, Union, Any
 
 
-def get_imputations(methods, X, test_X, predictors, imputed_variables, data=None) -> dict:
+def get_imputations(
+    methods: List[str], 
+    X: pd.DataFrame, 
+    test_X: pd.DataFrame, 
+    predictors: List[str], 
+    imputed_variables: List[str], 
+    data: Optional[pd.DataFrame] = None
+) -> Dict[str, Dict[float, Union[np.ndarray, pd.DataFrame]]]:
 
-    QUANTILES = [0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95]
-    method_imputations = dict()
+    QUANTILES: List[float] = [0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95]
+    method_imputations: Dict[str, Dict[float, Any]] = {}
     for method in methods:
-        method_imputations[method] = dict()
+        method_imputations[method] = {}
 
     # Cross-validation option
     if data:

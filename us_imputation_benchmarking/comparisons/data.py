@@ -3,8 +3,9 @@ import pandas as pd
 import io
 import requests
 import zipfile
+from typing import List, Union, Optional, Tuple, Set, Dict, Any
 
-VALID_YEARS = [
+VALID_YEARS: List[int] = [
     1989,
     1992,
     1995,
@@ -34,14 +35,25 @@ def scf_url(year: int) -> str:
     )
 
 
-def load(years=None, columns=None):
+def _load(years: Optional[Union[int, List[int]]] = None, 
+           columns: Optional[List[str]] = None) -> pd.DataFrame:
+    """
+    Load Survey of Consumer Finances data for specified years and columns.
+    
+    Args:
+        years: Year or list of years to load data for. Defaults to all valid years.
+        columns: List of column names to load. Defaults to all columns.
+        
+    Returns:
+        DataFrame containing the requested data.
+    """
     if years is None:
         years = VALID_YEARS
 
     if isinstance(years, int):
         years = [years]
 
-    all_data = []
+    all_data: List[pd.DataFrame] = []
 
     for year in years:
         # Download zip file
@@ -49,7 +61,7 @@ def load(years=None, columns=None):
         z = zipfile.ZipFile(io.BytesIO(response.content))
 
         # Find the .dta file in the zip
-        dta_files = [f for f in z.namelist() if f.endswith('.dta')]
+        dta_files: List[str] = [f for f in z.namelist() if f.endswith('.dta')]
         if not dta_files:
             raise ValueError(f"No Stata files found in zip for year {year}")
 
@@ -61,7 +73,7 @@ def load(years=None, columns=None):
         if columns is not None and 'wgt' not in df.columns:
             # Re-read to include weights
             with z.open(dta_files[0]) as f:
-                cols_with_weight = list(set(columns) | set(['wgt']))
+                cols_with_weight: List[str] = list(set(columns) | {'wgt'})
                 df = pd.read_stata(io.BytesIO(f.read()), columns=cols_with_weight)
 
         # Add year column
@@ -75,18 +87,38 @@ def load(years=None, columns=None):
         return all_data[0]
 
 
-def preprocess_data(full_data=False):
-    data = load([VALID_YEARS[-1]])
+def preprocess_data(
+    full_data: bool = False, 
+    years: Optional[Union[int, List[int]]] = None
+) -> Union[
+    Tuple[pd.DataFrame, List[str], List[str]],  # when full_data=True
+    Tuple[pd.DataFrame, pd.DataFrame, List[str], List[str]]  # when full_data=False
+]:
+    """
+    Preprocess the Survey of Consumer Finances data for model training and testing.
+    
+    Args:
+        full_data: If True, returns the entire dataset without splitting. If False,
+                  splits the data into training and test sets. Defaults to False.
+        years: Year or list of years to load data for. Defaults to all valid years.
+        
+    Returns:
+        If full_data=True:
+            Tuple containing (data, predictor_columns, imputed_columns)
+        If full_data=False:
+            Tuple containing (train_data, test_data, predictor_columns, imputed_columns)
+    """
+    data = _load(years=years)
 
-    # predictors shared with cps data
+    # predictors shared with cps data
 
-    PREDICTORS = ["hhsex",      # sex of head of household
+    PREDICTORS: List[str] = ["hhsex",      # sex of head of household
                 "age",          # age of respondent
                 "married",      # marital status of respondent
                 "kids",         # number of children in household
                 "educ",         # highest level of education
                 "race",         # race of respondent 
-                "income",       # total annual income of household  
+                "income",       # total annual income of household  
                 "wageinc",      # income from wages and salaries
                 "bussefarminc", # income from business, self-employment or farm
                 "intdivinc",    # income from interest and dividends
@@ -94,7 +126,7 @@ def preprocess_data(full_data=False):
                 "lf",           # labor force status
                 ]   
 
-    IMPUTED_VARIABLES = ["networth"] # some property also captured in cps data (HPROP_VAL)
+    IMPUTED_VARIABLES: List[str] = ["networth"] # some property also captured in cps data (HPROP_VAL)
 
     data = data[PREDICTORS + IMPUTED_VARIABLES]
     mean = data.mean(axis=0)

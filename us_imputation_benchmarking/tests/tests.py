@@ -4,7 +4,7 @@ from us_imputation_benchmarking.comparisons.quantile_loss import compare_quantil
 from us_imputation_benchmarking.comparisons.plot import plot_loss_comparison
 
 
-X, X_test, PREDICTORS, IMPUTED_VARIABLES = preprocess_data(full_data=False)
+X, X_test, PREDICTORS, IMPUTED_VARIABLES = preprocess_data(full_data=False, years=2019)
 Y_test = X_test[IMPUTED_VARIABLES]
 #data, PREDICTORS, IMPUTED_VARIABLES = preprocess_data(full_data=True)
 
