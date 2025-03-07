@@ -16,8 +16,8 @@ class QRF:
         """
         Initialize the QRF model.
         
-        Args:
-            seed: Random seed for reproducibility. Defaults to 0.
+        :param seed: Random seed for reproducibility.
+        :type seed: int
         """
         self.qrf = qrf.QRF(seed=seed)
         self.predictors: Optional[List[str]] = None
@@ -27,14 +27,16 @@ class QRF:
         """
         Fit the QRF model to the training data.
         
-        Args:
-            X: DataFrame containing the training data.
-            predictors: List of column names to use as predictors.
-            imputed_variables: List of column names to impute.
-            **qrf_kwargs: Additional keyword arguments to pass to QRF.
-            
-        Returns:
-            self: The fitted model instance.
+        :param X: DataFrame containing the training data.
+        :type X: pd.DataFrame
+        :param predictors: List of column names to use as predictors.
+        :type predictors: List[str]
+        :param imputed_variables: List of column names to impute.
+        :type imputed_variables: List[str]
+        :param qrf_kwargs: Additional keyword arguments to pass to QRF.
+        :type qrf_kwargs: Any
+        :returns: The fitted model instance.
+        :rtype: QRF
         """
         self.predictors = predictors
         self.imputed_variables = imputed_variables
@@ -46,12 +48,12 @@ class QRF:
         """
         Predict values at specified quantiles using the QRF model.
         
-        Args:
-            test_X: DataFrame containing the test data.
-            quantiles: List of quantiles to predict.
-            
-        Returns:
-            Dict: Mapping of quantiles to predicted values.
+        :param test_X: DataFrame containing the test data.
+        :type test_X: pd.DataFrame
+        :param quantiles: List of quantiles to predict.
+        :type quantiles: List[float]
+        :returns: Dictionary mapping quantiles to predicted values.
+        :rtype: Dict[float, np.ndarray]
         """
         imputations: Dict[float, np.ndarray] = {}
         

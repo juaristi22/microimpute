@@ -8,9 +8,12 @@ def plot_loss_comparison(loss_comparison_df: pd.DataFrame, quantiles: List[float
     """
     Plot a bar chart comparing quantile losses across different methods.
     
-    Args:
-        loss_comparison_df: DataFrame containing loss comparison data.
-        quantiles: List of quantile values (e.g. [0.05, 0.1, ...]).
+    :param loss_comparison_df: DataFrame containing loss comparison data.
+    :type loss_comparison_df: pd.DataFrame
+    :param quantiles: List of quantile values (e.g. [0.05, 0.1, ...]).
+    :type quantiles: List[float]
+    :returns: None
+    :rtype: None
     """
     percentiles: List[str] = [str(int(q * 100)) for q in quantiles]
     plt.figure(figsize=(12, 6))

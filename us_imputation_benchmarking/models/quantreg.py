@@ -1,7 +1,7 @@
 import statsmodels.api as sm
 import pandas as pd
 import numpy as np
-from typing import List, Dict, Optional, Union, Collection
+from typing import List, Dict, Optional, Union, Collection, Any
 
 
 class QuantReg:
@@ -13,7 +13,9 @@ class QuantReg:
     """
     
     def __init__(self):
-        """Initialize the Quantile Regression model."""
+        """
+        Initialize the Quantile Regression model.
+        """
         self.models: Dict[float, Any] = {}
         self.predictors: Optional[List[str]] = None
         self.imputed_variables: Optional[List[str]] = None
@@ -22,14 +24,16 @@ class QuantReg:
         """
         Fit the Quantile Regression model to the training data.
         
-        Args:
-            X: DataFrame containing the training data.
-            predictors: List of column names to use as predictors.
-            imputed_variables: List of column names to impute.
-            quantiles: List of quantiles to fit models for.
-            
-        Returns:
-            self: The fitted model instance.
+        :param X: DataFrame containing the training data.
+        :type X: pd.DataFrame
+        :param predictors: List of column names to use as predictors.
+        :type predictors: List[str]
+        :param imputed_variables: List of column names to impute.
+        :type imputed_variables: List[str]
+        :param quantiles: List of quantiles to fit models for.
+        :type quantiles: List[float]
+        :returns: The fitted model instance.
+        :rtype: QuantReg
         """
         self.predictors = predictors
         self.imputed_variables = imputed_variables
@@ -46,13 +50,14 @@ class QuantReg:
         """
         Predict values at specified quantiles using the Quantile Regression model.
         
-        Args:
-            test_X: DataFrame containing the test data.
-            quantiles: List of quantiles to predict. If None, uses the quantiles
-                from training. Defaults to None.
-            
-        Returns:
-            Dict: Mapping of quantiles to predicted values.
+        :param test_X: DataFrame containing the test data.
+        :type test_X: pd.DataFrame
+        :param quantiles: List of quantiles to predict. If None, uses the quantiles
+                        from training.
+        :type quantiles: Optional[List[float]]
+        :returns: Dictionary mapping quantiles to predicted values.
+        :rtype: Dict[float, np.ndarray]
+        :raises ValueError: If a requested quantile was not fitted during training.
         """
         imputations: Dict[float, np.ndarray] = {}
         test_X_with_const = sm.add_constant(test_X[self.predictors])

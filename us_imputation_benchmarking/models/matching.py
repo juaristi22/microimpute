@@ -21,9 +21,8 @@ class Matching:
         """
         Initialize the matching model.
         
-        Args:
-            matching_hotdeck: Function that performs the hot deck matching.
-                Defaults to nnd_hotdeck_using_rpy2.
+        :param matching_hotdeck: Function that performs the hot deck matching.
+        :type matching_hotdeck: Callable
         """
         self.matching_hotdeck = matching_hotdeck
         self.predictors: Optional[List[str]] = None
@@ -34,13 +33,14 @@ class Matching:
         """
         Fit the matching model by storing the donor data and variable names.
         
-        Args:
-            X: DataFrame containing the donor data.
-            predictors: List of column names to use as predictors.
-            imputed_variables: List of column names to impute.
-            
-        Returns:
-            self: The fitted model instance.
+        :param X: DataFrame containing the donor data.
+        :type X: pd.DataFrame
+        :param predictors: List of column names to use as predictors.
+        :type predictors: List[str]
+        :param imputed_variables: List of column names to impute.
+        :type imputed_variables: List[str]
+        :returns: The fitted model instance.
+        :rtype: Matching
         """
         self.donor_data = X.copy()
         self.predictors = predictors
@@ -51,12 +51,12 @@ class Matching:
         """
         Predict imputed values using the matching model.
         
-        Args:
-            test_X: DataFrame containing the recipient data.
-            quantiles: List of quantiles to predict.
-            
-        Returns:
-            Dict: Mapping of quantiles to imputed values.
+        :param test_X: DataFrame containing the recipient data.
+        :type test_X: pd.DataFrame
+        :param quantiles: List of quantiles to predict.
+        :type quantiles: List[float]
+        :returns: Dictionary mapping quantiles to imputed values.
+        :rtype: Dict[float, pd.DataFrame]
         """
         imputations: Dict[float, pd.DataFrame] = {}
         test_X_copy = test_X.copy()

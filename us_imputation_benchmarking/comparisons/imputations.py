@@ -16,6 +16,24 @@ def get_imputations(
     imputed_variables: List[str], 
     data: Optional[pd.DataFrame] = None
 ) -> Dict[str, Dict[float, Union[np.ndarray, pd.DataFrame]]]:
+    """
+    Generate imputations using multiple methods for the specified variables.
+    
+    :param methods: List of imputation methods to use (e.g., "QRF", "OLS", "QuantReg", "Matching").
+    :type methods: List[str]
+    :param X: Training data containing predictors and variables to impute.
+    :type X: pd.DataFrame
+    :param test_X: Test data on which to make imputations.
+    :type test_X: pd.DataFrame
+    :param predictors: Names of columns to use as predictors.
+    :type predictors: List[str]
+    :param imputed_variables: Names of columns to impute.
+    :type imputed_variables: List[str]
+    :param data: Optional full dataset for cross-validation.
+    :type data: Optional[pd.DataFrame]
+    :returns: Nested dictionary mapping method names to dictionaries mapping quantiles to imputations.
+    :rtype: Dict[str, Dict[float, Union[np.ndarray, pd.DataFrame]]]
+    """
 
     QUANTILES: List[float] = [0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95]
     method_imputations: Dict[str, Dict[float, Any]] = {}

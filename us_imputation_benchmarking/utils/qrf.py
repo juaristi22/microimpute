@@ -17,9 +17,10 @@ class QRF:
         """
         Initialize Quantile Random Forest.
         
-        Args:
-            seed: Random seed for reproducibility. Defaults to 0.
-            file_path: Path to a pickled model file to load. Defaults to None.
+        :param seed: Random seed for reproducibility.
+        :type seed: int
+        :param file_path: Path to a pickled model file to load.
+        :type file_path: Optional[str]
         """
         self.seed = seed
         self.qrf = None
@@ -37,10 +38,14 @@ class QRF:
         """
         Fit the Quantile Random Forest model.
         
-        Args:
-            X: Feature DataFrame.
-            y: Target DataFrame.
-            **qrf_kwargs: Additional keyword arguments to pass to RandomForestQuantileRegressor.
+        :param X: Feature DataFrame.
+        :type X: pd.DataFrame
+        :param y: Target DataFrame.
+        :type y: pd.DataFrame
+        :param qrf_kwargs: Additional keyword arguments to pass to RandomForestQuantileRegressor.
+        :type qrf_kwargs: Any
+        :returns: None
+        :rtype: None
         """
         self.categorical_columns = X.select_dtypes(include=["object"]).columns
         X = pd.get_dummies(
@@ -57,13 +62,14 @@ class QRF:
         """
         Make predictions with the Quantile Random Forest model.
         
-        Args:
-            X: Feature DataFrame.
-            count_samples: Number of quantile samples. Defaults to 10.
-            mean_quantile: Target quantile for predictions. Defaults to 0.5.
-            
-        Returns:
-            DataFrame with predictions.
+        :param X: Feature DataFrame.
+        :type X: pd.DataFrame
+        :param count_samples: Number of quantile samples.
+        :type count_samples: int
+        :param mean_quantile: Target quantile for predictions.
+        :type mean_quantile: float
+        :returns: DataFrame with predictions.
+        :rtype: pd.DataFrame
         """
         X = pd.get_dummies(
             X, columns=self.categorical_columns, drop_first=True
@@ -88,8 +94,10 @@ class QRF:
         """
         Save the model to disk.
         
-        Args:
-            path: File path to save the pickled model.
+        :param path: File path to save the pickled model.
+        :type path: str
+        :returns: None
+        :rtype: None
         """
         with open(path, "wb") as f:
             pickle.dump(

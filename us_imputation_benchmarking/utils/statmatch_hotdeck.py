@@ -48,19 +48,23 @@ def nnd_hotdeck_using_rpy2(
     donor_classes: Optional[Union[str, List[str]]] = None
 ) -> Tuple[Any, Any]:
     """
-    Performs nearest neighbor distance hot deck matching using R's StatMatch package.
+    Perform nearest neighbor distance hot deck matching using R's StatMatch package.
     
-    Args:
-        receiver: DataFrame containing recipient data.
-        donor: DataFrame containing donor data.
-        matching_variables: List of column names to use for matching.
-        z_variables: List of column names to donate from donor to recipient.
-        donor_classes: Column name(s) used to define classes in the donor data.
-        
-    Returns:
-        Tuple containing two fused datasets:
-        - First without duplication of matching variables
-        - Second with duplication of matching variables
+    :param receiver: DataFrame containing recipient data.
+    :type receiver: Optional[pd.DataFrame]
+    :param donor: DataFrame containing donor data.
+    :type donor: Optional[pd.DataFrame]
+    :param matching_variables: List of column names to use for matching.
+    :type matching_variables: Optional[List[str]]
+    :param z_variables: List of column names to donate from donor to recipient.
+    :type z_variables: Optional[List[str]]
+    :param donor_classes: Column name(s) used to define classes in the donor data.
+    :type donor_classes: Optional[Union[str, List[str]]]
+    :returns: Tuple containing two fused datasets:
+              - First without duplication of matching variables
+              - Second with duplication of matching variables
+    :rtype: Tuple[Any, Any]
+    :raises AssertionError: If receiver, donor, or matching_variables are not provided.
     """
     from rpy2.robjects.packages import importr
     from rpy2.robjects import pandas2ri
