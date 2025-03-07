@@ -1,4 +1,3 @@
-from policyengine_us_data.utils import QRF
 import numpy as np
 
 
