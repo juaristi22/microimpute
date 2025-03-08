@@ -11,7 +11,7 @@ def cross_validate_model(
     predictors: List[str],
     imputed_variables: List[str],
     quantiles: Optional[List[float]] = None,
-    K: int = 5,
+    n_splits: int = 5,
     random_state: int = 42
 ) -> pd.DataFrame:
     """
@@ -27,8 +27,8 @@ def cross_validate_model(
     :type imputed_variables: List[str]
     :param quantiles: List of quantiles to evaluate. Defaults to standard set if None.
     :type quantiles: Optional[List[float]]
-    :param K: Number of cross-validation folds.
-    :type K: int
+    :param n_splits: Number of cross-validation folds.
+    :type n_splits: int
     :param random_state: Random seed for reproducibility.
     :type random_state: int
     :returns: DataFrame with train and test rows, quantiles as columns, and average loss values
@@ -44,7 +44,7 @@ def cross_validate_model(
     test_y_values = []
     
     # Set up k-fold cross-validation
-    kf = KFold(n_splits=K, shuffle=True, random_state=random_state)
+    kf = KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
     
     for train_idx, test_idx in kf.split(data):
         train_data = data.iloc[train_idx]
@@ -75,7 +75,7 @@ def cross_validate_model(
     
     avg_test_losses = {q: [] for q in quantiles}
     avg_train_losses = {q: [] for q in quantiles}
-    for k in range(K):
+    for k in range(len(test_y_values)):
         for q in quantiles:
             # Flatten arrays for easier calculation
             test_y_flat = test_y_values[k].flatten()
