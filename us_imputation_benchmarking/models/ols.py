@@ -12,6 +12,7 @@ class OLS:
     This model predicts different quantiles by assuming normally 
     distributed residuals.
     """
+    __name__ = "OLS"
     
     def __init__(self):
         """

@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-from typing import List
+from typing import List, Dict, Type, Union, Optional, Tuple
 
 
-def plot_loss_comparison(loss_comparison_df: pd.DataFrame, quantiles: List[float]) -> None:
+def plot_loss_comparison(loss_comparison_df: pd.DataFrame, 
+                         quantiles: List[float],
+                         save_path: Optional[str] = None) -> None:
     """
     Plot a bar chart comparing quantile losses across different methods.
     
@@ -24,4 +26,9 @@ def plot_loss_comparison(loss_comparison_df: pd.DataFrame, quantiles: List[float
     plt.legend(title="Method")
     ax.set_xticklabels(percentiles)
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.show()
+    # Save or show the plot
+    if save_path:
+        plt.savefig(save_path)
+        print(f"Plot saved to {save_path}")
+    else:
+        plt.show()

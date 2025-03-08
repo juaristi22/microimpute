@@ -11,6 +11,7 @@ class QuantReg:
     This model uses statsmodels' QuantReg implementation to
     directly predict specific quantiles.
     """
+    __name__ = "QuantReg"
     
     def __init__(self):
         """

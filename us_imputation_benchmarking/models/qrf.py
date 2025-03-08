@@ -11,6 +11,7 @@ class QRF:
     This model uses a Quantile Random Forest to predict quantiles.
     The underlying QRF implementation is from utils.qrf.
     """
+    __name__ = "QRF"
     
     def __init__(self, seed: int = 0):
         """
