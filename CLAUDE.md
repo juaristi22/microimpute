@@ -1,25 +1,10 @@
 # US Imputation Benchmarking - Developer Guide
 
-## Build & Test Commands
-```bash
-# Install package in development mode
-pip install -e .
-
-# Run all tests
-python us_imputation_benchmarking/tests.py
-
-# Run specific model test (example)
-python -c "from us_imputation_benchmarking import tests; tests.test_qrf()"
-
-# Install development dependencies
-pip install black isort mypy pytest
-```
-
 ## Code Style Guidelines
 
 ### Formatting & Organization
 - Use 4 spaces for indentation
-- Maximum line length: 88 characters (Black default)
+- Maximum line length: 79 characters (Black default)
 - Format code with Black: `black us_imputation_benchmarking/`
 - Sort imports with isort: `isort us_imputation_benchmarking/`
 
@@ -38,3 +23,10 @@ pip install black isort mypy pytest
 - Use assertions for validation
 - Raise appropriate exceptions with informative messages
 - Add context to exceptions when re-raising
+
+## Code Integrity and Test Data Handling
+- **ABSOLUTE NEVER HARDCODE LOGIC JUST TO PASS SPECIFIC TEST CASES**
+    - This is a serious dishonesty that undermines code quality and model integrity
+    - It creates technical dept and maintenance nightmares
+    - It destroys the ability to trust results and undermines the entire purpose of tests
+    - NEVER add conditional logic that returns fixed values for specific input combinations
