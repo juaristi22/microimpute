@@ -18,15 +18,8 @@ RANDOM_STATE: int = 42
 
 # Model parameters
 DEFAULT_MODEL_PARAMS: Dict[str, Dict[str, Any]] = {
-    "qrf": {
-        "n_estimators": 100,
-        "min_samples_leaf": 10,
-        "max_features": "sqrt",
-        "random_state": RANDOM_STATE,
-    },
-    "quantreg": {
-        "max_iter": 1000,
-    },
+    "qrf": {},
+    "quantreg": {},
     "ols": {},
     "matching": {}
 }

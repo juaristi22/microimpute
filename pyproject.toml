@@ -5,16 +5,17 @@ description = "Benchmarking imputation models for US household survey data"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "numpy",
-    "pandas",
-    "matplotlib",
-    "seaborn",
-    "scikit-learn",
-    "scipy",
-    "rpy2",
-    "requests",
-    "statsmodels",
-    "quantile-forest",
+    "numpy>=1.2.0,<2.0.0",
+    "pandas>=2.0.0,<3.0.0",
+    "matplotlib>=3.4.0,<4.0.0",
+    "seaborn>=0.11.0,<0.13.0",
+    "scikit-learn>=1.0.0,<2.0.0",
+    "scipy>=1.0.0,<2.0.0",
+    "rpy2>=3.4.0,<3.6.0",
+    "requests>=2.25.0,<3.0.0",
+    "tqdm>=4.6.0,<5.0.0",
+    "statsmodels>=0.13.0,<0.15.0",
+    "quantile-forest>=1.0.0,<1.5.0",
 ]
 
 [project.optional-dependencies]
