@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 from typing import List, Dict, Optional, Union, Any, Type, Callable, Tuple
+from us_imputation_benchmarking.config import QUANTILES
+from us_imputation_benchmarking.models.quantreg import QuantReg
 
 
 def get_imputations(
@@ -9,7 +11,7 @@ def get_imputations(
     test_X: pd.DataFrame,
     predictors: List[str],
     imputed_variables: List[str],
-    quantiles: Optional[List[float]] = None,
+    quantiles: Optional[List[float]] = QUANTILES,
 ) -> Dict[str, Dict[float, Union[np.ndarray, pd.DataFrame]]]:
     """
     Generate imputations using multiple model classes for the specified variables.
@@ -27,10 +29,6 @@ def get_imputations(
     :returns: Nested dictionary mapping method names to dictionaries mapping quantiles to imputations.
     :rtype: Dict[str, Dict[float, Union[np.ndarray, pd.DataFrame]]]
     """
-    # Set default quantiles if not provided
-    if quantiles is None:
-        QUANTILES: List[float] = [0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95]
-
     method_imputations: Dict[str, Dict[float, Any]] = {}
 
     for model_class in model_classes:
@@ -41,13 +39,13 @@ def get_imputations(
         model = model_class()
 
         # Handle QuantReg which needs quantiles during fitting
-        if model_name == "QuantReg":
-            model.fit(X, predictors, imputed_variables, QUANTILES)
+        if model_class == QuantReg:
+            model.fit(X, predictors, imputed_variables, quantiles)
         else:
             model.fit(X, predictors, imputed_variables)
 
         # Get predictions
-        imputations = model.predict(test_X, QUANTILES)
+        imputations = model.predict(test_X, quantiles)
         method_imputations[model_name] = imputations
 
     return method_imputations

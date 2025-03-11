@@ -3,6 +3,8 @@ import pandas as pd
 from sklearn.model_selection import KFold
 from typing import List, Dict, Type, Any, Union, Optional, Tuple, Callable
 from us_imputation_benchmarking.comparisons.quantile_loss import quantile_loss
+from us_imputation_benchmarking.config import QUANTILES, RANDOM_STATE
+from us_imputation_benchmarking.models.quantreg import QuantReg
 
 
 def cross_validate_model(
@@ -10,9 +12,9 @@ def cross_validate_model(
     data: pd.DataFrame,
     predictors: List[str],
     imputed_variables: List[str],
-    quantiles: Optional[List[float]] = None,
+    quantiles: Optional[List[float]] = QUANTILES,
     n_splits: int = 5,
-    random_state: int = 42,
+    random_state: int = RANDOM_STATE,
 ) -> pd.DataFrame:
     """
     Perform cross-validation for an imputation model.
@@ -34,9 +36,6 @@ def cross_validate_model(
     :returns: DataFrame with train and test rows, quantiles as columns, and average loss values
     :rtype: pd.DataFrame
     """
-    # Set default quantiles if not provided
-    if quantiles is None:
-        quantiles = [0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95]
 
     test_results = {q: [] for q in quantiles}
     train_results = {q: [] for q in quantiles}
@@ -60,7 +59,7 @@ def cross_validate_model(
         model = model_class()
 
         # Handle different model fitting requirements
-        if model_class.__name__ == "QuantReg":
+        if model_class == QuantReg:
             model.fit(train_data, predictors, imputed_variables, quantiles)
         else:
             model.fit(train_data, predictors, imputed_variables)

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 from typing import List, Dict, Type, Union, Optional, Tuple
-from us_imputation_benchmarking.comparisons.quantile_loss import QUANTILES
+from us_imputation_benchmarking.config import QUANTILES
 
 
 def plot_loss_comparison(

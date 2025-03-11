@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Tuple, Any, Union
+from us_imputation_benchmarking.config import QUANTILES
 
 
 def quantile_loss(q: float, y: np.ndarray, f: np.ndarray) -> np.ndarray:
@@ -21,7 +22,9 @@ def quantile_loss(q: float, y: np.ndarray, f: np.ndarray) -> np.ndarray:
 
 
 def compute_quantile_loss(
-    test_y: np.ndarray, imputations: np.ndarray, q: float
+    test_y: np.ndarray, 
+    imputations: np.ndarray, 
+    q: float
 ) -> np.ndarray:
     """
     Compute quantile loss for given true values and imputations.
@@ -38,8 +41,6 @@ def compute_quantile_loss(
     losses = quantile_loss(q, test_y, imputations)
     return losses
 
-
-QUANTILES: List[float] = [0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95]
 quantiles_legend: List[str] = [
     str(int(q * 100)) + "th percentile" for q in QUANTILES
 ]

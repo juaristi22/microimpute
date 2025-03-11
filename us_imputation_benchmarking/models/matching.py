@@ -18,9 +18,6 @@ class Matching:
     This model uses R's StatMatch package through rpy2 to perform nearest neighbor
     distance hot deck matching for imputation.
     """
-
-    __name__ = "Matching"
-
     def __init__(self, matching_hotdeck: Callable = nnd_hotdeck_using_rpy2):
         """
         Initialize the matching model.

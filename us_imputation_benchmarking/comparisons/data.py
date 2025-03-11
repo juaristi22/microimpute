@@ -3,21 +3,10 @@ import pandas as pd
 import io
 import requests
 import zipfile
+import tqdm
 from typing import List, Union, Optional, Tuple, Set, Dict, Any
 
-VALID_YEARS: List[int] = [
-    1989,
-    1992,
-    1995,
-    1998,
-    2001,
-    2004,
-    2007,
-    2010,
-    2013,
-    2016,
-    2019,
-]
+from us_imputation_benchmarking.config import VALID_YEARS, RANDOM_STATE
 
 
 def scf_url(year: int) -> str:
@@ -61,7 +50,7 @@ def _load(
 
     all_data: List[pd.DataFrame] = []
 
-    for year in years:
+    for year in tqdm(years):
         # Download zip file
         response = requests.get(scf_url(year))
         z = zipfile.ZipFile(io.BytesIO(response.content))
@@ -147,6 +136,6 @@ def preprocess_data(
         return data, PREDICTORS, IMPUTED_VARIABLES
     else:
         X, test_X = train_test_split(
-            data, test_size=0.2, train_size=0.8, random_state=42
+            data, test_size=0.2, train_size=0.8, random_state=RANDOM_STATE
         )
         return X, test_X, PREDICTORS, IMPUTED_VARIABLES

@@ -7,6 +7,7 @@ from us_imputation_benchmarking.comparisons.plot import plot_loss_comparison
 from us_imputation_benchmarking.models.qrf import QRF
 from us_imputation_benchmarking.models.ols import OLS
 from us_imputation_benchmarking.models.quantreg import QuantReg
+from us_imputation_benchmarking.config import RANDOM_STATE
 
 # from us_imputation_benchmarking.models.matching import Matching  # Not working yet
 from us_imputation_benchmarking.evaluations.cross_validation import (
@@ -22,12 +23,12 @@ def test_quantile_comparison():
         full_data=False, years=2019
     )
     # Shrink down the data by sampling
-    X = X.sample(frac=0.01, random_state=42)
-    X_test = X_test.sample(frac=0.01, random_state=42)
+    X = X.sample(frac=0.01, random_state=RANDOM_STATE)
+    X_test = X_test.sample(frac=0.01, random_state=RANDOM_STATE)
 
     Y_test = X_test[IMPUTED_VARIABLES]
     data, PREDICTORS, IMPUTED_VARIABLES = preprocess_data(full_data=True)
-    data = data.sample(frac=0.01, random_state=42)
+    data = data.sample(frac=0.01, random_state=RANDOM_STATE)
 
     model_classes = [QRF, OLS, QuantReg]  # Matching still not working
     method_imputations = get_imputations(

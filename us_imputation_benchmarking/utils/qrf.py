@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import pickle
 from typing import List, Optional, Dict, Any, Union, Tuple
+from us_imputation_benchmarking.config import RANDOM_STATE
 
 
 class QRF:
@@ -10,7 +11,9 @@ class QRF:
     encoded_columns: Optional[List[str]] = None
     output_columns: Optional[List[str]] = None
 
-    def __init__(self, seed: int = 0, file_path: Optional[str] = None):
+    def __init__(self, 
+                 seed: int = RANDOM_STATE, 
+                 file_path: Optional[str] = None):
         """
         Initialize Quantile Random Forest.
 

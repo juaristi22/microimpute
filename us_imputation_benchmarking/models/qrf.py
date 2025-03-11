@@ -2,6 +2,7 @@ from us_imputation_benchmarking.utils import qrf
 import numpy as np
 import pandas as pd
 from typing import List, Dict, Optional, Any, Union
+from us_imputation_benchmarking.config import RANDOM_STATE
 
 
 class QRF:
@@ -11,10 +12,7 @@ class QRF:
     This model uses a Quantile Random Forest to predict quantiles.
     The underlying QRF implementation is from utils.qrf.
     """
-
-    __name__ = "QRF"
-
-    def __init__(self, seed: int = 0):
+    def __init__(self, seed: int = RANDOM_STATE):
         """
         Initialize the QRF model.
 
