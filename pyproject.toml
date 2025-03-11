@@ -13,6 +13,8 @@ dependencies = [
     "scipy",
     "rpy2",
     "requests",
+    "statsmodels",
+    "quantile-forest",
 ]
 
 [project.optional-dependencies]

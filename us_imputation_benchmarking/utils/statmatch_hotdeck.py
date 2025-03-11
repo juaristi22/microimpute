@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import logging
 import os
-import pkg_resources
 import rpy2
 from rpy2.robjects.packages import importr
 from rpy2.robjects import pandas2ri

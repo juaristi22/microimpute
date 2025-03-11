@@ -37,6 +37,10 @@ def compute_quantile_loss(test_y: np.ndarray, imputations: np.ndarray, q: float)
     return losses
 
 
+    
+QUANTILES: List[float] = [0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95]
+quantiles_legend: List[str] = [str(int(q * 100)) + 'th percentile' for q in QUANTILES]
+
 def compare_quantile_loss(
     test_y: pd.DataFrame, 
     method_imputations: Dict[str, Dict[float, Union[np.ndarray, pd.DataFrame]]]
@@ -54,9 +58,6 @@ def compare_quantile_loss(
               - List of quantile values used
     :rtype: Tuple[pd.DataFrame, List[float]]
     """
-    
-    QUANTILES: List[float] = [0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95]
-    quantiles_legend: List[str] = [str(int(q * 100)) + 'th percentile' for q in QUANTILES]
 
     # Initialize empty dataframe with method names, quantile, and loss columns
     results_df: pd.DataFrame = pd.DataFrame(columns=['Method', 'Percentile', 'Loss'])
@@ -68,6 +69,7 @@ def compare_quantile_loss(
                 'Method': method,
                 'Percentile': str(int(quantile * 100)) + 'th percentile',
                 'Loss': q_loss.mean()}
+            
             results_df = pd.concat([results_df, pd.DataFrame([new_row])], ignore_index=True)
 
-    return results_df, QUANTILES
+    return results_df

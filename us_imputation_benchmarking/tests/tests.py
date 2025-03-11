@@ -17,11 +17,11 @@ data, PREDICTORS, IMPUTED_VARIABLES = preprocess_data(full_data=True)
 model_classes = [QRF, OLS, QuantReg]  # Matching still not working
 method_imputations = get_imputations(model_classes, X, X_test, PREDICTORS, IMPUTED_VARIABLES)
 
-loss_comparison_df, quantiles = compare_quantile_loss(Y_test, method_imputations)
+loss_comparison_df = compare_quantile_loss(Y_test, method_imputations)
 
 print(loss_comparison_df)
 
-plot_loss_comparison(loss_comparison_df, quantiles)
+plot_loss_comparison(loss_comparison_df)
 
 qrf_results = cross_validate_model(QRF, data, PREDICTORS, IMPUTED_VARIABLES)
 

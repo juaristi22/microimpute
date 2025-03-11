@@ -2,10 +2,11 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 from typing import List, Dict, Type, Union, Optional, Tuple
+from us_imputation_benchmarking.comparisons.quantile_loss import QUANTILES
 
 
 def plot_loss_comparison(loss_comparison_df: pd.DataFrame, 
-                         quantiles: List[float],
+                         quantiles: List[float] = QUANTILES,
                          save_path: Optional[str] = None) -> None:
     """
     Plot a bar chart comparing quantile losses across different methods.
