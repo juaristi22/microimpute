@@ -3,7 +3,7 @@ import pandas as pd
 import io
 import requests
 import zipfile
-import tqdm
+from tqdm import tqdm
 from typing import List, Union, Optional, Tuple, Set, Dict, Any
 
 from us_imputation_benchmarking.config import VALID_YEARS, RANDOM_STATE

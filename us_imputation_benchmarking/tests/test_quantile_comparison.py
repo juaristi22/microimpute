@@ -39,9 +39,13 @@ def test_quantile_comparison():
 
     assert not loss_comparison_df.isna().any().any()
 
+    #plot_loss_comparison(loss_comparison_df, save_path="loss_comparison.png")
+
     qrf_results = cross_validate_model(
         QRF, data, PREDICTORS, IMPUTED_VARIABLES
     )
     qrf_results.to_csv("qrf_results.csv")
 
     assert not qrf_results.isna().any().any()
+
+    #plot_train_test_performance(qrf_results, save_path="train_test_performance.png")

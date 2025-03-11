@@ -1,15 +1,15 @@
-import matplotlib.pyplot as plt
-import seaborn as sns
+import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 from typing import List, Dict, Type, Union, Optional, Tuple
-from us_imputation_benchmarking.config import QUANTILES
+from us_imputation_benchmarking.config import QUANTILES, PLOT_CONFIG
 
 
 def plot_loss_comparison(
     loss_comparison_df: pd.DataFrame,
     quantiles: List[float] = QUANTILES,
     save_path: Optional[str] = None,
-) -> None:
+) -> go.Figure:
     """
     Plot a bar chart comparing quantile losses across different methods.
 
@@ -17,30 +17,42 @@ def plot_loss_comparison(
     :type loss_comparison_df: pd.DataFrame
     :param quantiles: List of quantile values (e.g. [0.05, 0.1, ...]).
     :type quantiles: List[float]
-    :returns: None
-    :rtype: None
+    :param save_path: Path to save the plot. If None, the plot is displayed.
+    :type save_path: Optional[str]
+    :returns: Plotly figure object
+    :rtype: go.Figure
     """
-    percentiles: List[str] = [str(int(q * 100)) for q in quantiles]
-    plt.figure(figsize=(12, 6))
-    ax = sns.barplot(
-        data=loss_comparison_df,
+    fig = px.bar(
+        loss_comparison_df,
         x="Percentile",
         y="Loss",
-        hue="Method",
-        dodge=True,
+        color="Method",
+        barmode="group",
+        title="Test Loss Across Quantiles for Different Imputation Methods",
+        labels={"Percentile": "Percentiles", "Loss": "Average Test Quantile Loss"},
     )
-    plt.xlabel("Percentiles", fontsize=12)
-    plt.ylabel("Average Test Quantile Loss", fontsize=12)
-    plt.title(
-        "Test Loss Across Quantiles for Different Imputation Methods",
-        fontsize=14,
+    
+    # Update layout for better appearance
+    fig.update_layout(
+        title_font_size=14,
+        xaxis_title_font_size=12,
+        yaxis_title_font_size=12,
+        legend_title="Method",
+        height=PLOT_CONFIG["height"],
+        width=PLOT_CONFIG["width"],
     )
-    plt.legend(title="Method")
-    ax.set_xticklabels(percentiles)
-    plt.grid(axis="y", linestyle="--", alpha=0.7)
+    
+    # Add grid lines on y-axis
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='rgba(0,0,0,0.1)')
+    
     # Save or show the plot
     if save_path:
-        plt.savefig(save_path)
-        print(f"Plot saved to {save_path}")
-    else:
-        plt.show()
+        try:
+            fig.write_image(save_path)
+            html_path = save_path.replace(".png", ".html").replace(".jpg", ".html")
+            fig.write_html(html_path)
+            print(f"Plot saved to {save_path} and {html_path}")
+        except Exception as e:
+            print(f"Error saving plot: {e}")
+    
+    return fig
