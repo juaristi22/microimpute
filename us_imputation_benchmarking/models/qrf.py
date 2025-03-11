@@ -7,27 +7,34 @@ from typing import List, Dict, Optional, Any, Union
 class QRF:
     """
     Quantile Random Forest model for imputation.
-    
+
     This model uses a Quantile Random Forest to predict quantiles.
     The underlying QRF implementation is from utils.qrf.
     """
+
     __name__ = "QRF"
-    
+
     def __init__(self, seed: int = 0):
         """
         Initialize the QRF model.
-        
+
         :param seed: Random seed for reproducibility.
         :type seed: int
         """
         self.qrf = qrf.QRF(seed=seed)
         self.predictors: Optional[List[str]] = None
         self.imputed_variables: Optional[List[str]] = None
-        
-    def fit(self, X: pd.DataFrame, predictors: List[str], imputed_variables: List[str], **qrf_kwargs: Any) -> 'QRF':
+
+    def fit(
+        self,
+        X: pd.DataFrame,
+        predictors: List[str],
+        imputed_variables: List[str],
+        **qrf_kwargs: Any,
+    ) -> "QRF":
         """
         Fit the QRF model to the training data.
-        
+
         :param X: DataFrame containing the training data.
         :type X: pd.DataFrame
         :param predictors: List of column names to use as predictors.
@@ -41,14 +48,16 @@ class QRF:
         """
         self.predictors = predictors
         self.imputed_variables = imputed_variables
-        
+
         self.qrf.fit(X[predictors], X[imputed_variables], **qrf_kwargs)
         return self
-        
-    def predict(self, test_X: pd.DataFrame, quantiles: List[float]) -> Dict[float, np.ndarray]:
+
+    def predict(
+        self, test_X: pd.DataFrame, quantiles: List[float]
+    ) -> Dict[float, np.ndarray]:
         """
         Predict values at specified quantiles using the QRF model.
-        
+
         :param test_X: DataFrame containing the test data.
         :type test_X: pd.DataFrame
         :param quantiles: List of quantiles to predict.
@@ -57,9 +66,11 @@ class QRF:
         :rtype: Dict[float, np.ndarray]
         """
         imputations: Dict[float, np.ndarray] = {}
-        
+
         for q in quantiles:
-            imputation = self.qrf.predict(test_X[self.predictors], mean_quantile=q)
+            imputation = self.qrf.predict(
+                test_X[self.predictors], mean_quantile=q
+            )
             imputations[q] = imputation
-            
+
         return imputations

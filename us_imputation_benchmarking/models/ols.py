@@ -8,12 +8,13 @@ from typing import List, Dict, Union, Optional
 class OLS:
     """
     Ordinary Least Squares regression model for imputation.
-    
-    This model predicts different quantiles by assuming normally 
+
+    This model predicts different quantiles by assuming normally
     distributed residuals.
     """
+
     __name__ = "OLS"
-    
+
     def __init__(self):
         """
         Initialize the OLS model.
@@ -21,11 +22,16 @@ class OLS:
         self.model = None
         self.predictors: Optional[List[str]] = None
         self.imputed_variables: Optional[List[str]] = None
-        
-    def fit(self, X: pd.DataFrame, predictors: List[str], imputed_variables: List[str]) -> 'OLS':
+
+    def fit(
+        self,
+        X: pd.DataFrame,
+        predictors: List[str],
+        imputed_variables: List[str],
+    ) -> "OLS":
         """
         Fit the OLS model to the training data.
-        
+
         :param X: DataFrame containing the training data.
         :type X: pd.DataFrame
         :param predictors: List of column names to use as predictors.
@@ -37,17 +43,19 @@ class OLS:
         """
         self.predictors = predictors
         self.imputed_variables = imputed_variables
-        
+
         Y = X[imputed_variables]
         X_with_const = sm.add_constant(X[predictors])
-        
+
         self.model = sm.OLS(Y, X_with_const).fit()
         return self
-        
-    def predict(self, test_X: pd.DataFrame, quantiles: List[float]) -> Dict[float, np.ndarray]:
+
+    def predict(
+        self, test_X: pd.DataFrame, quantiles: List[float]
+    ) -> Dict[float, np.ndarray]:
         """
         Predict values at specified quantiles using the OLS model.
-        
+
         :param test_X: DataFrame containing the test data.
         :type test_X: pd.DataFrame
         :param quantiles: List of quantiles to predict.
@@ -57,17 +65,17 @@ class OLS:
         """
         imputations: Dict[float, np.ndarray] = {}
         test_X_with_const = sm.add_constant(test_X[self.predictors])
-        
+
         for q in quantiles:
             imputation = self._predict_quantile(test_X_with_const, q)
             imputations[q] = imputation
-            
+
         return imputations
-    
+
     def _predict_quantile(self, X: pd.DataFrame, q: float) -> np.ndarray:
         """
         Predict values at a specified quantile.
-        
+
         :param X: Feature matrix with constant.
         :type X: pd.DataFrame
         :param q: Quantile to predict.

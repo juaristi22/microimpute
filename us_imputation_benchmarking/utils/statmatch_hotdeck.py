@@ -8,10 +8,11 @@ from rpy2.robjects import pandas2ri
 import rpy2.robjects as ro
 from rpy2.robjects import numpy2ri
 from typing import List, Dict, Optional, Union, Any, Tuple
+
 # Enable R-Python DataFrame and array conversion
 pandas2ri.activate()
 numpy2ri.activate()
-utils = importr('utils')
+utils = importr("utils")
 utils.chooseCRANmirror(ind=1)
 StatMatch = importr("StatMatch")
 
@@ -39,16 +40,17 @@ match.vars: A character vector with the names of the matching variables. It has 
 All other vars (no need to specify)     
 """
 
+
 def nnd_hotdeck_using_rpy2(
-    receiver: Optional[pd.DataFrame] = None, 
-    donor: Optional[pd.DataFrame] = None, 
+    receiver: Optional[pd.DataFrame] = None,
+    donor: Optional[pd.DataFrame] = None,
     matching_variables: Optional[List[str]] = None,
-    z_variables: Optional[List[str]] = None, 
-    donor_classes: Optional[Union[str, List[str]]] = None
+    z_variables: Optional[List[str]] = None,
+    donor_classes: Optional[Union[str, List[str]]] = None,
 ) -> Tuple[Any, Any]:
     """
     Perform nearest neighbor distance hot deck matching using R's StatMatch package.
-    
+
     :param receiver: DataFrame containing recipient data.
     :type receiver: Optional[pd.DataFrame]
     :param donor: DataFrame containing donor data.
@@ -68,15 +70,19 @@ def nnd_hotdeck_using_rpy2(
     from rpy2.robjects.packages import importr
     from rpy2.robjects import pandas2ri
 
-    assert receiver is not None and donor is not None, "Receiver and donor must be provided"
-    assert matching_variables is not None, "Matching variables must be provided"
+    assert (
+        receiver is not None and donor is not None
+    ), "Receiver and donor must be provided"
+    assert (
+        matching_variables is not None
+    ), "Matching variables must be provided"
 
     pandas2ri.activate()
     StatMatch = importr("StatMatch")
 
     if isinstance(donor_classes, str):
-        assert donor_classes in receiver, 'Donor class not present in receiver'
-        assert donor_classes in donor, 'Donor class not present in donor'
+        assert donor_classes in receiver, "Donor class not present in receiver"
+        assert donor_classes in donor, "Donor class not present in donor"
 
     try:
         if donor_classes:
@@ -84,16 +90,16 @@ def nnd_hotdeck_using_rpy2(
                 data_rec=receiver,
                 data_don=donor,
                 match_vars=pd.Series(matching_variables),
-                don_class=pd.Series(donor_classes)
-                )
+                don_class=pd.Series(donor_classes),
+            )
         else:
             out_NND = StatMatch.NND_hotdeck(
                 data_rec=receiver,
                 data_don=donor,
                 match_vars=pd.Series(matching_variables),
                 # don_class = pd.Series(donor_classes)
-                )
-            
+            )
+
     except Exception as e:
         print(1)
         print(receiver)
@@ -116,21 +122,21 @@ def nnd_hotdeck_using_rpy2(
     # create synthetic data.set, without the
     # duplication of the matching variables
     fused_0 = StatMatch.create_fused(
-            data_rec=receiver,
-            data_don=donor,
-            mtc_ids=mtc_ids,
-            z_vars=pd.Series(z_variables)
-            )
+        data_rec=receiver,
+        data_don=donor,
+        mtc_ids=mtc_ids,
+        z_vars=pd.Series(z_variables),
+    )
 
     # create synthetic data.set, with the "duplication"
     # of the matching variables
     fused_1 = StatMatch.create_fused(
-            data_rec=receiver,
-            data_don=donor,
-            mtc_ids=mtc_ids,
-            z_vars=pd.Series(z_variables),
-            dup_x=False,
-            match_vars=pd.Series(matching_variables)
-            )
+        data_rec=receiver,
+        data_don=donor,
+        mtc_ids=mtc_ids,
+        z_vars=pd.Series(z_variables),
+        dup_x=False,
+        match_vars=pd.Series(matching_variables),
+    )
 
     return fused_0, fused_1

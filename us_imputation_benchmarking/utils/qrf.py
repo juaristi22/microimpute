@@ -13,7 +13,7 @@ class QRF:
     def __init__(self, seed: int = 0, file_path: Optional[str] = None):
         """
         Initialize Quantile Random Forest.
-        
+
         :param seed: Random seed for reproducibility.
         :type seed: int
         :param file_path: Path to a pickled model file to load.
@@ -34,7 +34,7 @@ class QRF:
     def fit(self, X: pd.DataFrame, y: pd.DataFrame, **qrf_kwargs: Any) -> None:
         """
         Fit the Quantile Random Forest model.
-        
+
         :param X: Feature DataFrame.
         :type X: pd.DataFrame
         :param y: Target DataFrame.
@@ -55,10 +55,15 @@ class QRF:
         )
         self.qrf.fit(X, y)
 
-    def predict(self, X: pd.DataFrame, count_samples: int = 10, mean_quantile: float = 0.5) -> pd.DataFrame:
+    def predict(
+        self,
+        X: pd.DataFrame,
+        count_samples: int = 10,
+        mean_quantile: float = 0.5,
+    ) -> pd.DataFrame:
         """
         Make predictions with the Quantile Random Forest model.
-        
+
         :param X: Feature DataFrame.
         :type X: pd.DataFrame
         :param count_samples: Number of quantile samples.
@@ -90,7 +95,7 @@ class QRF:
     def save(self, path: str) -> None:
         """
         Save the model to disk.
-        
+
         :param path: File path to save the pickled model.
         :type path: str
         :returns: None

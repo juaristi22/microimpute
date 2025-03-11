@@ -19,6 +19,7 @@ VALID_YEARS: List[int] = [
     2019,
 ]
 
+
 def scf_url(year: int) -> str:
     """
     Return the URL of the SCF summary microdata zip file for a year.
@@ -37,11 +38,13 @@ def scf_url(year: int) -> str:
     )
 
 
-def _load(years: Optional[Union[int, List[int]]] = None, 
-           columns: Optional[List[str]] = None) -> pd.DataFrame:
+def _load(
+    years: Optional[Union[int, List[int]]] = None,
+    columns: Optional[List[str]] = None,
+) -> pd.DataFrame:
     """
     Load Survey of Consumer Finances data for specified years and columns.
-    
+
     :param years: Year or list of years to load data for.
     :type years: Optional[Union[int, List[int]]]
     :param columns: List of column names to load.
@@ -64,7 +67,7 @@ def _load(years: Optional[Union[int, List[int]]] = None,
         z = zipfile.ZipFile(io.BytesIO(response.content))
 
         # Find the .dta file in the zip
-        dta_files: List[str] = [f for f in z.namelist() if f.endswith('.dta')]
+        dta_files: List[str] = [f for f in z.namelist() if f.endswith(".dta")]
         if not dta_files:
             raise ValueError(f"No Stata files found in zip for year {year}")
 
@@ -73,14 +76,16 @@ def _load(years: Optional[Union[int, List[int]]] = None,
             df = pd.read_stata(io.BytesIO(f.read()), columns=columns)
 
         # Ensure 'wgt' is included
-        if columns is not None and 'wgt' not in df.columns:
+        if columns is not None and "wgt" not in df.columns:
             # Re-read to include weights
             with z.open(dta_files[0]) as f:
-                cols_with_weight: List[str] = list(set(columns) | {'wgt'})
-                df = pd.read_stata(io.BytesIO(f.read()), columns=cols_with_weight)
+                cols_with_weight: List[str] = list(set(columns) | {"wgt"})
+                df = pd.read_stata(
+                    io.BytesIO(f.read()), columns=cols_with_weight
+                )
 
         # Add year column
-        df['year'] = year
+        df["year"] = year
         all_data.append(df)
 
     # Combine all years
@@ -91,15 +96,16 @@ def _load(years: Optional[Union[int, List[int]]] = None,
 
 
 def preprocess_data(
-    full_data: bool = False, 
-    years: Optional[Union[int, List[int]]] = None
+    full_data: bool = False, years: Optional[Union[int, List[int]]] = None
 ) -> Union[
     Tuple[pd.DataFrame, List[str], List[str]],  # when full_data=True
-    Tuple[pd.DataFrame, pd.DataFrame, List[str], List[str]]  # when full_data=False
+    Tuple[
+        pd.DataFrame, pd.DataFrame, List[str], List[str]
+    ],  # when full_data=False
 ]:
     """
     Preprocess the Survey of Consumer Finances data for model training and testing.
-    
+
     :param full_data: Whether to return the complete dataset without splitting.
     :type full_data: bool
     :param years: Year or list of years to load data for.
@@ -113,21 +119,24 @@ def preprocess_data(
 
     # predictors shared with cps data
 
-    PREDICTORS: List[str] = ["hhsex",      # sex of head of household
-                "age",          # age of respondent
-                "married",      # marital status of respondent
-                "kids",         # number of children in household
-                "educ",         # highest level of education
-                "race",         # race of respondent 
-                "income",       # total annual income of household  
-                "wageinc",      # income from wages and salaries
-                "bussefarminc", # income from business, self-employment or farm
-                "intdivinc",    # income from interest and dividends
-                "ssretinc",     # income from social security and retirement accounts
-                "lf",           # labor force status
-                ]   
+    PREDICTORS: List[str] = [
+        "hhsex",  # sex of head of household
+        "age",  # age of respondent
+        "married",  # marital status of respondent
+        "kids",  # number of children in household
+        "educ",  # highest level of education
+        "race",  # race of respondent
+        "income",  # total annual income of household
+        "wageinc",  # income from wages and salaries
+        "bussefarminc",  # income from business, self-employment or farm
+        "intdivinc",  # income from interest and dividends
+        "ssretinc",  # income from social security and retirement accounts
+        "lf",  # labor force status
+    ]
 
-    IMPUTED_VARIABLES: List[str] = ["networth"] # some property also captured in cps data (HPROP_VAL)
+    IMPUTED_VARIABLES: List[str] = [
+        "networth"
+    ]  # some property also captured in cps data (HPROP_VAL)
 
     data = data[PREDICTORS + IMPUTED_VARIABLES]
     mean = data.mean(axis=0)
@@ -137,5 +146,7 @@ def preprocess_data(
     if full_data:
         return data, PREDICTORS, IMPUTED_VARIABLES
     else:
-        X, test_X = train_test_split(data, test_size=0.2, train_size=0.8, random_state=42)
+        X, test_X = train_test_split(
+            data, test_size=0.2, train_size=0.8, random_state=42
+        )
         return X, test_X, PREDICTORS, IMPUTED_VARIABLES
