@@ -11,19 +11,16 @@ def plot_train_test_performance(
     save_path: Optional[str] = None,
     figsize: Tuple[int, int] = (PLOT_CONFIG["width"], PLOT_CONFIG["height"]),
 ) -> go.Figure:
-    """
-    Plot the performance comparison between training and testing sets across quantiles.
+    """Plot the performance comparison between training and testing sets across quantiles.
 
-    :param results: DataFrame with train and test rows, quantiles as columns, and loss values.
-    :type results: pd.DataFrame
-    :param title: Custom title for the plot. If None, a default title is used.
-    :type title: Optional[str]
-    :param save_path: Path to save the plot. If None, the plot is displayed.
-    :type save_path: Optional[str]
-    :param figsize: Figure size as (width, height) in pixels.
-    :type figsize: Tuple[int, int]
-    :returns: Plotly figure object
-    :rtype: go.Figure
+    Args:
+        results: DataFrame with train and test rows, quantiles as columns, and loss values.
+        title: Custom title for the plot. If None, a default title is used.
+        save_path: Path to save the plot. If None, the plot is displayed.
+        figsize: Figure size as (width, height) in pixels.
+
+    Returns:
+        Plotly figure object
     """
     # Convert column names to strings if they are not already
     results.columns = [str(col) for col in results.columns]

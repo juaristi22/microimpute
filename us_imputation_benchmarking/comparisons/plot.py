@@ -10,17 +10,15 @@ def plot_loss_comparison(
     quantiles: List[float] = QUANTILES,
     save_path: Optional[str] = None,
 ) -> go.Figure:
-    """
-    Plot a bar chart comparing quantile losses across different methods.
+    """Plot a bar chart comparing quantile losses across different methods.
 
-    :param loss_comparison_df: DataFrame containing loss comparison data.
-    :type loss_comparison_df: pd.DataFrame
-    :param quantiles: List of quantile values (e.g. [0.05, 0.1, ...]).
-    :type quantiles: List[float]
-    :param save_path: Path to save the plot. If None, the plot is displayed.
-    :type save_path: Optional[str]
-    :returns: Plotly figure object
-    :rtype: go.Figure
+    Args:
+        loss_comparison_df: DataFrame containing loss comparison data.
+        quantiles: List of quantile values (e.g. [0.05, 0.1, ...]).
+        save_path: Path to save the plot. If None, the plot is displayed.
+
+    Returns:
+        Plotly figure object
     """
     fig = px.bar(
         loss_comparison_df,

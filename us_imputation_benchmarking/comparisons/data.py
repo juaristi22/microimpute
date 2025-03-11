@@ -10,14 +10,16 @@ from us_imputation_benchmarking.config import VALID_YEARS, RANDOM_STATE
 
 
 def scf_url(year: int) -> str:
-    """
-    Return the URL of the SCF summary microdata zip file for a year.
+    """Return the URL of the SCF summary microdata zip file for a year.
 
-    :param year: Year of SCF summary microdata to retrieve.
-    :type year: int
-    :returns: URL of summary microdata zip file for the given year.
-    :rtype: str
-    :raises AssertionError: If the year is not in VALID_YEARS.
+    Args:
+        year: Year of SCF summary microdata to retrieve.
+
+    Returns:
+        URL of summary microdata zip file for the given year.
+
+    Raises:
+        AssertionError: If the year is not in VALID_YEARS.
     """
     assert year in VALID_YEARS, "The SCF is not available for " + str(year)
     return (
@@ -31,16 +33,17 @@ def _load(
     years: Optional[Union[int, List[int]]] = None,
     columns: Optional[List[str]] = None,
 ) -> pd.DataFrame:
-    """
-    Load Survey of Consumer Finances data for specified years and columns.
+    """Load Survey of Consumer Finances data for specified years and columns.
 
-    :param years: Year or list of years to load data for.
-    :type years: Optional[Union[int, List[int]]]
-    :param columns: List of column names to load.
-    :type columns: Optional[List[str]]
-    :returns: DataFrame containing the requested data.
-    :rtype: pd.DataFrame
-    :raises ValueError: If no Stata files are found in the downloaded zip.
+    Args:
+        years: Year or list of years to load data for.
+        columns: List of column names to load.
+
+    Returns:
+        DataFrame containing the requested data.
+
+    Raises:
+        ValueError: If no Stata files are found in the downloaded zip.
     """
     if years is None:
         years = VALID_YEARS
@@ -92,17 +95,16 @@ def preprocess_data(
         pd.DataFrame, pd.DataFrame, List[str], List[str]
     ],  # when full_data=False
 ]:
-    """
-    Preprocess the Survey of Consumer Finances data for model training and testing.
+    """Preprocess the Survey of Consumer Finances data for model training and testing.
 
-    :param full_data: Whether to return the complete dataset without splitting.
-    :type full_data: bool
-    :param years: Year or list of years to load data for.
-    :type years: Optional[Union[int, List[int]]]
-    :returns: Different tuple formats depending on the value of full_data:
-              - If full_data=True: (data, predictor_columns, imputed_columns)
-              - If full_data=False: (train_data, test_data, predictor_columns, imputed_columns)
-    :rtype: Union[Tuple[pd.DataFrame, List[str], List[str]], Tuple[pd.DataFrame, pd.DataFrame, List[str], List[str]]]
+    Args:
+        full_data: Whether to return the complete dataset without splitting.
+        years: Year or list of years to load data for.
+
+    Returns:
+        Different tuple formats depending on the value of full_data:
+          - If full_data=True: (data, predictor_columns, imputed_columns)
+          - If full_data=False: (train_data, test_data, predictor_columns, imputed_columns)
     """
     data = _load(years=years)
 

@@ -14,13 +14,11 @@ class QRF:
     def __init__(self, 
                  seed: int = RANDOM_STATE, 
                  file_path: Optional[str] = None):
-        """
-        Initialize Quantile Random Forest.
+        """Initialize Quantile Random Forest.
 
-        :param seed: Random seed for reproducibility.
-        :type seed: int
-        :param file_path: Path to a pickled model file to load.
-        :type file_path: Optional[str]
+        Args:
+            seed: Random seed for reproducibility.
+            file_path: Path to a pickled model file to load.
         """
         self.seed = seed
         self.qrf = None
@@ -35,17 +33,12 @@ class QRF:
             self.qrf = data["qrf"]
 
     def fit(self, X: pd.DataFrame, y: pd.DataFrame, **qrf_kwargs: Any) -> None:
-        """
-        Fit the Quantile Random Forest model.
+        """Fit the Quantile Random Forest model.
 
-        :param X: Feature DataFrame.
-        :type X: pd.DataFrame
-        :param y: Target DataFrame.
-        :type y: pd.DataFrame
-        :param qrf_kwargs: Additional keyword arguments to pass to RandomForestQuantileRegressor.
-        :type qrf_kwargs: Any
-        :returns: None
-        :rtype: None
+        Args:
+            X: Feature DataFrame.
+            y: Target DataFrame.
+            **qrf_kwargs: Additional keyword arguments to pass to RandomForestQuantileRegressor.
         """
         self.categorical_columns = X.select_dtypes(include=["object"]).columns
         X = pd.get_dummies(
@@ -64,17 +57,15 @@ class QRF:
         count_samples: int = 10,
         mean_quantile: float = 0.5,
     ) -> pd.DataFrame:
-        """
-        Make predictions with the Quantile Random Forest model.
+        """Make predictions with the Quantile Random Forest model.
 
-        :param X: Feature DataFrame.
-        :type X: pd.DataFrame
-        :param count_samples: Number of quantile samples.
-        :type count_samples: int
-        :param mean_quantile: Target quantile for predictions.
-        :type mean_quantile: float
-        :returns: DataFrame with predictions.
-        :rtype: pd.DataFrame
+        Args:
+            X: Feature DataFrame.
+            count_samples: Number of quantile samples.
+            mean_quantile: Target quantile for predictions.
+
+        Returns:
+            DataFrame with predictions.
         """
         X = pd.get_dummies(
             X, columns=self.categorical_columns, drop_first=True
@@ -96,13 +87,10 @@ class QRF:
         return pd.DataFrame(predictions, columns=self.output_columns)
 
     def save(self, path: str) -> None:
-        """
-        Save the model to disk.
+        """Save the model to disk.
 
-        :param path: File path to save the pickled model.
-        :type path: str
-        :returns: None
-        :rtype: None
+        Args:
+            path: File path to save the pickled model.
         """
         with open(path, "wb") as f:
             pickle.dump(
