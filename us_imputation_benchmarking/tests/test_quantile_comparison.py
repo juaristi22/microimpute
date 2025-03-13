@@ -8,8 +8,7 @@ from us_imputation_benchmarking.models.qrf import QRF
 from us_imputation_benchmarking.models.ols import OLS
 from us_imputation_benchmarking.models.quantreg import QuantReg
 from us_imputation_benchmarking.config import RANDOM_STATE
-
-# from us_imputation_benchmarking.models.matching import Matching  # Not working yet
+from us_imputation_benchmarking.models.matching import Matching
 from us_imputation_benchmarking.evaluations.cross_validation import (
     cross_validate_model,
 )
@@ -30,7 +29,7 @@ def test_quantile_comparison():
     data, PREDICTORS, IMPUTED_VARIABLES = preprocess_data(full_data=True)
     data = data.sample(frac=0.01, random_state=RANDOM_STATE)
 
-    model_classes = [QRF, OLS, QuantReg]  # Matching still not working
+    model_classes = [QRF, OLS, QuantReg, Matching]
     method_imputations = get_imputations(
         model_classes, X, X_test, PREDICTORS, IMPUTED_VARIABLES
     )
@@ -39,7 +38,7 @@ def test_quantile_comparison():
 
     assert not loss_comparison_df.isna().any().any()
 
-    #plot_loss_comparison(loss_comparison_df, save_path="loss_comparison.png")
+    plot_loss_comparison(loss_comparison_df, save_path="loss_comparison.png")
 
     qrf_results = cross_validate_model(
         QRF, data, PREDICTORS, IMPUTED_VARIABLES
