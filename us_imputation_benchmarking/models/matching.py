@@ -74,8 +74,7 @@ class Matching(Imputer):
             receiver=test_X_copy,
             donor=self.donor_data,
             matching_variables=self.predictors,
-            z_variables=self.imputed_variables,
-            donor_classes=None,
+            z_variables=self.imputed_variables
         )
 
         fused0_pd = pandas2ri.rpy2py(fused0)

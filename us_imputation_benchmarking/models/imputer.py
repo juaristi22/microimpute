@@ -12,10 +12,11 @@ class Imputer(ABC):
     the required methods.
     """
     
-    def __init__(self) -> None:
+    def __init__(self, random_seed=None) -> None:
         """Initialize the imputer model."""
         self.predictors: Optional[List[str]] = None
         self.imputed_variables: Optional[List[str]] = None
+        self.seed = random_seed
     
     @abstractmethod
     def fit(
@@ -40,7 +41,9 @@ class Imputer(ABC):
     
     @abstractmethod
     def predict(
-        self, test_X: pd.DataFrame, quantiles: Optional[List[float]] = None
+        self, 
+        test_X: pd.DataFrame, 
+        quantiles: Optional[List[float]] = None
     ) -> Dict[float, Union[np.ndarray, pd.DataFrame]]:
         """Predict imputed values at specified quantiles.
         
