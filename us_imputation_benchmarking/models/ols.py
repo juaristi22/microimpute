@@ -13,9 +13,7 @@ class OLS:
     distributed residuals.
     """
     def __init__(self):
-        """
-        Initialize the OLS model.
-        """
+        """Initialize the OLS model."""
         self.model = None
         self.predictors: Optional[List[str]] = None
         self.imputed_variables: Optional[List[str]] = None
@@ -26,17 +24,15 @@ class OLS:
         predictors: List[str],
         imputed_variables: List[str],
     ) -> "OLS":
-        """
-        Fit the OLS model to the training data.
+        """Fit the OLS model to the training data.
 
-        :param X: DataFrame containing the training data.
-        :type X: pd.DataFrame
-        :param predictors: List of column names to use as predictors.
-        :type predictors: List[str]
-        :param imputed_variables: List of column names to impute.
-        :type imputed_variables: List[str]
-        :returns: The fitted model instance.
-        :rtype: OLS
+        Args:
+            X: DataFrame containing the training data.
+            predictors: List of column names to use as predictors.
+            imputed_variables: List of column names to impute.
+
+        Returns:
+            The fitted model instance.
         """
         self.predictors = predictors
         self.imputed_variables = imputed_variables
@@ -50,15 +46,14 @@ class OLS:
     def predict(
         self, test_X: pd.DataFrame, quantiles: List[float]
     ) -> Dict[float, np.ndarray]:
-        """
-        Predict values at specified quantiles using the OLS model.
+        """Predict values at specified quantiles using the OLS model.
 
-        :param test_X: DataFrame containing the test data.
-        :type test_X: pd.DataFrame
-        :param quantiles: List of quantiles to predict.
-        :type quantiles: List[float]
-        :returns: Dictionary mapping quantiles to predicted values.
-        :rtype: Dict[float, np.ndarray]
+        Args:
+            test_X: DataFrame containing the test data.
+            quantiles: List of quantiles to predict.
+
+        Returns:
+            Dictionary mapping quantiles to predicted values.
         """
         imputations: Dict[float, np.ndarray] = {}
         test_X_with_const = sm.add_constant(test_X[self.predictors])
@@ -70,15 +65,14 @@ class OLS:
         return imputations
 
     def _predict_quantile(self, X: pd.DataFrame, q: float) -> np.ndarray:
-        """
-        Predict values at a specified quantile.
+        """Predict values at a specified quantile.
 
-        :param X: Feature matrix with constant.
-        :type X: pd.DataFrame
-        :param q: Quantile to predict.
-        :type q: float
-        :returns: Array of predicted values at the specified quantile.
-        :rtype: np.ndarray
+        Args:
+            X: Feature matrix with constant.
+            q: Quantile to predict.
+
+        Returns:
+            Array of predicted values at the specified quantile.
         """
         mean_pred = self.model.predict(X)
         se = np.sqrt(self.model.scale)

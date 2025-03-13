@@ -48,28 +48,23 @@ def nnd_hotdeck_using_rpy2(
     z_variables: Optional[List[str]] = None,
     donor_classes: Optional[Union[str, List[str]]] = None,
 ) -> Tuple[Any, Any]:
-    """
-    Perform nearest neighbor distance hot deck matching using R's StatMatch package.
+    """Perform nearest neighbor distance hot deck matching using R's StatMatch package.
 
-    :param receiver: DataFrame containing recipient data.
-    :type receiver: Optional[pd.DataFrame]
-    :param donor: DataFrame containing donor data.
-    :type donor: Optional[pd.DataFrame]
-    :param matching_variables: List of column names to use for matching.
-    :type matching_variables: Optional[List[str]]
-    :param z_variables: List of column names to donate from donor to recipient.
-    :type z_variables: Optional[List[str]]
-    :param donor_classes: Column name(s) used to define classes in the donor data.
-    :type donor_classes: Optional[Union[str, List[str]]]
-    :returns: Tuple containing two fused datasets:
-              - First without duplication of matching variables
-              - Second with duplication of matching variables
-    :rtype: Tuple[Any, Any]
-    :raises AssertionError: If receiver, donor, or matching_variables are not provided.
-    """
-    from rpy2.robjects.packages import importr
-    from rpy2.robjects import pandas2ri
+    Args:
+        receiver: DataFrame containing recipient data.
+        donor: DataFrame containing donor data.
+        matching_variables: List of column names to use for matching.
+        z_variables: List of column names to donate from donor to recipient.
+        donor_classes: Column name(s) used to define classes in the donor data.
 
+    Returns:
+        Tuple containing two fused datasets:
+          - First without duplication of matching variables
+          - Second with duplication of matching variables
+
+    Raises:
+        AssertionError: If receiver, donor, or matching_variables are not provided.
+    """
     assert (
         receiver is not None and donor is not None
     ), "Receiver and donor must be provided"
@@ -77,50 +72,83 @@ def nnd_hotdeck_using_rpy2(
         matching_variables is not None
     ), "Matching variables must be provided"
 
+    # Make sure R<->Python conversion is enabled
     pandas2ri.activate()
+    
+    # Import R's StatMatch package
     StatMatch = importr("StatMatch")
 
+    # Check donor classes if provided
     if isinstance(donor_classes, str):
         assert donor_classes in receiver, "Donor class not present in receiver"
         assert donor_classes in donor, "Donor class not present in donor"
 
-    try:
-        if donor_classes:
-            out_NND = StatMatch.NND_hotdeck(
-                data_rec=receiver,
-                data_don=donor,
-                match_vars=pd.Series(matching_variables),
-                don_class=pd.Series(donor_classes),
-            )
+    # Call the NND_hotdeck function from R
+    if donor_classes:
+        out_NND = StatMatch.NND_hotdeck(
+            data_rec=receiver,
+            data_don=donor,
+            match_vars=pd.Series(matching_variables),
+            don_class=pd.Series(donor_classes),
+        )
+    else:
+        out_NND = StatMatch.NND_hotdeck(
+            data_rec=receiver,
+            data_don=donor,
+            match_vars=pd.Series(matching_variables),
+        )
+
+    # Create the correct matching indices matrix for StatMatch.create_fused
+    # Get all indices as 1-based (for R)
+    recipient_indices = np.arange(1, len(receiver) + 1)
+    
+    # For direct NND matching we need the row positions from mtc.ids
+    mtc_ids_r = out_NND.rx2("mtc.ids")
+    
+    # Create the properly formatted 2-column matrix that create_fused expects
+    if hasattr(mtc_ids_r, 'ncol') and mtc_ids_r.ncol == 2:
+        # Already a matrix with the right shape, use it directly
+        mtc_ids = mtc_ids_r
+    else:
+        # The IDs returned aren't in the expected format, extract and convert them
+        mtc_array = np.array(mtc_ids_r)
+        
+        # If we have a 1D array with strings, convert to integers
+        if mtc_array.dtype.kind in ['U', 'S']:
+            mtc_array = np.array([int(x) for x in mtc_array])
+        
+        # If the mtc.ids array has 2 values per recipient (recipient_idx, donor_idx pairs)
+        if len(mtc_array) == 2 * len(receiver):
+            # Extract only the donor indices (every second value)
+            donor_indices = mtc_array.reshape(-1, 2)[:, 1]
+            
+            # Make sure these indices are within the valid range (1 to donor dataset size)
+            # If they're not, we need to map them to valid indices
+            donor_indices_valid = np.remainder(donor_indices - 1, len(donor)) + 1
         else:
-            out_NND = StatMatch.NND_hotdeck(
-                data_rec=receiver,
-                data_don=donor,
-                match_vars=pd.Series(matching_variables),
-                # don_class = pd.Series(donor_classes)
-            )
-
-    except Exception as e:
-        print(1)
-        print(receiver)
-        print(2)
-        print(donor)
-        print(3)
-        print(pd.Series(matching_variables))
-        print(e)
-
-    # Convert out_NND[0] to a NumPy array and reshape to 2 columns
-    # To address shape errors when using hotdeck for mtc_ids
-    mtc_ids_array = np.array(out_NND[0])
-    mtc_ids_2d = mtc_ids_array.reshape(-1, 2)
-    # Convert the 2D NumPy array to an R matrix using py2rpy
-    mtc_ids = ro.conversion.py2rpy(mtc_ids_2d)
-
-    print("mtc_ids:", mtc_ids)
-    print("mtc_ids type:", type(mtc_ids))
-
-    # create synthetic data.set, without the
-    # duplication of the matching variables
+            # Use the indices directly (up to the length of receiver)
+            if len(mtc_array) >= len(receiver):
+                donor_indices_valid = mtc_array[:len(receiver)]
+            else:
+                # If we have too few indices, repeat the last ones to match length
+                # Probably not a common edge case but there may be better ways to handle it
+                donor_indices_valid = np.concatenate([
+                    mtc_array,
+                    np.repeat(mtc_array[-1], len(receiver) - len(mtc_array))
+                ])
+        
+        # Create the final mtc.ids matrix required by create_fused
+        mtc_matrix = np.column_stack((recipient_indices, donor_indices_valid))
+        
+        # Convert to R matrix
+        mtc_ids = ro.r.matrix(
+            ro.IntVector(mtc_matrix.flatten()),
+            nrow=len(recipient_indices),
+            ncol=2
+        )
+    
+    # Create the fused datasets using create_fused
+    # First without duplication of matching variables
     fused_0 = StatMatch.create_fused(
         data_rec=receiver,
         data_don=donor,
@@ -128,8 +156,7 @@ def nnd_hotdeck_using_rpy2(
         z_vars=pd.Series(z_variables),
     )
 
-    # create synthetic data.set, with the "duplication"
-    # of the matching variables
+    # Second with duplication of matching variables
     fused_1 = StatMatch.create_fused(
         data_rec=receiver,
         data_don=donor,

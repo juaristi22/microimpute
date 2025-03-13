@@ -13,11 +13,10 @@ class QRF:
     The underlying QRF implementation is from utils.qrf.
     """
     def __init__(self, seed: int = RANDOM_STATE):
-        """
-        Initialize the QRF model.
+        """Initialize the QRF model.
 
-        :param seed: Random seed for reproducibility.
-        :type seed: int
+        Args:
+            seed: Random seed for reproducibility.
         """
         self.qrf = qrf.QRF(seed=seed)
         self.predictors: Optional[List[str]] = None
@@ -30,19 +29,16 @@ class QRF:
         imputed_variables: List[str],
         **qrf_kwargs: Any,
     ) -> "QRF":
-        """
-        Fit the QRF model to the training data.
+        """Fit the QRF model to the training data.
 
-        :param X: DataFrame containing the training data.
-        :type X: pd.DataFrame
-        :param predictors: List of column names to use as predictors.
-        :type predictors: List[str]
-        :param imputed_variables: List of column names to impute.
-        :type imputed_variables: List[str]
-        :param qrf_kwargs: Additional keyword arguments to pass to QRF.
-        :type qrf_kwargs: Any
-        :returns: The fitted model instance.
-        :rtype: QRF
+        Args:
+            X: DataFrame containing the training data.
+            predictors: List of column names to use as predictors.
+            imputed_variables: List of column names to impute.
+            **qrf_kwargs: Additional keyword arguments to pass to QRF.
+
+        Returns:
+            The fitted model instance.
         """
         self.predictors = predictors
         self.imputed_variables = imputed_variables
@@ -53,15 +49,14 @@ class QRF:
     def predict(
         self, test_X: pd.DataFrame, quantiles: List[float]
     ) -> Dict[float, np.ndarray]:
-        """
-        Predict values at specified quantiles using the QRF model.
+        """Predict values at specified quantiles using the QRF model.
 
-        :param test_X: DataFrame containing the test data.
-        :type test_X: pd.DataFrame
-        :param quantiles: List of quantiles to predict.
-        :type quantiles: List[float]
-        :returns: Dictionary mapping quantiles to predicted values.
-        :rtype: Dict[float, np.ndarray]
+        Args:
+            test_X: DataFrame containing the test data.
+            quantiles: List of quantiles to predict.
+
+        Returns:
+            Dictionary mapping quantiles to predicted values.
         """
         imputations: Dict[float, np.ndarray] = {}
 

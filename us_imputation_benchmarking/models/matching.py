@@ -19,11 +19,10 @@ class Matching:
     distance hot deck matching for imputation.
     """
     def __init__(self, matching_hotdeck: Callable = nnd_hotdeck_using_rpy2):
-        """
-        Initialize the matching model.
+        """Initialize the matching model.
 
-        :param matching_hotdeck: Function that performs the hot deck matching.
-        :type matching_hotdeck: Callable
+        Args:
+            matching_hotdeck: Function that performs the hot deck matching.
         """
         self.matching_hotdeck = matching_hotdeck
         self.predictors: Optional[List[str]] = None
@@ -36,17 +35,15 @@ class Matching:
         predictors: List[str],
         imputed_variables: List[str],
     ) -> "Matching":
-        """
-        Fit the matching model by storing the donor data and variable names.
+        """Fit the matching model by storing the donor data and variable names.
 
-        :param X: DataFrame containing the donor data.
-        :type X: pd.DataFrame
-        :param predictors: List of column names to use as predictors.
-        :type predictors: List[str]
-        :param imputed_variables: List of column names to impute.
-        :type imputed_variables: List[str]
-        :returns: The fitted model instance.
-        :rtype: Matching
+        Args:
+            X: DataFrame containing the donor data.
+            predictors: List of column names to use as predictors.
+            imputed_variables: List of column names to impute.
+
+        Returns:
+            The fitted model instance.
         """
         self.donor_data = X.copy()
         self.predictors = predictors
@@ -56,15 +53,14 @@ class Matching:
     def predict(
         self, test_X: pd.DataFrame, quantiles: List[float]
     ) -> Dict[float, pd.DataFrame]:
-        """
-        Predict imputed values using the matching model.
+        """Predict imputed values using the matching model.
 
-        :param test_X: DataFrame containing the recipient data.
-        :type test_X: pd.DataFrame
-        :param quantiles: List of quantiles to predict.
-        :type quantiles: List[float]
-        :returns: Dictionary mapping quantiles to imputed values.
-        :rtype: Dict[float, pd.DataFrame]
+        Args:
+            test_X: DataFrame containing the recipient data.
+            quantiles: List of quantiles to predict.
+
+        Returns:
+            Dictionary mapping quantiles to imputed values.
         """
         imputations: Dict[float, pd.DataFrame] = {}
         test_X_copy = test_X.copy()

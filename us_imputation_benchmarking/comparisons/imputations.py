@@ -13,21 +13,18 @@ def get_imputations(
     imputed_variables: List[str],
     quantiles: Optional[List[float]] = QUANTILES,
 ) -> Dict[str, Dict[float, Union[np.ndarray, pd.DataFrame]]]:
-    """
-    Generate imputations using multiple model classes for the specified variables.
+    """Generate imputations using multiple model classes for the specified variables.
 
-    :param model_classes: List of model classes to use (e.g., QRF, OLS, QuantReg, Matching).
-    :type model_classes: List[Type]
-    :param X: Training data containing predictors and variables to impute.
-    :type X: pd.DataFrame
-    :param test_X: Test data on which to make imputations.
-    :type test_X: pd.DataFrame
-    :param predictors: Names of columns to use as predictors.
-    :type predictors: List[str]
-    :param imputed_variables: Names of columns to impute.
-    :type imputed_variables: List[str]
-    :returns: Nested dictionary mapping method names to dictionaries mapping quantiles to imputations.
-    :rtype: Dict[str, Dict[float, Union[np.ndarray, pd.DataFrame]]]
+    Args:
+        model_classes: List of model classes to use (e.g., QRF, OLS, QuantReg, Matching).
+        X: Training data containing predictors and variables to impute.
+        test_X: Test data on which to make imputations.
+        predictors: Names of columns to use as predictors.
+        imputed_variables: Names of columns to impute.
+        quantiles: List of quantiles to predict.
+
+    Returns:
+        Nested dictionary mapping method names to dictionaries mapping quantiles to imputations.
     """
     method_imputations: Dict[str, Dict[float, Any]] = {}
 

@@ -16,25 +16,19 @@ def cross_validate_model(
     n_splits: int = 5,
     random_state: int = RANDOM_STATE,
 ) -> pd.DataFrame:
-    """
-    Perform cross-validation for an imputation model.
+    """Perform cross-validation for an imputation model.
 
-    :param model_class: Model class to evaluate (e.g., QRF, OLS, QuantReg, Matching).
-    :type model_class: Type
-    :param data: Full dataset to split into training and testing folds.
-    :type data: pd.DataFrame
-    :param predictors: Names of columns to use as predictors.
-    :type predictors: List[str]
-    :param imputed_variables: Names of columns to impute.
-    :type imputed_variables: List[str]
-    :param quantiles: List of quantiles to evaluate. Defaults to standard set if None.
-    :type quantiles: Optional[List[float]]
-    :param n_splits: Number of cross-validation folds.
-    :type n_splits: int
-    :param random_state: Random seed for reproducibility.
-    :type random_state: int
-    :returns: DataFrame with train and test rows, quantiles as columns, and average loss values
-    :rtype: pd.DataFrame
+    Args:
+        model_class: Model class to evaluate (e.g., QRF, OLS, QuantReg, Matching).
+        data: Full dataset to split into training and testing folds.
+        predictors: Names of columns to use as predictors.
+        imputed_variables: Names of columns to impute.
+        quantiles: List of quantiles to evaluate. Defaults to standard set if None.
+        n_splits: Number of cross-validation folds.
+        random_state: Random seed for reproducibility.
+
+    Returns:
+        DataFrame with train and test rows, quantiles as columns, and average loss values
     """
 
     test_results = {q: [] for q in quantiles}
