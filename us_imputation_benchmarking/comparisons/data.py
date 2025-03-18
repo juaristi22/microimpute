@@ -149,7 +149,10 @@ def preprocess_data(data,
     """Preprocess the data for model training and testing.
 
     Args:
+        data: DataFrame containing the data to preprocess.
         full_data: Whether to return the complete dataset without splitting.
+        train_size: Proportion of the dataset to include in the train split.
+        test_size: Proportion of the dataset to include in the test split.
 
     Returns:
         Different tuple formats depending on the value of full_data:

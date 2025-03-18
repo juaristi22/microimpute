@@ -32,7 +32,7 @@ def compute_quantile_loss(
         q: Quantile value.
 
     Returns:
-        Array of computed losses.
+        np.ndarray: Element-wise quantile loss values between true values and predictions.
     """
     losses = quantile_loss(q, test_y, imputations)
     return losses
@@ -47,7 +47,7 @@ def compare_quantile_loss(
     method_imputations: Dict[
         str, Dict[float, Union[np.ndarray, pd.DataFrame]]
     ],
-) -> Tuple[pd.DataFrame, List[float]]:
+) -> pd.DataFrame:
     """Compare quantile loss across different imputation methods.
 
     Args:
@@ -56,9 +56,8 @@ def compare_quantile_loss(
                           mapping quantiles to imputation values.
 
     Returns:
-        A tuple containing:
-          - DataFrame with columns 'Method', 'Percentile', and 'Loss'
-          - List of quantile values used
+        pd.DataFrame: Results dataframe with columns 'Method', 'Percentile', and 'Loss'
+                     containing the mean quantile loss for each method and percentile.
     """
 
     # Initialize empty dataframe with method names, quantile, and loss columns

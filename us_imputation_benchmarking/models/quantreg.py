@@ -12,7 +12,7 @@ class QuantReg(Imputer):
     This model uses statsmodels' QuantReg implementation to
     directly predict specific quantiles.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Quantile Regression model."""
         super().__init__()
         self.models: Dict[float, Any] = {}

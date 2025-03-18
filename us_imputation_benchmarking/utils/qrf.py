@@ -61,11 +61,12 @@ class QRF:
 
         Args:
             X: Feature DataFrame.
-            count_samples: Number of quantile samples.
-            mean_quantile: Target quantile for predictions.
+            count_samples: Number of quantile samples to generate.
+            mean_quantile: Target quantile for predictions (between 0 and 1).
 
         Returns:
-            DataFrame with predictions.
+            pd.DataFrame: DataFrame with predicted values, with the same columns as the
+                         target variable used during training.
         """
         X = pd.get_dummies(
             X, columns=self.categorical_columns, drop_first=True

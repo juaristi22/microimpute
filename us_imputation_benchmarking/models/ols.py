@@ -13,7 +13,7 @@ class OLS(Imputer):
     This model predicts different quantiles by assuming normally
     distributed residuals.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the OLS model."""
         super().__init__()
         self.model = None

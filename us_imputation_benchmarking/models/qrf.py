@@ -13,7 +13,7 @@ class QRF(Imputer):
     This model uses a Quantile Random Forest to predict quantiles.
     The underlying QRF implementation is from utils.qrf.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the QRF model.
         
         The random seed is set through the RANDOM_STATE constant from config.
