@@ -23,22 +23,22 @@ The tests in this directory verify that all imputation models in this package:
 - **test_ols.py**: Tests for the Ordinary Least Squares (OLS) imputer model:
   - Cross-validation evaluation on sample data
   - Basic functionality tests using the Iris dataset
-  - Verification of normal distribution properties (symmetric quantiles)
+  - Verification of fit/predict workflows with specific quantiles
 
 - **test_quantreg.py**: Tests for the Quantile Regression imputer model:
+  - Cross-validation evaluation on sample data
   - Basic functionality tests using the Iris dataset
   - Verification of fit/predict workflows with specific quantiles
-  - Structure validation for prediction results
 
 - **test_qrf.py**: Tests for the Quantile Random Forest imputer model:
   - Cross-validation evaluation on sample data
-  - Performance measurements (train/test loss)
-  - Basic functionality using the Iris dataset
+  - Basic functionality tests using the Iris dataset
+  - Verification of fit/predict workflows with specific quantiles
 
 - **test_matching.py**: Tests for the Statistical Matching imputer model:
   - Cross-validation evaluation on sample data
   - Basic functionality tests using the Iris dataset
-  - Validation of DataFrame-based prediction output
+  - Verification of fit/predict workflows with specific quantiles
 
 ## Using the Imputer Interface
 
