@@ -1,25 +1,14 @@
-from us_imputation_benchmarking.comparisons.data import preprocess_data, prepare_scf_data
+from us_imputation_benchmarking.comparisons.data import preprocess_data
 from us_imputation_benchmarking.models.quantreg import QuantReg
-from us_imputation_benchmarking.config import RANDOM_STATE, QUANTILES
+from us_imputation_benchmarking.config import QUANTILES
 from sklearn.datasets import load_iris
 import pandas as pd
-import numpy as np 
 from us_imputation_benchmarking.evaluations.cross_validation import (
     cross_validate_model,
 )
-
-# Shrink down the data by sampling
-data, PREDICTORS, IMPUTED_VARIABLES = prepare_scf_data(full_data=True)
-data = data.sample(frac=0.01, random_state=RANDOM_STATE)
-
-quantreg_results = cross_validate_model(
-        QuantReg, data, PREDICTORS, IMPUTED_VARIABLES
-    )
-quantreg_results.to_csv("quantreg_results.csv")
-
-assert not quantreg_results.isna().any().any()
-
-#plot_train_test_performance(quantreg_results, save_path="quantreg_train_test_performance.png")
+from us_imputation_benchmarking.evaluations.train_test_performance import (
+    plot_train_test_performance,
+)
 
 # Test Method on iris dataset
 iris_data = load_iris()
@@ -29,6 +18,29 @@ predictors = ['sepal length (cm)', 'sepal width (cm)', 'petal length (cm)']
 imputed_variables = ['petal width (cm)']
 
 iris_df = iris_df[predictors + imputed_variables]
+
+def test_matching_cross_validation(data=iris_df, 
+                    predictors=predictors, 
+                    imputed_variables=imputed_variables, 
+                    quantiles = QUANTILES):
+    """
+    Test the QuantReg model on a specific dataset.
+
+    Args:
+            data: DataFrame with the dataset of interest.
+            predictors: List of predictor variables.
+            imputed_variables: List of variables to impute.
+            quantiles: List of quantiles to predict.
+    """
+    quantreg_results = cross_validate_model(
+            QuantReg, data, predictors, imputed_variables)
+    
+    #quantreg_results.to_csv("quantreg_results.csv")
+
+    assert not quantreg_results.isna().any().any()
+
+    #plot_train_test_performance(quantreg_results, save_path="quantreg_train_test_performance.png")
+
 
 def test_quantreg_example(data=iris_df, 
                     predictors=predictors, 

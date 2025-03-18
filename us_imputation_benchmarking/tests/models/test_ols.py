@@ -1,6 +1,6 @@
-from us_imputation_benchmarking.comparisons.data import preprocess_data, prepare_scf_data
+from us_imputation_benchmarking.comparisons.data import preprocess_data
 from us_imputation_benchmarking.models.ols import OLS
-from us_imputation_benchmarking.config import RANDOM_STATE, QUANTILES
+from us_imputation_benchmarking.config import QUANTILES
 from sklearn.datasets import load_iris
 import pandas as pd
 import numpy as np 
@@ -11,20 +11,6 @@ from us_imputation_benchmarking.evaluations.train_test_performance import (
     plot_train_test_performance,
 )
 
-# Shrink down the data by sampling
-data, PREDICTORS, IMPUTED_VARIABLES = prepare_scf_data(full_data=True)
-data = data.sample(frac=0.01, random_state=RANDOM_STATE)
-
-ols_results = cross_validate_model(
-        OLS, data, PREDICTORS, IMPUTED_VARIABLES
-    )
-ols_results.to_csv("ols_results.csv")
-
-assert not ols_results.isna().any().any()
-
-#plot_train_test_performance(ols_results, save_path="ols_train_test_performance.png")
-
-
 # Test Method on iris dataset
 iris_data = load_iris()
 iris_df = pd.DataFrame(iris_data.data, columns=iris_data.feature_names)
@@ -33,6 +19,29 @@ predictors = ['sepal length (cm)', 'sepal width (cm)', 'petal length (cm)']
 imputed_variables = ['petal width (cm)']
 
 iris_df = iris_df[predictors + imputed_variables]
+
+def test_ols_cross_validation(data=iris_df, 
+                    predictors=predictors, 
+                    imputed_variables=imputed_variables, 
+                    quantiles = QUANTILES):
+    """
+    Test the OLS model on a specific dataset.
+
+    Args:
+            data: DataFrame with the dataset of interest.
+            predictors: List of predictor variables.
+            imputed_variables: List of variables to impute.
+            quantiles: List of quantiles to predict.
+    """
+    ols_results = cross_validate_model(
+            OLS, data, predictors, imputed_variables)
+    
+    #ols_results.to_csv("ols_results.csv")
+
+    assert not ols_results.isna().any().any()
+
+    #plot_train_test_performance(ols_results, save_path="ols_train_test_performance.png")
+
 
 def test_ols_example(data=iris_df, 
                     predictors=predictors, 

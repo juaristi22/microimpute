@@ -1,29 +1,14 @@
-from us_imputation_benchmarking.comparisons.data import preprocess_data, prepare_scf_data
+from us_imputation_benchmarking.comparisons.data import preprocess_data
 from us_imputation_benchmarking.models.matching import Matching
-from us_imputation_benchmarking.config import RANDOM_STATE, QUANTILES
+from us_imputation_benchmarking.config import QUANTILES
 from sklearn.datasets import load_iris
 import pandas as pd
-import numpy as np 
 from us_imputation_benchmarking.evaluations.cross_validation import (
     cross_validate_model,
 )
 from us_imputation_benchmarking.evaluations.train_test_performance import (
     plot_train_test_performance,
 )
-
-# Shrink down the data by sampling
-data, PREDICTORS, IMPUTED_VARIABLES = prepare_scf_data(full_data=True)
-data = data.sample(frac=0.01, random_state=RANDOM_STATE)
-
-matching_results = cross_validate_model(
-        Matching, data, PREDICTORS, IMPUTED_VARIABLES
-    )
-matching_results.to_csv("matching_results.csv")
-
-assert not matching_results.isna().any().any()
-
-#plot_train_test_performance(matching_results, save_path="matching_train_test_performance.png")
-
 
 # Test Method on iris dataset
 iris_data = load_iris()
@@ -34,7 +19,30 @@ imputed_variables = ['petal width (cm)']
 
 iris_df = iris_df[predictors + imputed_variables]
 
-def test_matching_example(data=iris_df, 
+def test_matching_cross_validation(data=iris_df, 
+                    predictors=predictors, 
+                    imputed_variables=imputed_variables, 
+                    quantiles = QUANTILES):
+    """
+    Test the Matching model on a specific dataset.
+
+    Args:
+            data: DataFrame with the dataset of interest.
+            predictors: List of predictor variables.
+            imputed_variables: List of variables to impute.
+            quantiles: List of quantiles to predict.
+    """
+    matching_results = cross_validate_model(
+            Matching, data, predictors, imputed_variables)
+    
+    #matching_results.to_csv("matching_results.csv")
+
+    assert not matching_results.isna().any().any()
+
+    #plot_train_test_performance(matching_results, save_path="matching_train_test_performance.png")
+
+
+def test_matching_example_use(data=iris_df, 
                     predictors=predictors, 
                     imputed_variables=imputed_variables, 
                     quantiles = QUANTILES):
@@ -48,7 +56,10 @@ def test_matching_example(data=iris_df,
         - How matching uses nearest neighbors for imputation
         
         Args:
-            train_test_data: Tuple of (train_data, test_data)
+            data: DataFrame with the dataset of interest.
+            predictors: List of predictor variables.
+            imputed_variables: List of variables to impute.
+            quantiles: List of quantiles to predict.
         """
         X_train, X_test = preprocess_data(data)
         
