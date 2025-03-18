@@ -7,8 +7,8 @@ from us_imputation_benchmarking.models.quantreg import QuantReg
 
 def get_imputations(
     model_classes: List[Type],
-    X: pd.DataFrame,
-    test_X: pd.DataFrame,
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame,
     predictors: List[str],
     imputed_variables: List[str],
     quantiles: Optional[List[float]] = QUANTILES,
@@ -17,8 +17,8 @@ def get_imputations(
 
     Args:
         model_classes: List of model classes to use (e.g., QRF, OLS, QuantReg, Matching).
-        X: Training data containing predictors and variables to impute.
-        test_X: Test data on which to make imputations.
+        X_train: Training data containing predictors and variables to impute.
+        X_test: Test data on which to make imputations.
         predictors: Names of columns to use as predictors.
         imputed_variables: Names of columns to impute.
         quantiles: List of quantiles to predict.
@@ -37,12 +37,12 @@ def get_imputations(
 
         # Handle QuantReg which needs quantiles during fitting
         if model_class == QuantReg:
-            model.fit(X, predictors, imputed_variables, quantiles)
+            model.fit(X_train, predictors, imputed_variables, quantiles)
         else:
-            model.fit(X, predictors, imputed_variables)
+            model.fit(X_train, predictors, imputed_variables)
 
         # Get predictions
-        imputations = model.predict(test_X, quantiles)
+        imputations = model.predict(X_test, quantiles)
         method_imputations[model_name] = imputations
 
     return method_imputations

@@ -13,8 +13,32 @@ The tests in this directory verify that all imputation models in this package:
 
 ## Test Files
 
-- **test_imputers.py**: Comprehensive tests verifying the common interface across models
-- **test_imputer_examples.py**: Examples of using each model type with detailed documentation
+- **test_imputers.py**: Comprehensive tests verifying the common interface across models. This file tests:
+  - Inheritance from the `Imputer` abstract base class
+  - Initialization signatures with no required arguments
+  - The common fit/predict interface across all model implementations
+  - Model interchangeability through the common interface
+  - Proper documentation of methods
+
+- **test_ols.py**: Tests for the Ordinary Least Squares (OLS) imputer model:
+  - Cross-validation evaluation on sample data
+  - Basic functionality tests using the Iris dataset
+  - Verification of normal distribution properties (symmetric quantiles)
+
+- **test_quantreg.py**: Tests for the Quantile Regression imputer model:
+  - Basic functionality tests using the Iris dataset
+  - Verification of fit/predict workflows with specific quantiles
+  - Structure validation for prediction results
+
+- **test_qrf.py**: Tests for the Quantile Random Forest imputer model:
+  - Cross-validation evaluation on sample data
+  - Performance measurements (train/test loss)
+  - Basic functionality using the Iris dataset
+
+- **test_matching.py**: Tests for the Statistical Matching imputer model:
+  - Cross-validation evaluation on sample data
+  - Basic functionality tests using the Iris dataset
+  - Validation of DataFrame-based prediction output
 
 ## Using the Imputer Interface
 
@@ -23,7 +47,7 @@ The tests in this directory verify that all imputation models in this package:
 All imputation models inherit from `Imputer` and implement:
 
 ```python
-def fit(self, X, predictors, imputed_variables, **kwargs) -> "Imputer":
+def fit(self, X_train, predictors, imputed_variables, **kwargs) -> "Imputer":
     """Fit the model to training data."""
     pass
 

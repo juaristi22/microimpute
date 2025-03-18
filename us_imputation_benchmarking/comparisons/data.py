@@ -6,7 +6,7 @@ import zipfile
 from tqdm import tqdm
 from typing import List, Union, Optional, Tuple, Set, Dict, Any
 
-from us_imputation_benchmarking.config import VALID_YEARS, RANDOM_STATE
+from us_imputation_benchmarking.config import VALID_YEARS, RANDOM_STATE, train_size, test_size
 
 
 def scf_url(year: int) -> str:
@@ -86,9 +86,8 @@ def _load(
     else:
         return all_data[0]
 
-
-def preprocess_data(
-    full_data: bool = False, years: Optional[Union[int, List[int]]] = None
+def prepare_scf_data(full_data: bool = False, 
+                     years: Optional[Union[int, List[int]]] = None
 ) -> Union[
     Tuple[pd.DataFrame, List[str], List[str]],  # when full_data=True
     Tuple[
@@ -130,14 +129,43 @@ def preprocess_data(
     ]  # some property also captured in cps data (HPROP_VAL)
 
     data = data[PREDICTORS + IMPUTED_VARIABLES]
+
+    if full_data:
+        data = preprocess_data(data, full_data=True)
+        return data, PREDICTORS, IMPUTED_VARIABLES
+    else:
+        X_train, X_test = preprocess_data(data)
+        return X_train, X_test, PREDICTORS, IMPUTED_VARIABLES
+
+
+def preprocess_data(data, 
+    full_data: bool = False,
+    train_size: float = train_size,
+    test_size: float = test_size,
+) -> Union[pd.DataFrame,  # when full_data=True
+    Tuple[
+        pd.DataFrame, pd.DataFrame],  # when full_data=False
+]:
+    """Preprocess the data for model training and testing.
+
+    Args:
+        full_data: Whether to return the complete dataset without splitting.
+
+    Returns:
+        Different tuple formats depending on the value of full_data:
+          - If full_data=True: (data)
+          - If full_data=False: (X_train, X_test)"
+    """
+    
     mean = data.mean(axis=0)
     std = data.std(axis=0)
     data = (data - mean) / std
 
     if full_data:
-        return data, PREDICTORS, IMPUTED_VARIABLES
+        return data
     else:
-        X, test_X = train_test_split(
-            data, test_size=0.2, train_size=0.8, random_state=RANDOM_STATE
+        X_train, X_test = train_test_split(
+            data, test_size=test_size, train_size=train_size, 
+            random_state=RANDOM_STATE
         )
-        return X, test_X, PREDICTORS, IMPUTED_VARIABLES
+        return X_train, X_test

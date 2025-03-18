@@ -22,14 +22,14 @@ class OLS(Imputer):
 
     def fit(
         self,
-        X: pd.DataFrame,
+        X_train: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
     ) -> "OLS":
         """Fit the OLS model to the training data.
 
         Args:
-            X: DataFrame containing the training data.
+            X_train: DataFrame containing the training data.
             predictors: List of column names to use as predictors.
             imputed_variables: List of column names to impute.
 
@@ -39,35 +39,35 @@ class OLS(Imputer):
         self.predictors = predictors
         self.imputed_variables = imputed_variables
 
-        Y = X[imputed_variables]
-        X_with_const = sm.add_constant(X[predictors])
+        Y = X_train[imputed_variables]
+        X_with_const = sm.add_constant(X_train[predictors])
 
         self.model = sm.OLS(Y, X_with_const).fit()
         return self
 
     def predict(
-        self, test_X: pd.DataFrame, 
+        self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None
     ) -> Dict[float, np.ndarray]:
         """Predict values at specified quantiles using the OLS model.
 
         Args:
-            test_X: DataFrame containing the test data.
+            X_test: DataFrame containing the test data.
             quantiles: List of quantiles to predict.
 
         Returns:
             Dictionary mapping quantiles to predicted values.
         """
         imputations: Dict[float, np.ndarray] = {}
-        test_X_with_const = sm.add_constant(test_X[self.predictors])
+        X_test_with_const = sm.add_constant(X_test[self.predictors])
 
         if quantiles:
             for q in quantiles:
-                imputation = self._predict_quantile(test_X_with_const, q)
+                imputation = self._predict_quantile(X_test_with_const, q)
                 imputations[q] = imputation
         else: 
             q = np.random.uniform(0, 1)
-            imputation = self._predict_quantile(test_X_with_const, q)
+            imputation = self._predict_quantile(X_test_with_const, q)
             imputations[q] = imputation
 
         return imputations

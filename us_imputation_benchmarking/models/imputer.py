@@ -21,7 +21,7 @@ class Imputer(ABC):
     @abstractmethod
     def fit(
         self,
-        X: pd.DataFrame,
+        X_train: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
         **kwargs: Any,
@@ -29,7 +29,7 @@ class Imputer(ABC):
         """Fit the model to the training data.
         
         Args:
-            X: DataFrame containing the training data.
+            X_train: DataFrame containing the training data.
             predictors: List of column names to use as predictors.
             imputed_variables: List of column names to impute.
             **kwargs: Additional keyword arguments for specific model implementations.
@@ -42,13 +42,13 @@ class Imputer(ABC):
     @abstractmethod
     def predict(
         self, 
-        test_X: pd.DataFrame, 
+        X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None
     ) -> Dict[float, Union[np.ndarray, pd.DataFrame]]:
         """Predict imputed values at specified quantiles.
         
         Args:
-            test_X: DataFrame containing the test data.
+            X_test: DataFrame containing the test data.
             quantiles: List of quantiles to predict. If None, uses random quantile.
             
         Returns:

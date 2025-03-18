@@ -32,46 +32,46 @@ class Matching(Imputer):
 
     def fit(
         self,
-        X: pd.DataFrame,
+        X_train: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
     ) -> "Matching":
         """Fit the matching model by storing the donor data and variable names.
 
         Args:
-            X: DataFrame containing the donor data.
+            X_train: DataFrame containing the donor data.
             predictors: List of column names to use as predictors.
             imputed_variables: List of column names to impute.
 
         Returns:
             The fitted model instance.
         """
-        self.donor_data = X.copy()
+        self.donor_data = X_train.copy()
         self.predictors = predictors
         self.imputed_variables = imputed_variables
         return self
 
     def predict(
-        self, test_X: pd.DataFrame, 
+        self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None
     ) -> Dict[float, pd.DataFrame]:
         """Predict imputed values using the matching model.
 
         Args:
-            test_X: DataFrame containing the recipient data.
+            X_test: DataFrame containing the recipient data.
             quantiles: List of quantiles to predict.
 
         Returns:
             Dictionary mapping quantiles to imputed values.
         """
         imputations: Dict[float, pd.DataFrame] = {}
-        test_X_copy = test_X.copy()
-        test_X_copy.drop(
+        X_test_copy = X_test.copy()
+        X_test_copy.drop(
             self.imputed_variables, axis=1, inplace=True, errors="ignore"
         )
 
         fused0, fused1 = self.matching_hotdeck(
-            receiver=test_X_copy,
+            receiver=X_test_copy,
             donor=self.donor_data,
             matching_variables=self.predictors,
             z_variables=self.imputed_variables

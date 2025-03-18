@@ -15,16 +15,15 @@ class QRF(Imputer):
     """
     def __init__(self):
         """Initialize the QRF model.
-
-        Args:
-            seed: Random seed for reproducibility.
+        
+        The random seed is set through the RANDOM_STATE constant from config.
         """
         super().__init__()
         self.qrf = qrf.QRF(seed=RANDOM_STATE)
 
     def fit(
         self,
-        X: pd.DataFrame,
+        X_train: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
         **qrf_kwargs: Any,
@@ -32,7 +31,7 @@ class QRF(Imputer):
         """Fit the QRF model to the training data.
 
         Args:
-            X: DataFrame containing the training data.
+            X_train: DataFrame containing the training data.
             predictors: List of column names to use as predictors.
             imputed_variables: List of column names to impute.
             **qrf_kwargs: Additional keyword arguments to pass to QRF.
@@ -43,17 +42,17 @@ class QRF(Imputer):
         self.predictors = predictors
         self.imputed_variables = imputed_variables
 
-        self.qrf.fit(X[predictors], X[imputed_variables], **qrf_kwargs)
+        self.qrf.fit(X_train[predictors], X_train[imputed_variables], **qrf_kwargs)
         return self
 
     def predict(
-        self, test_X: pd.DataFrame, 
+        self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None
     ) -> Dict[float, np.ndarray]:
         """Predict values at specified quantiles using the QRF model.
 
         Args:
-            test_X: DataFrame containing the test data.
+            X_test: DataFrame containing the test data.
             quantiles: List of quantiles to predict.
 
         Returns:
@@ -64,13 +63,13 @@ class QRF(Imputer):
         if quantiles:
             for q in quantiles:
                 imputation = self.qrf.predict(
-                    test_X[self.predictors], mean_quantile=q
+                    X_test[self.predictors], mean_quantile=q
                 )
                 imputations[q] = imputation
         else:
             q = np.random.uniform(0, 1)
             imputation = self.qrf.predict(
-                test_X[self.predictors], mean_quantile=q
+                X_test[self.predictors], mean_quantile=q
             )
             imputations[q] = imputation
 
