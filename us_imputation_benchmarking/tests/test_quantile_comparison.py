@@ -1,14 +1,13 @@
 from us_imputation_benchmarking.comparisons.data import prepare_scf_data
 from us_imputation_benchmarking.comparisons.imputations import get_imputations
-from us_imputation_benchmarking.comparisons.quantile_loss import (
-    compare_quantile_loss,
-)
 from us_imputation_benchmarking.comparisons.plot import plot_loss_comparison
-from us_imputation_benchmarking.models.qrf import QRF
-from us_imputation_benchmarking.models.ols import OLS
-from us_imputation_benchmarking.models.quantreg import QuantReg
-from us_imputation_benchmarking.models.matching import Matching
+from us_imputation_benchmarking.comparisons.quantile_loss import \
+    compare_quantile_loss
 from us_imputation_benchmarking.config import RANDOM_STATE
+from us_imputation_benchmarking.models.matching import Matching
+from us_imputation_benchmarking.models.ols import OLS
+from us_imputation_benchmarking.models.qrf import QRF
+from us_imputation_benchmarking.models.quantreg import QuantReg
 
 
 def test_quantile_comparison():
@@ -30,4 +29,4 @@ def test_quantile_comparison():
 
     assert not loss_comparison_df.isna().any().any()
 
-    #plot_loss_comparison(loss_comparison_df, save_path="loss_comparison.png")
+    # plot_loss_comparison(loss_comparison_df, save_path="loss_comparison.png")
