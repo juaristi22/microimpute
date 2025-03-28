@@ -58,7 +58,7 @@ class TestImputerInterface:
         """
         return [OLS, QuantReg, QRF, Matching]
 
-    def test_inheritance(self, model_classes):
+    def test_inheritance(self, model_classes: List[Type[Imputer]]) -> None:
         """Test that all model classes inherit from Imputer.
 
         Args:
@@ -70,7 +70,7 @@ class TestImputerInterface:
                 model_class, Imputer
             ), f"{model_class.__name__} should inherit from Imputer"
 
-    def test_init_signatures(self, model_classes):
+    def test_init_signatures(self, model_classes: List[Type[Imputer]]) -> None:
         """Test that all models can be initialized without required arguments.
 
         Args:
@@ -86,12 +86,18 @@ class TestImputerInterface:
                 model.imputed_variables is None
             ), f"{model_class.__name__} should initialize imputed_variables as None"
 
-    def test_fit_predict_interface(self, model_classes, data, quantiles=QUANTILES):
+    def test_fit_predict_interface(
+        self, 
+        model_classes: List[Type[Imputer]], 
+        data: pd.DataFrame, 
+        quantiles: List[float] = QUANTILES
+    ) -> None:
         """Test the fit and predict methods of all models.
 
         Args:
             model_classes: List of model classes to test
             data: DataFrame with sample data
+            quantiles: List of quantiles to test with
         """
         predictors = ["sepal length (cm)", "sepal width (cm)", "petal length (cm)"]
         imputed_variables = ["petal width (cm)"]
@@ -138,7 +144,11 @@ class TestImputerInterface:
                 f"default quantiles"
             )
 
-    def test_model_interchangeability(self, model_classes, data):
+    def test_model_interchangeability(
+        self, 
+        model_classes: List[Type[Imputer]], 
+        data: pd.DataFrame
+    ) -> None:
         """Test that models can be interchanged through the Imputer interface.
 
         Args:
@@ -195,7 +205,7 @@ class TestImputerInterface:
                     pred is not None
                 ), f"{model_class.__name__} predictions should not be None"
 
-    def test_method_docstrings(self, model_classes):
+    def test_method_docstrings(self, model_classes: List[Type[Imputer]]) -> None:
         """Test that all models have proper docstrings for their methods.
 
         Args:

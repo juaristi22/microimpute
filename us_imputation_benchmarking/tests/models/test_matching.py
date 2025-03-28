@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 import pandas as pd
 from sklearn.datasets import load_iris
 
@@ -20,11 +22,11 @@ iris_df = iris_df[predictors + imputed_variables]
 
 
 def test_matching_cross_validation(
-    data=iris_df,
-    predictors=predictors,
-    imputed_variables=imputed_variables,
-    quantiles=QUANTILES,
-):
+    data: pd.DataFrame = iris_df,
+    predictors: List[str] = predictors,
+    imputed_variables: List[str] = imputed_variables,
+    quantiles: List[float] = QUANTILES,
+) -> None:
     """
     Test the Matching model on a specific dataset.
 
@@ -46,11 +48,11 @@ def test_matching_cross_validation(
 
 
 def test_matching_example_use(
-    data=iris_df,
-    predictors=predictors,
-    imputed_variables=imputed_variables,
-    quantiles=QUANTILES,
-):
+    data: pd.DataFrame = iris_df,
+    predictors: List[str] = predictors,
+    imputed_variables: List[str] = imputed_variables,
+    quantiles: List[float] = QUANTILES,
+) -> None:
     """
     Example of how to use the Statistical Matching imputer model.
 
@@ -77,8 +79,8 @@ def test_matching_example_use(
     # Predict for the test data
     # For matching, quantiles don't have the same meaning as in regression
     # The same matched value is used for all quantiles
-    quantiles = [0.5]  # Just use one quantile for simplicity
-    predictions = model.predict(X_test, quantiles)
+    test_quantiles: List[float] = [0.5]  # Just use one quantile for simplicity
+    predictions: Dict[float, pd.DataFrame] = model.predict(X_test, test_quantiles)
 
     # Check structure of predictions
     assert isinstance(predictions, dict)

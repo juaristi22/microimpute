@@ -106,7 +106,7 @@ def cross_validate_model(
                 # Handle different model fitting requirements
                 if model_class == QuantReg:
                     log.info(f"Fitting QuantReg model with explicit quantiles")
-                    model.fit(train_data, predictors, imputed_variables, quantiles)
+                    model.fit(train_data, predictors, imputed_variables, quantiles=quantiles)
                 else:
                     log.info(f"Fitting {model_class.__name__} model")
                     model.fit(train_data, predictors, imputed_variables)

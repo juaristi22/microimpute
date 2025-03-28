@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 import pandas as pd
 from sklearn.datasets import load_iris
 
@@ -20,11 +22,11 @@ iris_df = iris_df[predictors + imputed_variables]
 
 
 def test_matching_cross_validation(
-    data=iris_df,
-    predictors=predictors,
-    imputed_variables=imputed_variables,
-    quantiles=QUANTILES,
-):
+    data: pd.DataFrame = iris_df,
+    predictors: List[str] = predictors,
+    imputed_variables: List[str] = imputed_variables,
+    quantiles: List[float] = QUANTILES,
+) -> None:
     """
     Test the QuantReg model on a specific dataset.
 
@@ -46,11 +48,11 @@ def test_matching_cross_validation(
 
 
 def test_quantreg_example(
-    data=iris_df,
-    predictors=predictors,
-    imputed_variables=imputed_variables,
-    quantiles=QUANTILES,
-):
+    data: pd.DataFrame = iris_df,
+    predictors: List[str] = predictors,
+    imputed_variables: List[str] = imputed_variables,
+    quantiles: List[float] = QUANTILES,
+) -> None:
     """
     Example of how to use the Quantile Regression imputer model.
 
@@ -75,7 +77,7 @@ def test_quantreg_example(
     model.fit(X_train, predictors, imputed_variables, quantiles=quantiles)
 
     # Predict at the fitted quantiles
-    predictions = model.predict(X_test)
+    predictions: Dict[float, pd.DataFrame] = model.predict(X_test)
 
     # Check structure of predictions
     assert isinstance(predictions, dict)

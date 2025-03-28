@@ -38,12 +38,8 @@ class Matching(Imputer):
 
         self.matching_hotdeck = matching_hotdeck
         self.donor_data: Optional[pd.DataFrame] = None
-        self.predictors: Optional[List[str]] = None
-        self.imputed_variables: Optional[List[str]] = None
 
-        self.logger.debug("Matching imputer initialized successfully")
-
-    def fit(
+    def _fit(
         self,
         X_train: pd.DataFrame,
         predictors: List[str],
@@ -63,12 +59,7 @@ class Matching(Imputer):
             ValueError: If input data is invalid or missing required columns.
         """
         try:
-            # Validate input data
-            self._validate_data(X_train, predictors + imputed_variables, "donor")
-
             self.donor_data = X_train.copy()
-            self.predictors = predictors
-            self.imputed_variables = imputed_variables
 
             self.logger.info(f"Matching model ready with {len(X_train)} donor records")
             self.logger.info(f"Using predictors: {predictors}")
@@ -80,7 +71,8 @@ class Matching(Imputer):
             raise ValueError(f"Failed to set up matching model: {str(e)}") from e
 
     def predict(
-        self, X_test: pd.DataFrame, quantiles: Optional[List[float]] = None
+        self, X_test: pd.DataFrame, 
+        quantiles: Optional[List[float]] = None
     ) -> Dict[float, pd.DataFrame]:
         """Predict imputed values using the matching model.
 
@@ -108,7 +100,7 @@ class Matching(Imputer):
                 raise ValueError(error_msg)
 
             # Validate input data
-            self._validate_data(X_test, self.predictors, "recipient")
+            self._validate_data(X_test, self.predictors)
 
             # Validate quantiles if provided
             if quantiles is not None:

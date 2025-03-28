@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -8,8 +9,6 @@ import rpy2.robjects as ro
 from rpy2.robjects import numpy2ri, pandas2ri
 from rpy2.robjects.packages import importr
 
-from us_imputation_benchmarking.utils.logging_utils import get_logger
-
 # Enable R-Python DataFrame and array conversion
 pandas2ri.activate()
 numpy2ri.activate()
@@ -18,7 +17,7 @@ utils.chooseCRANmirror(ind=1)
 StatMatch = importr("StatMatch")
 
 
-log = get_logger(__name__)
+log = logging.getLogger(__name__)
 
 """
 data.rec: A matrix or data frame that plays the role of recipient in the 

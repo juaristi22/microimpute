@@ -19,8 +19,9 @@ class QuantReg(Imputer):
         """Initialize the Quantile Regression model."""
         super().__init__()
         self.models: Dict[float, Any] = {}
+        self.logger.debug("Initializing QuantReg imputer")
 
-    def fit(
+    def _fit(
         self,
         X_train: pd.DataFrame,
         predictors: List[str],
@@ -44,12 +45,9 @@ class QuantReg(Imputer):
             RuntimeError: If model fitting fails.
         """
         try:
-            # Validate input data
-            self._validate_data(X_train, predictors + imputed_variables, "training")
-
             # Validate quantiles if provided
             if quantiles:
-                invalid_quantiles = [q for q in quantiles if not 0 <= q <= 1]
+                invalid_quantiles = [q for q in quantiles if not 0 < q < 1]
                 if invalid_quantiles:
                     error_msg = (
                         f"Quantiles must be between 0 and 1, got: {invalid_quantiles}"
@@ -63,9 +61,6 @@ class QuantReg(Imputer):
                 self.logger.info(
                     "No quantiles provided, will fit a single random quantile"
                 )
-
-            self.predictors = predictors
-            self.imputed_variables = imputed_variables
 
             Y = X_train[imputed_variables]
             X_with_const = sm.add_constant(X_train[predictors])
@@ -92,8 +87,9 @@ class QuantReg(Imputer):
             raise RuntimeError(f"Failed to fit QuantReg model: {str(e)}") from e
 
     def predict(
-        self, X_test: pd.DataFrame, quantiles: Optional[List[float]] = None
-    ) -> Dict[float, np.ndarray]:
+        self, X_test: pd.DataFrame, 
+        quantiles: Optional[List[float]] = None
+    ) -> Dict[float, pd.DataFrame]:
         """Predict values at specified quantiles using the Quantile Regression model.
 
         Args:
@@ -123,7 +119,7 @@ class QuantReg(Imputer):
                 raise ValueError(error_msg)
 
             # Validate input data
-            self._validate_data(X_test, self.predictors, "prediction")
+            self._validate_data(X_test, self.predictors)
 
             # Process quantiles parameter
             if quantiles is None:
@@ -134,7 +130,9 @@ class QuantReg(Imputer):
             else:
                 self.logger.info(f"Predicting at {len(quantiles)} requested quantiles")
 
-            imputations: Dict[float, np.ndarray] = {}
+            # Create output dictionary with results
+            imputations: Dict[float, pd.DataFrame] = {}
+
             X_test_with_const = sm.add_constant(X_test[self.predictors])
             self.logger.info(f"Prepared test data with {len(X_test)} samples")
 
@@ -147,7 +145,7 @@ class QuantReg(Imputer):
 
                 self.logger.info(f"Predicting with model for q={q}")
                 imputation = self.models[q].predict(X_test_with_const)
-                imputations[q] = imputation
+                imputations[q] = pd.DataFrame(imputation)
 
             self.logger.info(f"Completed predictions for {len(quantiles)} quantiles")
             return imputations

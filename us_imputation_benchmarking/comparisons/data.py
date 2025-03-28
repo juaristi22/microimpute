@@ -177,7 +177,8 @@ def _load(
 
 
 def prepare_scf_data(
-    full_data: bool = False, years: Optional[Union[int, List[int]]] = None
+    full_data: bool = False, 
+    years: Optional[Union[int, List[int]]] = None
 ) -> Union[
     Tuple[pd.DataFrame, List[str], List[str]],  # when full_data=True
     Tuple[pd.DataFrame, pd.DataFrame, List[str], List[str]],  # when full_data=False

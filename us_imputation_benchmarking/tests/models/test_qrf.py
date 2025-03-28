@@ -1,3 +1,5 @@
+from typing import Dict, List, Tuple
+
 import pandas as pd
 from sklearn.datasets import load_iris
 
@@ -20,11 +22,11 @@ iris_df = iris_df[predictors + imputed_variables]
 
 
 def test_qrf_cross_validation(
-    data=iris_df,
-    predictors=predictors,
-    imputed_variables=imputed_variables,
-    quantiles=QUANTILES,
-):
+    data: pd.DataFrame = iris_df,
+    predictors: List[str] = predictors,
+    imputed_variables: List[str] = imputed_variables,
+    quantiles: List[float] = QUANTILES,
+) -> None:
     """
     Test the QRF model on a specific dataset.
 
@@ -44,11 +46,11 @@ def test_qrf_cross_validation(
 
 
 def test_qrf_example(
-    data=iris_df,
-    predictors=predictors,
-    imputed_variables=imputed_variables,
-    quantiles=QUANTILES,
-):
+    data: pd.DataFrame = iris_df,
+    predictors: List[str] = predictors,
+    imputed_variables: List[str] = imputed_variables,
+    quantiles: List[float] = QUANTILES,
+) -> None:
     """
     Example of how to use the Quantile Random Forest imputer model.
 
@@ -59,7 +61,10 @@ def test_qrf_example(
     - How QRF can capture complex nonlinear relationships
 
     Args:
-        train_test_data: Tuple of (train_data, test_data)
+        data: DataFrame with the dataset to use.
+        predictors: List of predictor column names.
+        imputed_variables: List of target column names.
+        quantiles: List of quantiles to predict.
     """
     X_train, X_test = preprocess_data(data)
 
@@ -76,7 +81,7 @@ def test_qrf_example(
     )
 
     # Predict at multiple quantiles
-    predictions = model.predict(X_test, quantiles)
+    predictions: Dict[float, pd.DataFrame] = model.predict(X_test, quantiles)
 
     # Check structure of predictions
     assert isinstance(predictions, dict)

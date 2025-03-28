@@ -1,3 +1,4 @@
+import logging
 import os
 import pickle
 from typing import Any, List, Optional
@@ -7,7 +8,6 @@ import pandas as pd
 from quantile_forest import RandomForestQuantileRegressor
 
 from us_imputation_benchmarking.config import RANDOM_STATE
-from us_imputation_benchmarking.utils.logging_utils import get_logger
 
 
 class QRF:
@@ -16,7 +16,8 @@ class QRF:
     output_columns: Optional[List[str]] = None
 
     def __init__(
-        self, seed: int = RANDOM_STATE, file_path: Optional[str] = None
+        self, seed: int = RANDOM_STATE, 
+        file_path: Optional[str] = None
     ) -> None:
         """Initialize Quantile Random Forest.
 
@@ -28,7 +29,7 @@ class QRF:
             FileNotFoundError: If file_path is provided but doesn't exist
             RuntimeError: If file loading fails
         """
-        self.logger = get_logger(__name__)
+        self.logger = logging.getLogger(__name__)
         self.logger.debug(f"Initializing QRF with seed={seed}, file_path={file_path}")
         self.seed = seed
         self.qrf = None

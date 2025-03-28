@@ -16,15 +16,20 @@ class QRF(Imputer):
     The underlying QRF implementation is from utils.qrf.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, random_seed: int = RANDOM_STATE) -> None:
         """Initialize the QRF model.
 
         The random seed is set through the RANDOM_STATE constant from config.
+
+        Args: 
+            random_seed: Seed for replicability.
         """
         super().__init__()
-        self.qrf = qrf.QRF(seed=RANDOM_STATE)
+        self.seed = random_seed
+        self.model = qrf.QRF(seed=self.seed)
+        self.logger.debug("Initializing QRF imputer")
 
-    def fit(
+    def _fit(
         self,
         X_train: pd.DataFrame,
         predictors: List[str],
@@ -47,12 +52,6 @@ class QRF(Imputer):
             RuntimeError: If model fitting fails.
         """
         try:
-            # Validate input data
-            self._validate_data(X_train, predictors + imputed_variables, "training")
-
-            self.predictors = predictors
-            self.imputed_variables = imputed_variables
-
             self.logger.info(
                 f"Fitting QRF model with {len(predictors)} predictors and "
                 f"optional parameters: {qrf_kwargs}"
@@ -63,7 +62,7 @@ class QRF(Imputer):
             y = X_train[imputed_variables]
 
             # Fit the QRF model
-            self.qrf.fit(X, y, **qrf_kwargs)
+            self.model.fit(X, y, **qrf_kwargs)
 
             self.logger.info(
                 f"QRF model fitted successfully with {len(X)} training samples"
@@ -75,8 +74,9 @@ class QRF(Imputer):
             raise RuntimeError(f"Failed to fit QRF model: {str(e)}") from e
 
     def predict(
-        self, X_test: pd.DataFrame, quantiles: Optional[List[float]] = None
-    ) -> Dict[float, np.ndarray]:
+        self, X_test: pd.DataFrame, 
+        quantiles: Optional[List[float]] = None
+    ) -> Dict[float, pd.DataFrame]:
         """Predict values at specified quantiles using the QRF model.
 
         Args:
@@ -98,9 +98,10 @@ class QRF(Imputer):
                 raise ValueError(error_msg)
 
             # Validate input data
-            self._validate_data(X_test, self.predictors, "prediction")
+            self._validate_data(X_test, self.predictors)
 
-            imputations: Dict[float, np.ndarray] = {}
+            # Create output dictionary with results
+            imputations: Dict[float, pd.DataFrame] = {}
 
             if quantiles:
                 self.logger.info(
@@ -112,15 +113,15 @@ class QRF(Imputer):
                         self.logger.error(error_msg)
                         raise ValueError(error_msg)
 
-                    imputation = self.qrf.predict(
+                    imputation = self.model.predict(
                         X_test[self.predictors], mean_quantile=q
                     )
-                    imputations[q] = imputation
+                    imputations[q] = pd.DataFrame(imputation)
             else:
                 q = np.random.uniform(0, 1)
                 self.logger.info(f"Predicting at random quantile: {q:.4f}")
-                imputation = self.qrf.predict(X_test[self.predictors], mean_quantile=q)
-                imputations[q] = imputation
+                imputation = self.model.predict(X_test[self.predictors], mean_quantile=q)
+                imputations[q] = pd.DataFrame(imputation)
 
             self.logger.info(f"QRF predictions completed for {len(X_test)} samples")
             return imputations

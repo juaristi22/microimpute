@@ -25,7 +25,9 @@ def quantile_loss(q: float, y: np.ndarray, f: np.ndarray) -> np.ndarray:
 
 
 def compute_quantile_loss(
-    test_y: np.ndarray, imputations: np.ndarray, q: float
+    test_y: np.ndarray, 
+    imputations: np.ndarray, 
+    q: float
 ) -> np.ndarray:
     """Compute quantile loss for given true values and imputations.
 
@@ -76,7 +78,7 @@ quantiles_legend: List[str] = [str(int(q * 100)) + "th percentile" for q in QUAN
 
 def compare_quantile_loss(
     test_y: pd.DataFrame,
-    method_imputations: Dict[str, Dict[float, Union[np.ndarray, pd.DataFrame]]],
+    method_imputations: Dict[str, Dict[float, pd.DataFrame]],
 ) -> pd.DataFrame:
     """Compare quantile loss across different imputation methods.
 

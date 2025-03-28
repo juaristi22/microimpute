@@ -1,3 +1,5 @@
+from typing import Dict, List, Tuple
+
 import numpy as np
 import pandas as pd
 from sklearn.datasets import load_iris
@@ -21,11 +23,11 @@ iris_df = iris_df[predictors + imputed_variables]
 
 
 def test_ols_cross_validation(
-    data=iris_df,
-    predictors=predictors,
-    imputed_variables=imputed_variables,
-    quantiles=QUANTILES,
-):
+    data: pd.DataFrame = iris_df,
+    predictors: List[str] = predictors,
+    imputed_variables: List[str] = imputed_variables,
+    quantiles: List[float] = QUANTILES,
+) -> None:
     """
     Test the OLS model on a specific dataset.
 
@@ -45,11 +47,11 @@ def test_ols_cross_validation(
 
 
 def test_ols_example(
-    data=iris_df,
-    predictors=predictors,
-    imputed_variables=imputed_variables,
-    quantiles=QUANTILES,
-):
+    data: pd.DataFrame = iris_df,
+    predictors: List[str] = predictors,
+    imputed_variables: List[str] = imputed_variables,
+    quantiles: List[float] = QUANTILES,
+) -> None:
     """
     Example of how to use the OLS imputer model.
 
@@ -60,7 +62,10 @@ def test_ols_example(
     - How OLS models assume normally distributed residuals
 
     Args:
-        train_test_data: Tuple of (train_data, test_data)
+        data: DataFrame with the dataset to use.
+        predictors: List of predictor column names.
+        imputed_variables: List of target column names.
+        quantiles: List of quantiles to predict.
     """
     X_train, X_test = preprocess_data(data)
 
@@ -71,7 +76,7 @@ def test_ols_example(
     model.fit(X_train, predictors, imputed_variables)
 
     # Predict at multiple quantiles
-    predictions = model.predict(X_test, quantiles)
+    predictions: Dict[float, pd.DataFrame] = model.predict(X_test, quantiles)
 
     # Check structure of predictions
     assert isinstance(predictions, dict)

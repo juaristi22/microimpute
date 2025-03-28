@@ -20,10 +20,9 @@ class OLS(Imputer):
         """Initialize the OLS model."""
         super().__init__()
         self.model = None
-        self.predictors: Optional[List[str]] = None
-        self.imputed_variables: Optional[List[str]] = None
+        self.logger.debug("Initializing OLS imputer")
 
-    def fit(
+    def _fit(
         self,
         X_train: pd.DataFrame,
         predictors: List[str],
@@ -44,11 +43,6 @@ class OLS(Imputer):
             RuntimeError: If model fitting fails.
         """
         try:
-            # Validate input data
-            self._validate_data(X_train, predictors + imputed_variables, "training")
-
-            self.predictors = predictors
-            self.imputed_variables = imputed_variables
             self.logger.info(f"Fitting OLS model with {len(predictors)} predictors")
 
             Y = X_train[imputed_variables]
@@ -64,8 +58,9 @@ class OLS(Imputer):
             raise RuntimeError(f"Failed to fit OLS model: {str(e)}") from e
 
     def predict(
-        self, X_test: pd.DataFrame, quantiles: Optional[List[float]] = None
-    ) -> Dict[float, np.ndarray]:
+        self, X_test: pd.DataFrame, 
+        quantiles: Optional[List[float]] = None
+    ) -> Dict[float, pd.DataFrame]:
         """Predict values at specified quantiles using the OLS model.
 
         Args:
@@ -86,9 +81,11 @@ class OLS(Imputer):
                 raise ValueError(error_msg)
 
             # Validate input data
-            self._validate_data(X_test, self.predictors, "prediction")
+            self._validate_data(X_test, self.predictors)
 
-            imputations: Dict[float, np.ndarray] = {}
+            # Create output dictionary with results
+            imputations: Dict[float, pd.DataFrame] = {}
+
             X_test_with_const = sm.add_constant(X_test[self.predictors])
 
             if quantiles:
@@ -97,12 +94,12 @@ class OLS(Imputer):
                 )
                 for q in quantiles:
                     imputation = self._predict_quantile(X_test_with_const, q)
-                    imputations[q] = imputation
+                    imputations[q] = pd.DataFrame(imputation)
             else:
                 q = np.random.uniform(0, 1)
                 self.logger.info(f"Predicting at random quantile: {q:.4f}")
                 imputation = self._predict_quantile(X_test_with_const, q)
-                imputations[q] = imputation
+                imputations[q] = pd.DataFrame(imputation)
 
             return imputations
         except ValueError as e:
