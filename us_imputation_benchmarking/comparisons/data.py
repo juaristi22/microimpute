@@ -1,7 +1,7 @@
 import io
 import zipfile
 from typing import List, Optional, Tuple, Union
-
+import logging
 import pandas as pd
 import requests
 from sklearn.model_selection import train_test_split
@@ -9,9 +9,8 @@ from tqdm import tqdm
 
 from us_imputation_benchmarking.config import (RANDOM_STATE, VALID_YEARS,
                                                test_size, train_size)
-from us_imputation_benchmarking.utils.logging_utils import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def scf_url(year: int) -> str:
@@ -58,13 +57,14 @@ def _load(
         RuntimeError: If there's a network error or a problem processing
             the downloaded data
     """
+
     logger.info(f"Loading SCF data with years={years}")
 
     try:
         # Validate inputs
         if years is None:
             years = VALID_YEARS
-            logger.debug(f"Using default years: {years}")
+            logger.warning(f"Using default years: {years}")
 
         if isinstance(years, int):
             years = [years]
@@ -224,7 +224,7 @@ def prepare_scf_data(
 
         IMPUTED_VARIABLES: List[str] = [
             "networth"
-        ]  # some property also captured in cps data (HPROP_VAL)
+        ]
 
         # Validate that all required columns exist in the data
         missing_columns = [
@@ -286,6 +286,7 @@ def preprocess_data(
         ValueError: If data is empty or invalid
         RuntimeError: If data preprocessing fails
     """
+
     logger.debug(f"Preprocessing data with shape {data.shape}, full_data={full_data}")
 
     try:

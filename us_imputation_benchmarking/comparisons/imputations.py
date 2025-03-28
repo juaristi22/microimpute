@@ -1,14 +1,13 @@
 from typing import Any, Dict, List, Optional, Type, Union
-
+import logging
 import numpy as np
 import pandas as pd
 
 from us_imputation_benchmarking.config import QUANTILES
 from us_imputation_benchmarking.models.quantreg import QuantReg
-from us_imputation_benchmarking.utils.logging_utils import get_logger
 
-# Create logger for this module
-log = get_logger(__name__)
+
+log = logging.getLogger(__name__)
 
 
 def get_imputations(
@@ -80,7 +79,7 @@ def get_imputations(
 
         # Validate quantiles if provided
         if quantiles:
-            invalid_quantiles = [q for q in quantiles if not 0 <= q <= 1]
+            invalid_quantiles = [q for q in quantiles if not 0 < q < 1]
             if invalid_quantiles:
                 error_msg = (
                     f"Invalid quantiles (must be between 0 and 1): {invalid_quantiles}"

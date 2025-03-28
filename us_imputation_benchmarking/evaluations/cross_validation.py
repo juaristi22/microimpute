@@ -1,5 +1,5 @@
 from typing import List, Optional, Type
-
+import logging
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
@@ -7,9 +7,8 @@ from sklearn.model_selection import KFold
 from us_imputation_benchmarking.comparisons.quantile_loss import quantile_loss
 from us_imputation_benchmarking.config import QUANTILES, RANDOM_STATE
 from us_imputation_benchmarking.models.quantreg import QuantReg
-from us_imputation_benchmarking.utils.logging_utils import get_logger
 
-log = get_logger(__name__)
+log = logging.getLogger(__name__)
 
 
 def cross_validate_model(

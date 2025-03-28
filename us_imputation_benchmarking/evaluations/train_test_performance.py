@@ -1,15 +1,14 @@
 import os
 from typing import Dict, List, Optional, Tuple, Type, Union
-
+import logging
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
 from us_imputation_benchmarking.config import PLOT_CONFIG
-from us_imputation_benchmarking.utils.logging_utils import get_logger
 
-logger = get_logger(__name__)
 
+logger = logging.getLogger(__name__)
 
 def plot_train_test_performance(
     results: pd.DataFrame,

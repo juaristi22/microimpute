@@ -5,7 +5,6 @@ import pandas as pd
 import statsmodels.api as sm
 
 from us_imputation_benchmarking.models.imputer import Imputer
-from us_imputation_benchmarking.utils.logging_utils import get_logger
 
 
 class QuantReg(Imputer):

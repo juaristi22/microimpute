@@ -6,7 +6,6 @@ import pandas as pd
 from rpy2.robjects import pandas2ri
 
 from us_imputation_benchmarking.models.imputer import Imputer
-from us_imputation_benchmarking.utils.logging_utils import get_logger
 from us_imputation_benchmarking.utils.statmatch_hotdeck import \
     nnd_hotdeck_using_rpy2
 
@@ -30,8 +29,6 @@ class Matching(Imputer):
             ValueError: If matching_hotdeck is not callable
         """
         super().__init__()
-
-        self.logger = get_logger(__name__)
         self.logger.debug("Initializing Matching imputer")
 
         # Validate input

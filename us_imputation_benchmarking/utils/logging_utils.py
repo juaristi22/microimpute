@@ -53,15 +53,3 @@ def configure_logging(
         file_handler.setLevel(level)
         file_handler.setFormatter(formatter)
         root_logger.addHandler(file_handler)
-
-
-def get_logger(name: str) -> logging.Logger:
-    """Get a logger with the specified name.
-
-    Args:
-        name: Logger name, typically __name__ of the calling module
-
-    Returns:
-        Configured logger instance
-    """
-    return logging.getLogger(name)

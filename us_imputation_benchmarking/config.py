@@ -5,6 +5,10 @@ This module centralizes all constants and configuration parameters used across
 the package.
 """
 from typing import Any, Dict, List
+from us_imputation_benchmarking.utils.logging_utils import configure_logging
+
+# Logging configuration
+configure_logging()
 
 # Data configuration
 VALID_YEARS: List[int] = [

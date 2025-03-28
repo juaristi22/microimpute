@@ -1,13 +1,12 @@
 from typing import Dict, List, Union
-
+import logging
 import numpy as np
 import pandas as pd
 
 from us_imputation_benchmarking.config import QUANTILES
-from us_imputation_benchmarking.utils.logging_utils import get_logger
 
-# Create logger for this module
-log = get_logger(__name__)
+
+log = logging.getLogger(__name__)
 
 
 def quantile_loss(q: float, y: np.ndarray, f: np.ndarray) -> np.ndarray:
@@ -44,7 +43,7 @@ def compute_quantile_loss(
     """
     try:
         # Validate quantile value
-        if not 0 <= q <= 1:
+        if not 0 < q < 1:
             error_msg = f"Quantile must be between 0 and 1, got {q}"
             log.error(error_msg)
             raise ValueError(error_msg)

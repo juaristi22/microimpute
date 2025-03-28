@@ -3,8 +3,7 @@ from typing import Any, Dict, List, Optional, Set, Union
 
 import numpy as np
 import pandas as pd
-
-from us_imputation_benchmarking.utils.logging_utils import get_logger
+import logging
 
 
 class Imputer(ABC):
@@ -20,9 +19,7 @@ class Imputer(ABC):
         self.predictors: Optional[List[str]] = None
         self.imputed_variables: Optional[List[str]] = None
         self.seed = random_seed
-        self.logger = get_logger(
-            f"{self.__class__.__module__}.{self.__class__.__name__}"
-        )
+        self.logger = logging.getLogger(__name__)
 
     def _validate_data(
         self, data: pd.DataFrame, columns: List[str], context: str

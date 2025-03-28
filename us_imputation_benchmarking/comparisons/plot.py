@@ -1,14 +1,13 @@
 import os
 from typing import List, Optional
-
+import logging
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
 from us_imputation_benchmarking.config import PLOT_CONFIG, QUANTILES
-from us_imputation_benchmarking.utils.logging_utils import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def plot_loss_comparison(
