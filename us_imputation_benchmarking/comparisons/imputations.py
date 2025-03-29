@@ -112,14 +112,14 @@ def get_imputations(
                 # Handle QuantReg which needs quantiles during fitting
                 if model_class == QuantReg:
                     log.info(f"Fitting {model_name} with explicit quantiles")
-                    model.fit(X_train, predictors, imputed_variables, quantiles)
+                    fitted_model = model.fit(X_train, predictors, imputed_variables, quantiles=quantiles)
                 else:
                     log.info(f"Fitting {model_name}")
-                    model.fit(X_train, predictors, imputed_variables)
+                    fitted_model = model.fit(X_train, predictors, imputed_variables)
 
                 # Get predictions
                 log.info(f"Generating predictions with {model_name}")
-                imputations = model.predict(X_test, quantiles)
+                imputations = fitted_model.predict(X_test, quantiles)
                 method_imputations[model_name] = imputations
 
                 # Log a summary of predictions

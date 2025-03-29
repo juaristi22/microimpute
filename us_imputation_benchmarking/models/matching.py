@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from rpy2.robjects import pandas2ri
 
-from us_imputation_benchmarking.models.imputer import Imputer
+from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 from us_imputation_benchmarking.utils.statmatch_hotdeck import \
     nnd_hotdeck_using_rpy2
 
@@ -44,7 +44,7 @@ class Matching(Imputer):
         X_train: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
-    ) -> "Matching":
+    ) -> "MatchingResults":
         """Fit the matching model by storing the donor data and variable names.
 
         Args:
@@ -65,10 +65,39 @@ class Matching(Imputer):
             self.logger.info(f"Using predictors: {predictors}")
             self.logger.info(f"Targeting imputed variables: {imputed_variables}")
 
-            return self
+            return MatchingResults(
+                matching_hotdeck=self.matching_hotdeck,
+                donor_data=self.donor_data,
+                predictors=predictors,
+                imputed_variables=imputed_variables,
+            )
         except Exception as e:
             self.logger.error(f"Error setting up matching model: {str(e)}")
             raise ValueError(f"Failed to set up matching model: {str(e)}") from e
+
+
+class MatchingResults(ImputerResults):
+    """
+    Fitted Matching instance ready for imputation.
+    """
+    def __init__(
+        self,
+        matching_hotdeck: Callable,
+        donor_data: pd.DataFrame,
+        predictors: List[str],
+        imputed_variables: List[str],
+    ) -> None:
+        """Initialize the matching model.
+
+        Args:
+            matching_hotdeck: Function that performs the hot deck matching.  
+            donor_data: DataFrame containing the donor data.
+            predictors: List of column names to use as predictors.
+            imputed_variables: List of column names to impute.
+        """
+        super().__init__(predictors, imputed_variables)
+        self.matching_hotdeck = matching_hotdeck
+        self.donor_data = donor_data
 
     def predict(
         self, X_test: pd.DataFrame, 
@@ -89,19 +118,6 @@ class Matching(Imputer):
             RuntimeError: If matching or prediction fails.
         """
         try:
-            # Validate model state
-            if (
-                self.donor_data is None
-                or self.predictors is None
-                or self.imputed_variables is None
-            ):
-                error_msg = "Matching model not properly set up. Call fit() first."
-                self.logger.error(error_msg)
-                raise ValueError(error_msg)
-
-            # Validate input data
-            self._validate_data(X_test, self.predictors)
-
             # Validate quantiles if provided
             if quantiles is not None:
                 if not isinstance(quantiles, list):

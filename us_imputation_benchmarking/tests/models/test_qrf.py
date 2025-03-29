@@ -72,7 +72,7 @@ def test_qrf_example(
     model = QRF()
 
     # Fit the model with RF hyperparameters
-    model.fit(
+    fitted_model = model.fit(
         X_train,
         predictors,
         imputed_variables,
@@ -81,7 +81,7 @@ def test_qrf_example(
     )
 
     # Predict at multiple quantiles
-    predictions: Dict[float, pd.DataFrame] = model.predict(X_test, quantiles)
+    predictions: Dict[float, pd.DataFrame] = fitted_model.predict(X_test, quantiles)
 
     # Check structure of predictions
     assert isinstance(predictions, dict)

@@ -106,15 +106,15 @@ def cross_validate_model(
                 # Handle different model fitting requirements
                 if model_class == QuantReg:
                     log.info(f"Fitting QuantReg model with explicit quantiles")
-                    model.fit(train_data, predictors, imputed_variables, quantiles=quantiles)
+                    fitted_model = model.fit(train_data, predictors, imputed_variables, quantiles=quantiles)
                 else:
                     log.info(f"Fitting {model_class.__name__} model")
-                    model.fit(train_data, predictors, imputed_variables)
+                    fitted_model = model.fit(train_data, predictors, imputed_variables)
 
                 # Get predictions for this fold
                 log.info(f"Generating predictions for train and test data")
-                fold_test_imputations = model.predict(test_data, quantiles)
-                fold_train_imputations = model.predict(train_data, quantiles)
+                fold_test_imputations = fitted_model.predict(test_data, quantiles)
+                fold_train_imputations = fitted_model.predict(train_data, quantiles)
 
                 # Store results for each quantile
                 for q in quantiles:

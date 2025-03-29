@@ -8,7 +8,7 @@ import logging
 
 class Imputer(ABC):
     """
-    Abstract base class for imputation models.
+    Abstract base class for fitting imputation models.
 
     All imputation models should inherit from this class and implement
     the required methods.
@@ -73,8 +73,8 @@ class Imputer(ABC):
         self.imputed_variables = imputed_variables
         
         # Defer actual training to subclass with all parameters
-        self._fit(X_train, predictors, imputed_variables, **kwargs)
-        return self
+        fitted_model = self._fit(X_train, predictors, imputed_variables, **kwargs)
+        return fitted_model
 
     @abstractmethod
     def _fit(
@@ -97,6 +97,26 @@ class Imputer(ABC):
             RuntimeError: If model fitting fails.
         """
         raise NotImplementedError("Subclasses must implement `_fit`")
+
+
+class ImputerResults(ABC):
+    """
+    Abstract base class representing a fitted model for imputation.
+
+    All imputation models should inherit from this class and implement
+    the required methods.
+
+    predict() can only be called once the model is fitted in an 
+    ImputerResults instance.
+    """
+    def __init__(
+        self,
+        predictors: List[str],
+        imputed_variables: List[str],
+    ):
+        self.predictors = predictors
+        self.imputed_variables = imputed_variables
+        self.logger = logging.getLogger(__name__)
 
     @abstractmethod
     def predict(

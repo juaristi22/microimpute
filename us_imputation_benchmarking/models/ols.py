@@ -5,7 +5,7 @@ import pandas as pd
 import statsmodels.api as sm
 from scipy.stats import norm
 
-from us_imputation_benchmarking.models.imputer import Imputer
+from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 
 
 class OLS(Imputer):
@@ -27,7 +27,7 @@ class OLS(Imputer):
         X_train: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
-    ) -> "OLS":
+    ) -> "OLSResults":
         """Fit the OLS model to the training data.
 
         Args:
@@ -52,10 +52,35 @@ class OLS(Imputer):
             self.logger.info(
                 f"OLS model fitted successfully, R-squared: {self.model.rsquared:.4f}"
             )
-            return self
+            return OLSResults(
+                model=self.model,
+                predictors=predictors,
+                imputed_variables=imputed_variables,
+            )
         except Exception as e:
             self.logger.error(f"Error fitting OLS model: {str(e)}")
             raise RuntimeError(f"Failed to fit OLS model: {str(e)}") from e
+
+
+class OLSResults(ImputerResults):
+    """
+    Fitted OLS instance ready for imputation.
+    """
+    def __init__(
+        self,
+        model: OLS,
+        predictors: List[str],
+        imputed_variables: List[str],
+    ) -> None:
+        """Initialize the OLS results.
+
+        Args:
+            model: Fitted OLS model.
+            predictors: List of predictor variable names.
+            imputed_variables: List of imputed variable names.
+        """
+        super().__init__(predictors, imputed_variables)
+        self.model = model
 
     def predict(
         self, X_test: pd.DataFrame, 
@@ -75,14 +100,6 @@ class OLS(Imputer):
             RuntimeError: If prediction fails.
         """
         try:
-            if self.model is None:
-                error_msg = "Model must be fitted before prediction"
-                self.logger.error(error_msg)
-                raise ValueError(error_msg)
-
-            # Validate input data
-            self._validate_data(X_test, self.predictors)
-
             # Create output dictionary with results
             imputations: Dict[float, pd.DataFrame] = {}
 

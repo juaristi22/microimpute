@@ -14,7 +14,7 @@ from sklearn.datasets import load_iris
 
 from us_imputation_benchmarking.comparisons.data import preprocess_data
 from us_imputation_benchmarking.config import QUANTILES, RANDOM_STATE
-from us_imputation_benchmarking.models.imputer import Imputer
+from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 from us_imputation_benchmarking.models.matching import Matching
 from us_imputation_benchmarking.models.ols import OLS
 from us_imputation_benchmarking.models.qrf import QRF
@@ -110,16 +110,18 @@ class TestImputerInterface:
             # Fit the model
             if model_class.__name__ == "QuantReg":
                 # For QuantReg, we need to explicitly fit the quantiles
-                model.fit(X_train, predictors, imputed_variables, quantiles=quantiles)
+                fitted_model = model.fit(X_train, predictors, imputed_variables, quantiles=quantiles)
             else:
-                model.fit(X_train, predictors, imputed_variables)
+                fitted_model = model.fit(X_train, predictors, imputed_variables)
 
             # Check that the model stored the variable names
             assert model.predictors == predictors
             assert model.imputed_variables == imputed_variables
+            assert fitted_model.predictors == predictors
+            assert fitted_model.imputed_variables == imputed_variables
 
             # Predict with explicit quantiles
-            predictions = model.predict(X_test, quantiles)
+            predictions = fitted_model.predict(X_test, quantiles)
 
             # Check prediction format
             assert isinstance(
@@ -138,7 +140,7 @@ class TestImputerInterface:
                     assert pred.shape[0] == len(X_test)
 
             # Test with default quantiles (None)
-            default_predictions = model.predict(X_test)
+            default_predictions = fitted_model.predict(X_test)
             assert isinstance(default_predictions, dict), (
                 f"{model_class.__name__} predict should return a dictionary even with "
                 f"default quantiles"
@@ -174,12 +176,12 @@ class TestImputerInterface:
             """
             # Fit the model
             if fit_quantiles:
-                imputer.fit(X_train, predictors, imputed_variables, quantiles=quantiles)
+                fitted_model = imputer.fit(X_train, predictors, imputed_variables, quantiles=quantiles)
             else:
-                imputer.fit(X_train, predictors, imputed_variables)
+                fitted_model = imputer.fit(X_train, predictors, imputed_variables)
 
             # Make predictions
-            return imputer.predict(X_test, quantiles)
+            return fitted_model.predict(X_test, quantiles)
 
         # Run the same workflow with different model implementations
         for model_class in model_classes:
@@ -205,11 +207,12 @@ class TestImputerInterface:
                     pred is not None
                 ), f"{model_class.__name__} predictions should not be None"
 
-    def test_method_docstrings(self, model_classes: List[Type[Imputer]]) -> None:
+    def test_method_docstrings(self, model_classes: List[Type[Imputer]], data: pd.DataFrame) -> None:
         """Test that all models have proper docstrings for their methods.
 
         Args:
             model_classes: List of model classes to test
+            data: Sample dataset to use for testing
         """
         for model_class in model_classes:
             # Check class docstring
@@ -221,10 +224,23 @@ class TestImputerInterface:
             assert (
                 model_class.fit.__doc__
             ), f"{model_class.__name__}.fit is missing a docstring"
+            
+            # Create an instance and get Results class from the first model
+            instance = model_class()
+            X_train, _ = preprocess_data(data)
+            predictors = ["sepal length (cm)", "sepal width (cm)"]
+            imputed_variables = ["petal width (cm)"]
+            
+            if model_class.__name__ == "QuantReg":
+                results = instance.fit(X_train, predictors, imputed_variables, quantiles=[0.5])
+            else:
+                results = instance.fit(X_train, predictors, imputed_variables)
+                
+            # Check predict docstring on the results object
             assert (
-                model_class.predict.__doc__
-            ), f"{model_class.__name__}.predict is missing a docstring"
+                results.predict.__doc__
+            ), f"{results.__class__.__name__}.predict is missing a docstring"
 
             # Basic content check for docstrings
             assert "fit" in model_class.fit.__doc__.lower()
-            assert "predict" in model_class.predict.__doc__.lower()
+            assert "predict" in results.predict.__doc__.lower()

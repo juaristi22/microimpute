@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from us_imputation_benchmarking.config import RANDOM_STATE
-from us_imputation_benchmarking.models.imputer import Imputer
+from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 from us_imputation_benchmarking.utils import qrf
 
 
@@ -35,7 +35,7 @@ class QRF(Imputer):
         predictors: List[str],
         imputed_variables: List[str],
         **qrf_kwargs: Any,
-    ) -> "QRF":
+    ) -> "QRFResults":
         """Fit the QRF model to the training data.
 
         Args:
@@ -67,11 +67,35 @@ class QRF(Imputer):
             self.logger.info(
                 f"QRF model fitted successfully with {len(X)} training samples"
             )
-            return self
-
+            return QRFResults(
+                model=self.model,
+                predictors=predictors,
+                imputed_variables=imputed_variables,
+            )
         except Exception as e:
             self.logger.error(f"Error fitting QRF model: {str(e)}")
             raise RuntimeError(f"Failed to fit QRF model: {str(e)}") from e
+
+
+class QRFResults(ImputerResults):
+    """
+    Fitted QRF instance ready for imputation.
+    """
+    def __init__(
+        self,
+        model: QRF,
+        predictors: List[str],
+        imputed_variables: List[str],
+    ) -> None:
+        """Initialize the QRF results.
+
+        Args:
+            model: Fitted QRF model.
+            predictors: List of column names used as predictors.
+            imputed_variables: List of column names to be imputed.
+        """
+        super().__init__(predictors, imputed_variables)
+        self.model = model
 
     def predict(
         self, X_test: pd.DataFrame, 
@@ -91,15 +115,6 @@ class QRF(Imputer):
             RuntimeError: If prediction fails.
         """
         try:
-            # Validate that model is fitted
-            if self.predictors is None or self.imputed_variables is None:
-                error_msg = "Model must be fitted before prediction"
-                self.logger.error(error_msg)
-                raise ValueError(error_msg)
-
-            # Validate input data
-            self._validate_data(X_test, self.predictors)
-
             # Create output dictionary with results
             imputations: Dict[float, pd.DataFrame] = {}
 

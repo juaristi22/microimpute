@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 
-from us_imputation_benchmarking.models.imputer import Imputer
+from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 
 
 class QuantReg(Imputer):
@@ -27,7 +27,7 @@ class QuantReg(Imputer):
         predictors: List[str],
         imputed_variables: List[str],
         quantiles: Optional[List[float]] = None,
-    ) -> "QuantReg":
+    ) -> "QuantRegResults":
         """Fit the Quantile Regression model to the training data.
 
         Args:
@@ -80,11 +80,35 @@ class QuantReg(Imputer):
                 self.logger.info(f"Model for q={q:.4f} fitted successfully")
 
             self.logger.info(f"QuantReg has {len(self.models)} fitted models")
-            return self
-
+            return QuantRegResults(
+                models=self.models,
+                predictors=predictors,
+                imputed_variables=imputed_variables,
+            )
         except Exception as e:
             self.logger.error(f"Error fitting QuantReg model: {str(e)}")
             raise RuntimeError(f"Failed to fit QuantReg model: {str(e)}") from e
+
+
+class QuantRegResults(ImputerResults):
+    """
+    Fitted QuantReg instance ready for imputation.
+    """
+    def __init__(
+        self,
+        models: Dict[float, Any],
+        predictors: List[str],
+        imputed_variables: List[str],
+    ) -> None:
+        """Initialize the QRF results.
+
+        Args:
+            models: Dict of quantiles and fitted QuantReg models.
+            predictors: List of column names used as predictors.
+            imputed_variables: List of column names to be imputed.
+        """
+        super().__init__(predictors, imputed_variables)
+        self.models = models
 
     def predict(
         self, X_test: pd.DataFrame, 
@@ -106,21 +130,6 @@ class QuantReg(Imputer):
             RuntimeError: If prediction fails.
         """
         try:
-            # Check if model is fitted
-            if not self.models:
-                error_msg = "No models have been fitted yet. Call fit() first."
-                self.logger.error(error_msg)
-                raise ValueError(error_msg)
-
-            # Validate predictors
-            if self.predictors is None or self.imputed_variables is None:
-                error_msg = "Model not properly initialized with predictors and imputed variables"
-                self.logger.error(error_msg)
-                raise ValueError(error_msg)
-
-            # Validate input data
-            self._validate_data(X_test, self.predictors)
-
             # Process quantiles parameter
             if quantiles is None:
                 quantiles = list(self.models.keys())

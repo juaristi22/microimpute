@@ -74,13 +74,13 @@ def test_matching_example_use(
     model = Matching()
 
     # Fit the model (stores donor data)
-    model.fit(X_train, predictors, imputed_variables)
+    fitted_model = model.fit(X_train, predictors, imputed_variables)
 
     # Predict for the test data
     # For matching, quantiles don't have the same meaning as in regression
     # The same matched value is used for all quantiles
     test_quantiles: List[float] = [0.5]  # Just use one quantile for simplicity
-    predictions: Dict[float, pd.DataFrame] = model.predict(X_test, test_quantiles)
+    predictions: Dict[float, pd.DataFrame] = fitted_model.predict(X_test, test_quantiles)
 
     # Check structure of predictions
     assert isinstance(predictions, dict)

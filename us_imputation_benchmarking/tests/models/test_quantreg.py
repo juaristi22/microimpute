@@ -74,10 +74,10 @@ def test_quantreg_example(
     model = QuantReg()
 
     # Fit the model to specific quantiles
-    model.fit(X_train, predictors, imputed_variables, quantiles=quantiles)
+    fitted_model = model.fit(X_train, predictors, imputed_variables, quantiles=quantiles)
 
     # Predict at the fitted quantiles
-    predictions: Dict[float, pd.DataFrame] = model.predict(X_test)
+    predictions: Dict[float, pd.DataFrame] = fitted_model.predict(X_test)
 
     # Check structure of predictions
     assert isinstance(predictions, dict)

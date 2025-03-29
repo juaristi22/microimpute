@@ -73,10 +73,10 @@ def test_ols_example(
     model = OLS()
 
     # Fit the model
-    model.fit(X_train, predictors, imputed_variables)
+    fitted_model = model.fit(X_train, predictors, imputed_variables)
 
     # Predict at multiple quantiles
-    predictions: Dict[float, pd.DataFrame] = model.predict(X_test, quantiles)
+    predictions: Dict[float, pd.DataFrame] = fitted_model.predict(X_test, quantiles)
 
     # Check structure of predictions
     assert isinstance(predictions, dict)
