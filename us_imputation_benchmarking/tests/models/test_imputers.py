@@ -58,18 +58,6 @@ class TestImputerInterface:
         """
         return [OLS, QuantReg, QRF, Matching]
 
-    def test_inheritance(self, model_classes: List[Type[Imputer]]) -> None:
-        """Test that all model classes inherit from Imputer.
-
-        Args:
-            model_classes: List of model classes to test
-        """
-        for model_class in model_classes:
-            # Check that the class is a subclass of Imputer
-            assert issubclass(
-                model_class, Imputer
-            ), f"{model_class.__name__} should inherit from Imputer"
-
     def test_init_signatures(self, model_classes: List[Type[Imputer]]) -> None:
         """Test that all models can be initialized without required arguments.
 

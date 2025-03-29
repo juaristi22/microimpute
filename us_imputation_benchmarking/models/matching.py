@@ -1,11 +1,11 @@
-import random
 from typing import Any, Callable, Dict, List, Optional, Tuple
-
 import numpy as np
 import pandas as pd
 from rpy2.robjects import pandas2ri
+from pydantic import validate_call
+from us_imputation_benchmarking.config import validate_config
 
-from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
+from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults, validate_config
 from us_imputation_benchmarking.utils.statmatch_hotdeck import \
     nnd_hotdeck_using_rpy2
 
@@ -48,12 +48,13 @@ class Matching(Imputer):
         self.matching_hotdeck = matching_hotdeck
         self.donor_data: Optional[pd.DataFrame] = None
 
+    @validate_call(config=validate_config, validate_return=False)
     def _fit(
         self,
         X_train: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
-    ) -> "MatchingResults":
+    ) -> Any:  # Will return MatchingResults
         """Fit the matching model by storing the donor data and variable names.
 
         Args:
@@ -108,6 +109,7 @@ class MatchingResults(ImputerResults):
         self.matching_hotdeck = matching_hotdeck
         self.donor_data = donor_data
 
+    @validate_call(config=validate_config)
     def predict(
         self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None

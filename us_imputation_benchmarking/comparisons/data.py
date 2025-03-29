@@ -6,13 +6,15 @@ import pandas as pd
 import requests
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
+from pydantic import validate_call
 
 from us_imputation_benchmarking.config import (RANDOM_STATE, VALID_YEARS,
-                                               test_size, train_size)
+                                               test_size, train_size,
+                                               validate_config)
 
 logger = logging.getLogger(__name__)
 
-
+@validate_call(config=validate_config)
 def scf_url(year: int) -> str:
     """Return the URL of the SCF summary microdata zip file for a year.
 
@@ -37,7 +39,7 @@ def scf_url(year: int) -> str:
     logger.debug(f"Generated URL: {url}")
     return url
 
-
+@validate_call(config=validate_config)
 def _load(
     years: Optional[Union[int, List[int]]] = None,
     columns: Optional[List[str]] = None,
@@ -61,7 +63,7 @@ def _load(
     logger.info(f"Loading SCF data with years={years}")
 
     try:
-        # Validate inputs
+        # Identify years for download
         if years is None:
             years = VALID_YEARS
             logger.warning(f"Using default years: {years}")
@@ -175,7 +177,7 @@ def _load(
         logger.error(f"Error in _load: {str(e)}")
         raise
 
-
+@validate_call(config=validate_config)
 def prepare_scf_data(
     full_data: bool = False, 
     years: Optional[Union[int, List[int]]] = None
@@ -260,7 +262,7 @@ def prepare_scf_data(
         logger.error(f"Error in prepare_scf_data: {str(e)}")
         raise RuntimeError(f"Failed to prepare SCF data: {str(e)}") from e
 
-
+@validate_call(config=validate_config)
 def preprocess_data(
     data: pd.DataFrame,
     full_data: bool = False,
@@ -271,6 +273,10 @@ def preprocess_data(
     Tuple[pd.DataFrame, pd.DataFrame],  # when full_data=False
 ]:
     """Preprocess the data for model training and testing.
+    
+    # Validate data is not empty
+    if data is None or data.empty:
+        raise ValueError("Data must not be None or empty")
 
     Args:
         data: DataFrame containing the data to preprocess.
@@ -291,11 +297,8 @@ def preprocess_data(
     logger.debug(f"Preprocessing data with shape {data.shape}, full_data={full_data}")
 
     try:
-        # Validate input
-        if data is None or data.empty:
-            logger.error("Input data is None or empty")
-            raise ValueError("Input data must not be None or empty")
-
+        if data.empty:
+            raise ValueError("Data must not be None or empty")
         # Check for missing values
         missing_count = data.isna().sum().sum()
         if missing_count > 0:

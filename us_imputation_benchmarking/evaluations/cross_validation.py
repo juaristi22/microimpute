@@ -3,14 +3,17 @@ import logging
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
+from pydantic import validate_call
 
 from us_imputation_benchmarking.comparisons.quantile_loss import quantile_loss
-from us_imputation_benchmarking.config import QUANTILES, RANDOM_STATE
+from us_imputation_benchmarking.config import (QUANTILES, RANDOM_STATE, 
+                                               validate_config)
 from us_imputation_benchmarking.models.quantreg import QuantReg
+
 
 log = logging.getLogger(__name__)
 
-
+@validate_call(config=validate_config)
 def cross_validate_model(
     model_class: Type,
     data: pd.DataFrame,
@@ -42,12 +45,6 @@ def cross_validate_model(
         RuntimeError: If cross-validation fails.
     """
     try:
-        # Input validation
-        if not isinstance(data, pd.DataFrame):
-            error_msg = f"data must be a pandas DataFrame, got {type(data).__name__}"
-            log.error(error_msg)
-            raise ValueError(error_msg)
-
         # Validate predictor and imputed variable columns exist
         missing_predictors = [col for col in predictors if col not in data.columns]
         if missing_predictors:

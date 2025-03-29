@@ -4,12 +4,14 @@ import logging
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from pydantic import validate_call
 
-from us_imputation_benchmarking.config import PLOT_CONFIG
+from us_imputation_benchmarking.config import PLOT_CONFIG, validate_config
 
 
 logger = logging.getLogger(__name__)
 
+@validate_call(config=validate_config)
 def plot_train_test_performance(
     results: pd.DataFrame,
     title: Optional[str] = None,
@@ -38,10 +40,6 @@ def plot_train_test_performance(
     )
 
     # Validate inputs
-    if results is None or results.empty:
-        logger.error("Empty or None DataFrame provided for plotting")
-        raise ValueError("results DataFrame must not be empty")
-
     required_indices = ["train", "test"]
     available_indices = results.index.tolist()
     missing_indices = [idx for idx in required_indices if idx not in available_indices]

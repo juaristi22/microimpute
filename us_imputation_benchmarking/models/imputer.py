@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Set, Union
-
 import numpy as np
 import pandas as pd
 import logging
-
+from pydantic import validate_call
+from us_imputation_benchmarking.config import validate_config
 
 class Imputer(ABC):
     """
@@ -20,6 +20,7 @@ class Imputer(ABC):
         self.imputed_variables: Optional[List[str]] = None
         self.logger = logging.getLogger(__name__)
 
+    @validate_call(config=validate_config)
     def _validate_data(self, 
         data: pd.DataFrame, 
         columns: List[str]
@@ -31,21 +32,25 @@ class Imputer(ABC):
             columns: Column names that should be present
 
         Raises:
-            ValueError: If any columns are missing from the data
+            ValueError: If any columns are missing from the data or if data is empty
         """
+        if data is None or data.empty:
+            raise ValueError("Data must not be None or empty")
+            
         missing_columns: Set[str] = set(columns) - set(data.columns)
         if missing_columns:
             error_msg = f"Missing columns in data: {missing_columns}"
             self.logger.error(error_msg)
             raise ValueError(error_msg)
 
+    @validate_call(config=validate_config, validate_return=False)
     def fit(
         self,
         X_train: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
         **kwargs: Any,
-    ) -> "Imputer":
+    ) -> Any:  # Returns ImputerResults
         """Fit the model to the training data.
 
         Args:
@@ -77,6 +82,7 @@ class Imputer(ABC):
         return fitted_model
 
     @abstractmethod
+    @validate_call(config=validate_config, validate_return=False)
     def _fit(
         self, 
         X_train: pd.DataFrame,
@@ -119,11 +125,14 @@ class ImputerResults(ABC):
         self.logger = logging.getLogger(__name__)
 
     @abstractmethod
+    @validate_call(config=validate_config)
     def predict(
         self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None
     ) -> Dict[float, pd.DataFrame]:
         """Predict imputed values at specified quantiles.
+        
+        Will validate that input data is not empty before processing.
 
         Args:
             X_test: DataFrame containing the test data.

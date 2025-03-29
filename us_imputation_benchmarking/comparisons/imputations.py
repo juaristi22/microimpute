@@ -2,14 +2,15 @@ from typing import Any, Dict, List, Optional, Type, Union
 import logging
 import numpy as np
 import pandas as pd
+from pydantic import validate_call
 
-from us_imputation_benchmarking.config import QUANTILES
+from us_imputation_benchmarking.config import QUANTILES, validate_config
 from us_imputation_benchmarking.models.quantreg import QuantReg
 
 
 log = logging.getLogger(__name__)
 
-
+@validate_call(config=validate_config)
 def get_imputations(
     model_classes: List[Type],
     X_train: pd.DataFrame,
@@ -39,13 +40,6 @@ def get_imputations(
         # Input validation
         if not model_classes:
             error_msg = "model_classes list is empty"
-            log.error(error_msg)
-            raise ValueError(error_msg)
-
-        if not isinstance(X_train, pd.DataFrame) or not isinstance(
-            X_test, pd.DataFrame
-        ):
-            error_msg = "X_train and X_test must be pandas DataFrames"
             log.error(error_msg)
             raise ValueError(error_msg)
 

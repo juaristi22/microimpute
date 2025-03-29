@@ -1,7 +1,8 @@
 from typing import Any, Dict, List, Optional, Union
-
 import numpy as np
 import pandas as pd
+from pydantic import validate_call
+from us_imputation_benchmarking.config import validate_config
 
 from us_imputation_benchmarking.config import RANDOM_STATE
 from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
@@ -29,13 +30,14 @@ class QRF(Imputer):
         self.model = qrf.QRF(seed=self.seed)
         self.logger.debug("Initializing QRF imputer")
 
+    @validate_call(config=validate_config, validate_return=False)
     def _fit(
         self,
         X_train: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
         **qrf_kwargs: Any,
-    ) -> "QRFResults":
+    ) -> Any:  # Will return QRFResults
         """Fit the QRF model to the training data.
 
         Args:
@@ -97,6 +99,7 @@ class QRFResults(ImputerResults):
         super().__init__(predictors, imputed_variables)
         self.model = model
 
+    @validate_call(config=validate_config)
     def predict(
         self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None

@@ -1,8 +1,9 @@
 from typing import Any, Collection, Dict, List, Optional, Union
-
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
+from pydantic import validate_call
+from us_imputation_benchmarking.config import validate_config
 
 from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 
@@ -21,13 +22,14 @@ class QuantReg(Imputer):
         self.models: Dict[float, Any] = {}
         self.logger.debug("Initializing QuantReg imputer")
 
+    @validate_call(config=validate_config, validate_return=False)
     def _fit(
         self,
         X_train: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
         quantiles: Optional[List[float]] = None,
-    ) -> "QuantRegResults":
+    ) -> Any:  # Will return QuantRegResults
         """Fit the Quantile Regression model to the training data.
 
         Args:
@@ -110,6 +112,7 @@ class QuantRegResults(ImputerResults):
         super().__init__(predictors, imputed_variables)
         self.models = models
 
+    @validate_call(config=validate_config)
     def predict(
         self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None

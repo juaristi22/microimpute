@@ -4,12 +4,15 @@ import logging
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from pydantic import validate_call
 
-from us_imputation_benchmarking.config import PLOT_CONFIG, QUANTILES
+from us_imputation_benchmarking.config import (PLOT_CONFIG, QUANTILES, 
+                                               validate_config)
+
 
 logger = logging.getLogger(__name__)
 
-
+@validate_call(config=validate_config)
 def plot_loss_comparison(
     loss_comparison_df: pd.DataFrame,
     quantiles: List[float] = QUANTILES,
@@ -35,10 +38,6 @@ def plot_loss_comparison(
     )
 
     # Validate inputs
-    if loss_comparison_df is None or loss_comparison_df.empty:
-        logger.error("Empty or None DataFrame provided for plotting")
-        raise ValueError("loss_comparison_df must not be empty")
-
     required_columns = ["Percentile", "Loss", "Method"]
     missing_columns = [
         col for col in required_columns if col not in loss_comparison_df.columns

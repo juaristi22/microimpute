@@ -1,9 +1,10 @@
-from typing import Dict, List, Optional, Union
-
+from typing import Dict, List, Optional, Union, Any
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from scipy.stats import norm
+from pydantic import validate_call
+from us_imputation_benchmarking.config import validate_config
 
 from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 
@@ -22,12 +23,13 @@ class OLS(Imputer):
         self.model = None
         self.logger.debug("Initializing OLS imputer")
 
+    @validate_call(config=validate_config, validate_return=False)
     def _fit(
         self,
         X_train: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
-    ) -> "OLSResults":
+    ) -> Any:  # Will return OLSResults
         """Fit the OLS model to the training data.
 
         Args:
@@ -82,6 +84,7 @@ class OLSResults(ImputerResults):
         super().__init__(predictors, imputed_variables)
         self.model = model
 
+    @validate_call(config=validate_config)
     def predict(
         self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None
@@ -130,6 +133,7 @@ class OLSResults(ImputerResults):
             self.logger.error(f"Error during prediction: {str(e)}")
             raise RuntimeError(f"Failed to predict with OLS model: {str(e)}") from e
 
+    @validate_call(config=validate_config)
     def _predict_quantile(self, X: pd.DataFrame, q: float) -> np.ndarray:
         """Predict values at a specified quantile.
 

@@ -2,12 +2,12 @@ import logging
 import os
 import pickle
 from typing import Any, List, Optional
-
+from pydantic import validate_call
 import numpy as np
 import pandas as pd
 from quantile_forest import RandomForestQuantileRegressor
 
-from us_imputation_benchmarking.config import RANDOM_STATE
+from us_imputation_benchmarking.config import RANDOM_STATE, validate_config
 
 
 class QRF:
@@ -51,7 +51,11 @@ class QRF:
                 self.logger.error(f"Failed to load model from {file_path}: {str(e)}")
                 raise RuntimeError(f"Failed to load QRF model from {file_path}") from e
 
-    def fit(self, X: pd.DataFrame, y: pd.DataFrame, **qrf_kwargs: Any) -> None:
+    @validate_call(config=validate_config)
+    def fit(self, 
+            X: pd.DataFrame, 
+            y: pd.DataFrame, 
+            **qrf_kwargs: Any) -> None:
         """Fit the Quantile Random Forest model.
 
         Args:
@@ -67,16 +71,6 @@ class QRF:
         self.logger.debug(f"Fitting QRF with X shape {X.shape}, y shape {y.shape}")
 
         # Validate inputs
-        if X is None or y is None:
-            self.logger.error("Input X or y is None")
-            raise ValueError("X and y must not be None")
-
-        if X.empty or y.empty:
-            self.logger.error(
-                f"Empty input detected: X empty={X.empty}, y empty={y.empty}"
-            )
-            raise ValueError("X and y must not be empty")
-
         if len(X) != len(y):
             self.logger.error(
                 f"Shape mismatch: X has {len(X)} rows, y has {len(y)} rows"
@@ -108,6 +102,7 @@ class QRF:
             self.logger.error(f"Failed to fit QRF model: {str(e)}")
             raise RuntimeError("Failed to fit QRF model") from e
 
+    @validate_call(config=validate_config)
     def predict(
         self,
         X: pd.DataFrame,
@@ -138,10 +133,6 @@ class QRF:
         if self.qrf is None:
             self.logger.error("QRF model has not been fitted")
             raise ValueError("Model must be fitted before prediction")
-
-        if X is None or X.empty:
-            self.logger.error("Input X is None or empty")
-            raise ValueError("X must not be None or empty")
 
         if count_samples <= 0:
             self.logger.error(f"Invalid count_samples: {count_samples}")
@@ -200,6 +191,7 @@ class QRF:
             self.logger.error(f"Prediction failed: {str(e)}")
             raise RuntimeError("Failed to generate predictions with QRF model") from e
 
+    @validate_call(config=validate_config)
     def save(self, path: str) -> None:
         """Save the model to disk.
 
