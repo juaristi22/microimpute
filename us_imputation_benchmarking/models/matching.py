@@ -9,6 +9,15 @@ from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 from us_imputation_benchmarking.utils.statmatch_hotdeck import \
     nnd_hotdeck_using_rpy2
 
+MatchingHotdeckFn = Callable[
+    [
+        Optional[pd.DataFrame],
+        Optional[pd.DataFrame],
+        Optional[List[str]],
+        Optional[List[str]]
+    ],
+    Tuple[pd.DataFrame, pd.DataFrame]
+]
 
 class Matching(Imputer):
     """
@@ -19,7 +28,7 @@ class Matching(Imputer):
     neighbor distance hot deck matching for imputation.
     """
 
-    def __init__(self, matching_hotdeck: Callable = nnd_hotdeck_using_rpy2) -> None:
+    def __init__(self, matching_hotdeck: MatchingHotdeckFn = nnd_hotdeck_using_rpy2) -> None:
         """Initialize the matching model.
 
         Args:
@@ -82,7 +91,7 @@ class MatchingResults(ImputerResults):
     """
     def __init__(
         self,
-        matching_hotdeck: Callable,
+        matching_hotdeck: MatchingHotdeckFn,
         donor_data: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
@@ -212,7 +221,7 @@ class MatchingResults(ImputerResults):
                         imputations[q] = fused0_pd[self.imputed_variables]
                 else:
                     q = np.random.uniform(0, 1)
-                    self.logger.info(f"Creating imputation for random quantile {q:.4f}")
+                    self.logger.info(f"Creating imputation for random quantile {q:.3f}")
                     imputations[q] = fused0_pd[self.imputed_variables]
 
                 # Verify output shapes

@@ -110,11 +110,15 @@ class OLSResults(ImputerResults):
                     f"Predicting at {len(quantiles)} quantiles: {quantiles}"
                 )
                 for q in quantiles:
+                    if not 0 < q < 1:
+                        error_msg = f"Quantile must be between 0 and 1, got {q}"
+                        self.logger.error(error_msg)
+                        raise ValueError(error_msg)
                     imputation = self._predict_quantile(X_test_with_const, q)
                     imputations[q] = pd.DataFrame(imputation)
             else:
                 q = np.random.uniform(0, 1)
-                self.logger.info(f"Predicting at random quantile: {q:.4f}")
+                self.logger.info(f"Predicting at random quantile: {q:.3f}")
                 imputation = self._predict_quantile(X_test_with_const, q)
                 imputations[q] = pd.DataFrame(imputation)
 
@@ -141,11 +145,6 @@ class OLSResults(ImputerResults):
             RuntimeError: If prediction fails.
         """
         try:
-            if not 0 <= q <= 1:
-                error_msg = f"Quantile must be between 0 and 1, got {q}"
-                self.logger.error(error_msg)
-                raise ValueError(error_msg)
-
             mean_pred = self.model.predict(X)
             se = np.sqrt(self.model.scale)
 
