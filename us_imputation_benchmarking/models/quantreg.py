@@ -113,7 +113,7 @@ class QuantRegResults(ImputerResults):
         self.models = models
 
     @validate_call(config=validate_config)
-    def predict(
+    def _predict(
         self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None
     ) -> Dict[float, pd.DataFrame]:
@@ -133,31 +133,37 @@ class QuantRegResults(ImputerResults):
             RuntimeError: If prediction fails.
         """
         try:
-            # Process quantiles parameter
-            if quantiles is None:
-                quantiles = list(self.models.keys())
-                self.logger.info(
-                    f"Using {len(quantiles)} quantiles from fitted models: {quantiles}"
-                )
-            else:
-                self.logger.info(f"Predicting at {len(quantiles)} requested quantiles")
-
             # Create output dictionary with results
             imputations: Dict[float, pd.DataFrame] = {}
 
             X_test_with_const = sm.add_constant(X_test[self.predictors])
             self.logger.info(f"Prepared test data with {len(X_test)} samples")
 
-            # Predict for each quantile
-            for q in quantiles:
-                if q not in self.models:
-                    error_msg = f"Model for quantile {q} not fitted. Available quantiles: {list(self.models.keys())}"
-                    self.logger.error(error_msg)
-                    raise ValueError(error_msg)
+            if quantiles is not None:
+                # Predict for each requested quantile 
+                for q in quantiles:
+                    try:
+                        if q not in self.models:
+                            error_msg = f"Model for quantile {q} not fitted. Available quantiles: {list(self.models.keys())}"
+                            self.logger.error(error_msg)
+                            raise ValueError(error_msg)
+                    except Exception as quantile_error:
+                        self.logger.error(f"Error accessing quantiles: {str(quantile_error)}")
+                        raise RuntimeError(
+                            f"Failed to access {q} quantile for prediction"
+                        ) from quantile_error
 
-                self.logger.info(f"Predicting with model for q={q}")
-                imputation = self.models[q].predict(X_test_with_const)
-                imputations[q] = pd.DataFrame(imputation)
+                    self.logger.info(f"Predicting with model for q={q}")
+                    imputation = self.models[q].predict(X_test_with_const)
+                    imputations[q] = pd.DataFrame(imputation)
+            else:
+                # Predict for all quantiles that were already fitted
+                quantiles = list(self.models.keys())
+                self.logger.info(f"Predicting on already fitted {quantiles} quantiles")
+                for q in quantiles:
+                    self.logger.info(f"Predicting with model for q={q}")
+                    imputation = self.models[q].predict(X_test_with_const)
+                    imputations[q] = pd.DataFrame(imputation)
 
             self.logger.info(f"Completed predictions for {len(quantiles)} quantiles")
             return imputations

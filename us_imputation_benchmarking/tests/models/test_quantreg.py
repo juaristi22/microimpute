@@ -40,11 +40,11 @@ def test_matching_cross_validation(
         QuantReg, data, predictors, imputed_variables
     )
 
-    # quantreg_results.to_csv("quantreg_results.csv")
+    quantreg_results.to_csv("quantreg_results.csv")
 
     assert not quantreg_results.isna().any().any()
 
-    # plot_train_test_performance(quantreg_results, save_path="quantreg_train_test_performance.png")
+    plot_train_test_performance(quantreg_results, save_path="quantreg_train_test_performance.png")
 
 
 def test_quantreg_example(

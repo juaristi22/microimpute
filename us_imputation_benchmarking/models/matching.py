@@ -110,7 +110,7 @@ class MatchingResults(ImputerResults):
         self.donor_data = donor_data
 
     @validate_call(config=validate_config)
-    def predict(
+    def _predict(
         self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None
     ) -> Dict[float, pd.DataFrame]:
@@ -129,23 +129,6 @@ class MatchingResults(ImputerResults):
             RuntimeError: If matching or prediction fails.
         """
         try:
-            # Validate quantiles if provided
-            if quantiles is not None:
-                if not isinstance(quantiles, list):
-                    self.logger.error(
-                        f"quantiles must be a list, got {type(quantiles)}"
-                    )
-                    raise ValueError(f"quantiles must be a list, got {type(quantiles)}")
-
-                invalid_quantiles = [q for q in quantiles if q < 0 or q > 1]
-                if invalid_quantiles:
-                    self.logger.error(
-                        f"Invalid quantiles (must be between 0 and 1): {invalid_quantiles}"
-                    )
-                    raise ValueError(
-                        f"All quantiles must be between 0 and 1, got {invalid_quantiles}"
-                    )
-
             self.logger.info(f"Performing matching for {len(X_test)} recipient records")
 
             # Create a copy to avoid modifying the input

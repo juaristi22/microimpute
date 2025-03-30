@@ -81,6 +81,8 @@ def test_fit_predict_interface(model_class: Type[Imputer], iris_data: pd.DataFra
     
     X_train, X_test = preprocess_data(iris_data)
 
+    # Test with specified quantiles
+
     # Initialize the model
     model = model_class()
 
@@ -111,13 +113,17 @@ def test_fit_predict_interface(model_class: Type[Imputer], iris_data: pd.DataFra
 
     # Check prediction shape
     for q, pred in predictions.items():
-        if isinstance(pred, np.ndarray):
-            assert len(pred) == len(X_test)
-        elif isinstance(pred, pd.DataFrame):
-            assert pred.shape[0] == len(X_test)
+        assert pred.shape[0] == len(X_test)
 
     # Test with default quantiles (None)
-    default_predictions = fitted_model.predict(X_test)
+
+    # Initialize the model
+    model_default_q = model_class()
+
+    # Fit the model
+    fitted_default_model = model_default_q.fit(X_train, predictors, imputed_variables)
+
+    default_predictions = fitted_default_model.predict(X_test)
     assert isinstance(default_predictions, dict), (
         f"{model_class.__name__} predict should return a dictionary even with "
         f"default quantiles"

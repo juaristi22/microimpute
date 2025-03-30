@@ -124,26 +124,81 @@ class ImputerResults(ABC):
         self.imputed_variables = imputed_variables
         self.logger = logging.getLogger(__name__)
 
-    @abstractmethod
     @validate_call(config=validate_config)
-    def predict(
-        self, X_test: pd.DataFrame, 
+    def _validate_quantiles(self, 
+        quantiles: Optional[List[float]],
+    ) -> None:
+        """Validate that all provided quantiles are valid.
+
+        Args:
+            quantiles: List of quantiles to validate
+
+        Raises:
+            ValueError: If passed quantiles are not in the correct format
+        """
+        if quantiles is not None:
+            if not isinstance(quantiles, list):
+                self.logger.error(
+                    f"quantiles must be a list, got {type(quantiles)}"
+                )
+                raise ValueError(f"quantiles must be a list, got {type(quantiles)}")
+
+            invalid_quantiles = [q for q in quantiles if q < 0 or q > 1]
+            if invalid_quantiles:
+                self.logger.error(
+                    f"Invalid quantiles (must be between 0 and 1): {invalid_quantiles}"
+                )
+                raise ValueError(
+                    f"All quantiles must be between 0 and 1, got {invalid_quantiles}"
+                )
+
+    @validate_call(config=validate_config, validate_return=False)
+    def predict(self, 
+        X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None
     ) -> Dict[float, pd.DataFrame]:
         """Predict imputed values at specified quantiles.
         
-        Will validate that input data is not empty before processing.
+        Will validate that quantiles passed are in the correct format.
 
         Args:
             X_test: DataFrame containing the test data.
             quantiles: List of quantiles to predict. If None, uses random quantile.
 
         Returns:
-            Dictionary mapping quantiles to predicted values.
+            Dictionary mapping quantiles to imputed values.
 
         Raises:
-            ValueError: If model is not fitted or input data is invalid.
-            RuntimeError: If prediction fails.
+            ValueError: If input data is invalid.
+            RuntimeError: If imputation fails.
+        """
+        try:
+            # Validate quantiles
+            self._validate_quantiles(quantiles)
+        except Exception as quantile_error:
+            raise ValueError(f"Invalid quantiles: {str(quantile_error)}") from quantile_error
+        
+        # Defer actual imputations to subclass with all parameters
+        imputations = self._predict(X_test, quantiles)
+        return imputations
+
+    @abstractmethod
+    @validate_call(config=validate_config)
+    def _predict(
+        self, X_test: pd.DataFrame, 
+        quantiles: Optional[List[float]] = None
+    ) -> Dict[float, pd.DataFrame]:
+        """Predict imputed values at specified quantiles.
+
+        Args:
+            X_test: DataFrame containing the test data.
+            quantiles: List of quantiles to predict. If None, uses random quantile.
+
+        Returns:
+            Dictionary mapping quantiles to imputed values.
+
+        Raises:
+            RuntimeError: If imputation fails.
             NotImplementedError: If method is not implemented by subclass.
         """
         raise NotImplementedError("Subclasses must implement the predict method")

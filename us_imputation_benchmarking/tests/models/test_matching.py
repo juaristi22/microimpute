@@ -40,11 +40,11 @@ def test_matching_cross_validation(
         Matching, data, predictors, imputed_variables
     )
 
-    # matching_results.to_csv("matching_results.csv")
+    matching_results.to_csv("matching_results.csv")
 
     assert not matching_results.isna().any().any()
 
-    # plot_train_test_performance(matching_results, save_path="matching_train_test_performance.png")
+    plot_train_test_performance(matching_results, save_path="matching_train_test_performance.png")
 
 
 def test_matching_example_use(

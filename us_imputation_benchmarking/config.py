@@ -50,7 +50,8 @@ VALID_YEARS: List[int] = [
     2019,
 ]
 
-train_size, test_size = 0.8, 0.2
+train_size: float = 0.8
+test_size: float = 0.2
 
 # Analysis configuration
 QUANTILES: List[float] = [0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95]

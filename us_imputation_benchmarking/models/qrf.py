@@ -100,7 +100,7 @@ class QRFResults(ImputerResults):
         self.model = model
 
     @validate_call(config=validate_config)
-    def predict(
+    def _predict(
         self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None
     ) -> Dict[float, pd.DataFrame]:
@@ -126,11 +126,6 @@ class QRFResults(ImputerResults):
                     f"Predicting at {len(quantiles)} quantiles: {quantiles}"
                 )
                 for q in quantiles:
-                    if not 0 <= q <= 1:
-                        error_msg = f"Quantile must be between 0 and 1, got {q}"
-                        self.logger.error(error_msg)
-                        raise ValueError(error_msg)
-
                     imputation = self.model.predict(
                         X_test[self.predictors], mean_quantile=q
                     )
