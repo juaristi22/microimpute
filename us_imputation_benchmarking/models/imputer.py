@@ -71,6 +71,15 @@ class Imputer(ABC):
         try:
             # Validate data
             self._validate_data(X_train, predictors + imputed_variables)
+
+            for variable in imputed_variables:
+                if variable in predictors:
+                    error_msg = (
+                        f"Variable '{variable}' is both in the predictors and imputed "
+                        "variables list. Please ensure they are distinct."
+                    )
+                    self.logger.error(error_msg)
+                    raise ValueError(error_msg)
         except Exception as e:
             raise ValueError(f"Invalid input data for model: {str(e)}") from e
         

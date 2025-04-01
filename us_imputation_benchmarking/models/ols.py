@@ -9,67 +9,13 @@ from us_imputation_benchmarking.config import VALIDATE_CONFIG
 from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 
 
-class OLS(Imputer):
-    """
-    Ordinary Least Squares regression model for imputation.
-
-    This model predicts different quantiles by assuming normally
-    distributed residuals.
-    """
-
-    def __init__(self) -> None:
-        """Initialize the OLS model."""
-        super().__init__()
-        self.model = None
-        self.logger.debug("Initializing OLS imputer")
-
-    @validate_call(config=VALIDATE_CONFIG, validate_return=False)
-    def _fit(
-        self,
-        X_train: pd.DataFrame,
-        predictors: List[str],
-        imputed_variables: List[str],
-    ) -> Any:  # Will return OLSResults
-        """Fit the OLS model to the training data.
-
-        Args:
-            X_train: DataFrame containing the training data.
-            predictors: List of column names to use as predictors.
-            imputed_variables: List of column names to impute.
-
-        Returns:
-            The fitted model instance.
-
-        Raises:
-            RuntimeError: If model fitting fails.
-        """
-        try:
-            self.logger.info(f"Fitting OLS model with {len(predictors)} predictors")
-
-            Y = X_train[imputed_variables]
-            X_with_const = sm.add_constant(X_train[predictors])
-
-            self.model = sm.OLS(Y, X_with_const).fit()
-            self.logger.info(
-                f"OLS model fitted successfully, R-squared: {self.model.rsquared:.4f}"
-            )
-            return OLSResults(
-                model=self.model,
-                predictors=predictors,
-                imputed_variables=imputed_variables,
-            )
-        except Exception as e:
-            self.logger.error(f"Error fitting OLS model: {str(e)}")
-            raise RuntimeError(f"Failed to fit OLS model: {str(e)}") from e
-
-
 class OLSResults(ImputerResults):
     """
     Fitted OLS instance ready for imputation.
     """
     def __init__(
         self,
-        model: OLS,
+        model: "OLS",
         predictors: List[str],
         imputed_variables: List[str],
     ) -> None:
@@ -147,3 +93,57 @@ class OLSResults(ImputerResults):
                 raise e
             self.logger.error(f"Error predicting at quantile {q}: {str(e)}")
             raise RuntimeError(f"Failed to predict at quantile {q}: {str(e)}") from e
+
+
+class OLS(Imputer):
+    """
+    Ordinary Least Squares regression model for imputation.
+
+    This model predicts different quantiles by assuming normally
+    distributed residuals.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the OLS model."""
+        super().__init__()
+        self.model = None
+        self.logger.debug("Initializing OLS imputer")
+
+    @validate_call(config=VALIDATE_CONFIG, validate_return=False)
+    def _fit(
+        self,
+        X_train: pd.DataFrame,
+        predictors: List[str],
+        imputed_variables: List[str],
+    ) -> OLSResults:
+        """Fit the OLS model to the training data.
+
+        Args:
+            X_train: DataFrame containing the training data.
+            predictors: List of column names to use as predictors.
+            imputed_variables: List of column names to impute.
+
+        Returns:
+            The fitted model instance.
+
+        Raises:
+            RuntimeError: If model fitting fails.
+        """
+        try:
+            self.logger.info(f"Fitting OLS model with {len(predictors)} predictors")
+
+            Y = X_train[imputed_variables]
+            X_with_const = sm.add_constant(X_train[predictors])
+
+            self.model = sm.OLS(Y, X_with_const).fit()
+            self.logger.info(
+                f"OLS model fitted successfully, R-squared: {self.model.rsquared:.4f}"
+            )
+            return OLSResults(
+                model=self.model,
+                predictors=predictors,
+                imputed_variables=imputed_variables,
+            )
+        except Exception as e:
+            self.logger.error(f"Error fitting OLS model: {str(e)}")
+            raise RuntimeError(f"Failed to fit OLS model: {str(e)}") from e

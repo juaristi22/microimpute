@@ -8,96 +8,13 @@ from us_imputation_benchmarking.config import VALIDATE_CONFIG
 from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 
 
-class QuantReg(Imputer):
-    """
-    Quantile Regression model for imputation.
-
-    This model uses statsmodels' QuantReg implementation to
-    directly predict specific quantiles.
-    """
-
-    def __init__(self) -> None:
-        """Initialize the Quantile Regression model."""
-        super().__init__()
-        self.models: Dict[float, Any] = {}
-        self.logger.debug("Initializing QuantReg imputer")
-
-    @validate_call(config=VALIDATE_CONFIG, validate_return=False)
-    def _fit(
-        self,
-        X_train: pd.DataFrame,
-        predictors: List[str],
-        imputed_variables: List[str],
-        quantiles: Optional[List[float]] = None,
-    ) -> Any:  # Will return QuantRegResults
-        """Fit the Quantile Regression model to the training data.
-
-        Args:
-            X_train: DataFrame containing the training data.
-            predictors: List of column names to use as predictors.
-            imputed_variables: List of column names to impute.
-            quantiles: List of quantiles to fit models for.
-
-        Returns:
-            The fitted model instance.
-
-        Raises:
-            ValueError: If any quantile is outside the [0, 1] range.
-            RuntimeError: If model fitting fails.
-        """
-        try:
-            # Validate quantiles if provided
-            if quantiles:
-                invalid_quantiles = [q for q in quantiles if not 0 <= q <= 1]
-                if invalid_quantiles:
-                    error_msg = (
-                        f"Quantiles must be between 0 and 1, got: {invalid_quantiles}"
-                    )
-                    self.logger.error(error_msg)
-                    raise ValueError(error_msg)
-                self.logger.info(
-                    f"Fitting QuantReg models for {len(quantiles)} quantiles: {quantiles}"
-                )
-            else:
-                self.logger.info(
-                    "No quantiles provided, will fit a single random quantile"
-                )
-
-            Y = X_train[imputed_variables]
-            X_with_const = sm.add_constant(X_train[predictors])
-            self.logger.info(
-                f"Prepared training data with {len(X_train)} samples, {len(predictors)} predictors"
-            )
-
-            if quantiles:
-                for q in quantiles:
-                    self.logger.info(f"Fitting quantile regression for q={q}")
-                    self.models[q] = sm.QuantReg(Y, X_with_const).fit(q=q)
-                    self.logger.info(f"Model for q={q} fitted successfully")
-            else:
-                q = np.random.uniform(0, 1)
-                self.logger.info(f"Fitting quantile regression for random q={q:.4f}")
-                self.models[q] = sm.QuantReg(Y, X_with_const).fit(q=q)
-                self.logger.info(f"Model for q={q:.4f} fitted successfully")
-
-            self.logger.info(f"QuantReg has {len(self.models)} fitted models")
-            return QuantRegResults(
-                models=self.models,
-                predictors=predictors,
-                imputed_variables=imputed_variables,
-            )
-        except Exception as e:
-            self.logger.error(f"Error fitting QuantReg model: {str(e)}")
-            raise RuntimeError(f"Failed to fit QuantReg model: {str(e)}") from e
-
-
 class QuantRegResults(ImputerResults):
     """
     Fitted QuantReg instance ready for imputation.
     """
     def __init__(
         self,
-        models: Dict[float, Any],
+        models: Dict[float, "QuantReg"],
         predictors: List[str],
         imputed_variables: List[str],
     ) -> None:
@@ -174,3 +91,86 @@ class QuantRegResults(ImputerResults):
             raise RuntimeError(
                 f"Failed to predict with QuantReg model: {str(e)}"
             ) from e
+
+
+class QuantReg(Imputer):
+    """
+    Quantile Regression model for imputation.
+
+    This model uses statsmodels' QuantReg implementation to
+    directly predict specific quantiles.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the Quantile Regression model."""
+        super().__init__()
+        self.models: Dict[float, Any] = {}
+        self.logger.debug("Initializing QuantReg imputer")
+
+    @validate_call(config=VALIDATE_CONFIG, validate_return=False)
+    def _fit(
+        self,
+        X_train: pd.DataFrame,
+        predictors: List[str],
+        imputed_variables: List[str],
+        quantiles: Optional[List[float]] = None,
+    ) -> QuantRegResults:
+        """Fit the Quantile Regression model to the training data.
+
+        Args:
+            X_train: DataFrame containing the training data.
+            predictors: List of column names to use as predictors.
+            imputed_variables: List of column names to impute.
+            quantiles: List of quantiles to fit models for.
+
+        Returns:
+            The fitted model instance.
+
+        Raises:
+            ValueError: If any quantile is outside the [0, 1] range.
+            RuntimeError: If model fitting fails.
+        """
+        try:
+            # Validate quantiles if provided
+            if quantiles:
+                invalid_quantiles = [q for q in quantiles if not 0 <= q <= 1]
+                if invalid_quantiles:
+                    error_msg = (
+                        f"Quantiles must be between 0 and 1, got: {invalid_quantiles}"
+                    )
+                    self.logger.error(error_msg)
+                    raise ValueError(error_msg)
+                self.logger.info(
+                    f"Fitting QuantReg models for {len(quantiles)} quantiles: {quantiles}"
+                )
+            else:
+                self.logger.info(
+                    "No quantiles provided, will fit a single random quantile"
+                )
+
+            Y = X_train[imputed_variables]
+            X_with_const = sm.add_constant(X_train[predictors])
+            self.logger.info(
+                f"Prepared training data with {len(X_train)} samples, {len(predictors)} predictors"
+            )
+
+            if quantiles:
+                for q in quantiles:
+                    self.logger.info(f"Fitting quantile regression for q={q}")
+                    self.models[q] = sm.QuantReg(Y, X_with_const).fit(q=q)
+                    self.logger.info(f"Model for q={q} fitted successfully")
+            else:
+                q = np.random.uniform(0, 1)
+                self.logger.info(f"Fitting quantile regression for random q={q:.4f}")
+                self.models[q] = sm.QuantReg(Y, X_with_const).fit(q=q)
+                self.logger.info(f"Model for q={q:.4f} fitted successfully")
+
+            self.logger.info(f"QuantReg has {len(self.models)} fitted models")
+            return QuantRegResults(
+                models=self.models,
+                predictors=predictors,
+                imputed_variables=imputed_variables,
+            )
+        except Exception as e:
+            self.logger.error(f"Error fitting QuantReg model: {str(e)}")
+            raise RuntimeError(f"Failed to fit QuantReg model: {str(e)}") from e

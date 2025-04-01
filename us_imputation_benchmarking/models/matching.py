@@ -19,73 +19,6 @@ MatchingHotdeckFn = Callable[
     Tuple[pd.DataFrame, pd.DataFrame]
 ]
 
-class Matching(Imputer):
-    """
-    Statistical matching model for imputation using nearest neighbor distance
-    hot deck method.
-
-    This model uses R's StatMatch package through rpy2 to perform nearest
-    neighbor distance hot deck matching for imputation.
-    """
-
-    def __init__(self, matching_hotdeck: MatchingHotdeckFn = nnd_hotdeck_using_rpy2) -> None:
-        """Initialize the matching model.
-
-        Args:
-            matching_hotdeck: Function that performs the hot deck matching.
-
-        Raises:
-            ValueError: If matching_hotdeck is not callable
-        """
-        super().__init__()
-        self.logger.debug("Initializing Matching imputer")
-
-        # Validate input
-        if not callable(matching_hotdeck):
-            self.logger.error("matching_hotdeck must be a callable function")
-            raise ValueError("matching_hotdeck must be a callable function")
-
-        self.matching_hotdeck = matching_hotdeck
-        self.donor_data: Optional[pd.DataFrame] = None
-
-    @validate_call(config=VALIDATE_CONFIG, validate_return=False)
-    def _fit(
-        self,
-        X_train: pd.DataFrame,
-        predictors: List[str],
-        imputed_variables: List[str],
-    ) -> Any:  # Will return MatchingResults
-        """Fit the matching model by storing the donor data and variable names.
-
-        Args:
-            X_train: DataFrame containing the donor data.
-            predictors: List of column names to use as predictors.
-            imputed_variables: List of column names to impute.
-
-        Returns:
-            The fitted model instance.
-
-        Raises:
-            ValueError: If matching cannot be set up.
-        """
-        try:
-            self.donor_data = X_train.copy()
-
-            self.logger.info(f"Matching model ready with {len(X_train)} donor records")
-            self.logger.info(f"Using predictors: {predictors}")
-            self.logger.info(f"Targeting imputed variables: {imputed_variables}")
-
-            return MatchingResults(
-                matching_hotdeck=self.matching_hotdeck,
-                donor_data=self.donor_data,
-                predictors=predictors,
-                imputed_variables=imputed_variables,
-            )
-        except Exception as e:
-            self.logger.error(f"Error setting up matching model: {str(e)}")
-            raise ValueError(f"Failed to set up matching model: {str(e)}") from e
-
-
 class MatchingResults(ImputerResults):
     """
     Fitted Matching instance ready for imputation.
@@ -232,3 +165,70 @@ class MatchingResults(ImputerResults):
         except Exception as e:
             self.logger.error(f"Error during matching prediction: {str(e)}")
             raise RuntimeError(f"Failed to perform matching: {str(e)}") from e
+
+
+class Matching(Imputer):
+    """
+    Statistical matching model for imputation using nearest neighbor distance
+    hot deck method.
+
+    This model uses R's StatMatch package through rpy2 to perform nearest
+    neighbor distance hot deck matching for imputation.
+    """
+
+    def __init__(self, matching_hotdeck: MatchingHotdeckFn = nnd_hotdeck_using_rpy2) -> None:
+        """Initialize the matching model.
+
+        Args:
+            matching_hotdeck: Function that performs the hot deck matching.
+
+        Raises:
+            ValueError: If matching_hotdeck is not callable
+        """
+        super().__init__()
+        self.logger.debug("Initializing Matching imputer")
+
+        # Validate input
+        if not callable(matching_hotdeck):
+            self.logger.error("matching_hotdeck must be a callable function")
+            raise ValueError("matching_hotdeck must be a callable function")
+
+        self.matching_hotdeck = matching_hotdeck
+        self.donor_data: Optional[pd.DataFrame] = None
+
+    @validate_call(config=VALIDATE_CONFIG, validate_return=False)
+    def _fit(
+        self,
+        X_train: pd.DataFrame,
+        predictors: List[str],
+        imputed_variables: List[str],
+    ) -> MatchingResults:
+        """Fit the matching model by storing the donor data and variable names.
+
+        Args:
+            X_train: DataFrame containing the donor data.
+            predictors: List of column names to use as predictors.
+            imputed_variables: List of column names to impute.
+
+        Returns:
+            The fitted model instance.
+
+        Raises:
+            ValueError: If matching cannot be set up.
+        """
+        try:
+            self.donor_data = X_train.copy()
+
+            self.logger.info(f"Matching model ready with {len(X_train)} donor records")
+            self.logger.info(f"Using predictors: {predictors}")
+            self.logger.info(f"Targeting imputed variables: {imputed_variables}")
+
+            return MatchingResults(
+                matching_hotdeck=self.matching_hotdeck,
+                donor_data=self.donor_data,
+                predictors=predictors,
+                imputed_variables=imputed_variables,
+            )
+        except Exception as e:
+            self.logger.error(f"Error setting up matching model: {str(e)}")
+            raise ValueError(f"Failed to set up matching model: {str(e)}") from e
