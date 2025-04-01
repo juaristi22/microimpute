@@ -13,7 +13,7 @@ from .imputations import get_imputations
 from .plot import plot_loss_comparison
 
 # Import loss functions
-from .quantile_loss import quantile_loss
+from .quantile_loss import quantile_loss, compute_quantile_loss, compare_quantile_loss
 
 __all__ = [
     # Data functions

@@ -10,7 +10,7 @@ from us_imputation_benchmarking.config import VALIDATE_CONFIG
 from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 
 
-class _OLSResults(ImputerResults):
+class OLSResults(ImputerResults):
     """
     Fitted OLS instance ready for imputation.
     """

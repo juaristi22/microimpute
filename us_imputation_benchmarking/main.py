@@ -1,7 +1,7 @@
 """
 US Imputation Benchmarking Package
 
-A package for benchmarking different imputation methods using US data.
+A package for benchmarking different imputation methods.
 """
 
 __version__ = "0.1.0"

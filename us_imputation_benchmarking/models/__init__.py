@@ -16,7 +16,7 @@ __all__ = [
     # Base classes
     'Imputer', 'ImputerResults',
     # Model implementations
-    'OLS',
+    'OLS', 
     'QRF',
     'QuantReg',
     'Matching',

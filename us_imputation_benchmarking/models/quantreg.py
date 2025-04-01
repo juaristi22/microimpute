@@ -1,14 +1,15 @@
 from typing import Any, Dict, List, Optional
+
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from pydantic import validate_call
-from us_imputation_benchmarking.config import VALIDATE_CONFIG
 
+from us_imputation_benchmarking.config import VALIDATE_CONFIG
 from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 
 
-class _QuantRegResults(ImputerResults):
+class QuantRegResults(ImputerResults):
     """
     Fitted QuantReg instance ready for imputation.
     """

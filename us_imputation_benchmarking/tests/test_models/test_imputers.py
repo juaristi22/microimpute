@@ -7,13 +7,12 @@ imputer models thanks to the common Imputer interface.
 
 from typing import Type
 
-import numpy as np
 import pandas as pd
 import pytest
 from sklearn.datasets import load_iris
 
 from us_imputation_benchmarking.comparisons.data import preprocess_data
-from us_imputation_benchmarking.config import QUANTILES, RANDOM_STATE
+from us_imputation_benchmarking.config import QUANTILES
 from us_imputation_benchmarking.models import * 
 
 

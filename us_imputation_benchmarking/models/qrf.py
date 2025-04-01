@@ -132,7 +132,7 @@ class QRF(Imputer):
             self.logger.info(
                 f"QRF model fitted successfully with {len(X)} training samples"
             )
-            return _QRFResults(
+            return QRFResults(
                 model=self.model,
                 predictors=predictors,
                 imputed_variables=imputed_variables,

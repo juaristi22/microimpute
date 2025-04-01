@@ -21,9 +21,11 @@ from us_imputation_benchmarking.evaluations.cross_validation import cross_valida
 from us_imputation_benchmarking.evaluations.train_test_performance import plot_train_test_performance
 
 # Import comparison utilities
-from us_imputation_benchmarking.comparisons.quantile_loss import quantile_loss
+from us_imputation_benchmarking.comparisons.quantile_loss import (
+    quantile_loss, compare_quantile_loss, compute_quantile_loss
+)
 from us_imputation_benchmarking.comparisons.plot import plot_loss_comparison
 from us_imputation_benchmarking.comparisons.imputations import get_imputations
 
 # Main configuration
-from us_imputation_benchmarking.config import RANDOM_STATE, QUANTILES, PLOT_CONFIG, validate_config
+from us_imputation_benchmarking.config import RANDOM_STATE, QUANTILES, PLOT_CONFIG, VALIDATE_CONFIG
