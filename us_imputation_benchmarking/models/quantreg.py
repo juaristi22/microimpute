@@ -42,7 +42,6 @@ class QuantReg(Imputer):
             The fitted model instance.
 
         Raises:
-            ValueError: If input data is invalid or missing required columns.
             ValueError: If any quantile is outside the [0, 1] range.
             RuntimeError: If model fitting fails.
         """
@@ -129,7 +128,6 @@ class QuantRegResults(ImputerResults):
 
         Raises:
             ValueError: If a requested quantile was not fitted during training.
-            ValueError: If model is not fitted or input data is invalid.
             RuntimeError: If prediction fails.
         """
         try:

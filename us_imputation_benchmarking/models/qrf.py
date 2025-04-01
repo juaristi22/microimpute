@@ -50,7 +50,6 @@ class QRF(Imputer):
             The fitted model instance.
 
         Raises:
-            ValueError: If input data is invalid or missing required columns.
             RuntimeError: If model fitting fails.
         """
         try:
@@ -114,7 +113,6 @@ class QRFResults(ImputerResults):
             Dictionary mapping quantiles to predicted values.
 
         Raises:
-            ValueError: If model is not fitted or input data is invalid.
             RuntimeError: If prediction fails.
         """
         try:
@@ -139,9 +137,6 @@ class QRFResults(ImputerResults):
             self.logger.info(f"QRF predictions completed for {len(X_test)} samples")
             return imputations
 
-        except ValueError as e:
-            # Re-raise validation errors directly
-            raise e
         except Exception as e:
             self.logger.error(f"Error during QRF prediction: {str(e)}")
             raise RuntimeError(f"Failed to predict with QRF model: {str(e)}") from e

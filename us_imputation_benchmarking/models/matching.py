@@ -66,7 +66,7 @@ class Matching(Imputer):
             The fitted model instance.
 
         Raises:
-            ValueError: If input data is invalid or missing required columns.
+            ValueError: If matching cannot be set up.
         """
         try:
             self.donor_data = X_train.copy()

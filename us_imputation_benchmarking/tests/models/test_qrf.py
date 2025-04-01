@@ -38,7 +38,7 @@ def test_qrf_cross_validation(
     """
     qrf_results = cross_validate_model(QRF, data, predictors, imputed_variables)
 
-    qrf_results.to_csv("matching_results.csv")
+    qrf_results.to_csv("qrf_results.csv")
 
     assert not qrf_results.isna().any().any()
 

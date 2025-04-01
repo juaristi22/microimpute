@@ -41,7 +41,6 @@ class OLS(Imputer):
             The fitted model instance.
 
         Raises:
-            ValueError: If input data is invalid or missing required columns.
             RuntimeError: If model fitting fails.
         """
         try:
@@ -99,7 +98,6 @@ class OLSResults(ImputerResults):
             Dictionary mapping quantiles to predicted values.
 
         Raises:
-            ValueError: If model is not fitted or input data is invalid.
             RuntimeError: If prediction fails.
         """
         try:
@@ -121,9 +119,6 @@ class OLSResults(ImputerResults):
                 imputations[q] = pd.DataFrame(imputation)
             return imputations
         
-        except ValueError as e:
-            # Re-raise ValueError for specific error types
-            raise e
         except Exception as e:
             self.logger.error(f"Error during prediction: {str(e)}")
             raise RuntimeError(f"Failed to predict with OLS model: {str(e)}") from e
@@ -140,7 +135,6 @@ class OLSResults(ImputerResults):
             Array of predicted values at the specified quantile.
 
         Raises:
-            ValueError: If quantile value is outside [0, 1] range.
             RuntimeError: If prediction fails.
         """
         try:
