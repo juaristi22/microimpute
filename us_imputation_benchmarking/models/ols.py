@@ -1,4 +1,5 @@
-from typing import Dict, List, Optional, Union, Any
+from typing import Dict, List, Optional, Any
+
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
@@ -9,7 +10,7 @@ from us_imputation_benchmarking.config import VALIDATE_CONFIG
 from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 
 
-class OLSResults(ImputerResults):
+class _OLSResults(ImputerResults):
     """
     Fitted OLS instance ready for imputation.
     """

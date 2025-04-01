@@ -8,7 +8,7 @@ from us_imputation_benchmarking.config import VALIDATE_CONFIG
 from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 
 
-class QuantRegResults(ImputerResults):
+class _QuantRegResults(ImputerResults):
     """
     Fitted QuantReg instance ready for imputation.
     """

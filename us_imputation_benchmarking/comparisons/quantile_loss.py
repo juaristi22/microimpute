@@ -1,4 +1,5 @@
-from typing import Dict, List, Union
+from typing import Dict, List
+
 import logging
 import numpy as np
 import pandas as pd

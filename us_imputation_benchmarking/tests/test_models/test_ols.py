@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -6,10 +6,7 @@ from sklearn.datasets import load_iris
 
 from us_imputation_benchmarking.comparisons.data import preprocess_data
 from us_imputation_benchmarking.config import QUANTILES
-from us_imputation_benchmarking.evaluations.cross_validation import \
-    cross_validate_model
-from us_imputation_benchmarking.evaluations.train_test_performance import \
-    plot_train_test_performance
+from us_imputation_benchmarking.evaluations import *
 from us_imputation_benchmarking.models.ols import OLS
 
 # Test Method on iris dataset

@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
+
 import numpy as np
 import pandas as pd
 from pydantic import validate_call
@@ -131,7 +132,7 @@ class QRF(Imputer):
             self.logger.info(
                 f"QRF model fitted successfully with {len(X)} training samples"
             )
-            return QRFResults(
+            return _QRFResults(
                 model=self.model,
                 predictors=predictors,
                 imputed_variables=imputed_variables,

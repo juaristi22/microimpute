@@ -13,12 +13,8 @@ import pytest
 from sklearn.datasets import load_iris
 
 from us_imputation_benchmarking.comparisons.data import preprocess_data
-from us_imputation_benchmarking.config import QUANTILES
-from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
-from us_imputation_benchmarking.models.matching import Matching
-from us_imputation_benchmarking.models.ols import OLS
-from us_imputation_benchmarking.models.qrf import QRF
-from us_imputation_benchmarking.models.quantreg import QuantReg
+from us_imputation_benchmarking.config import QUANTILES, RANDOM_STATE
+from us_imputation_benchmarking.models import * 
 
 
 @pytest.fixture

@@ -1,5 +1,6 @@
-import os
 from typing import List, Optional
+
+import os
 import logging
 import pandas as pd
 import plotly.express as px

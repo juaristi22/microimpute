@@ -1,4 +1,5 @@
 from typing import Any, Callable, Dict, List, Optional, Tuple
+
 import numpy as np
 import pandas as pd
 from rpy2.robjects import pandas2ri
@@ -19,7 +20,7 @@ MatchingHotdeckFn = Callable[
     Tuple[pd.DataFrame, pd.DataFrame]
 ]
 
-class MatchingResults(ImputerResults):
+class _MatchingResults(ImputerResults):
     """
     Fitted Matching instance ready for imputation.
     """

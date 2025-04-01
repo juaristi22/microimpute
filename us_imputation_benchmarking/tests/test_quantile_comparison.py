@@ -2,17 +2,9 @@ from typing import List, Type
 
 import pandas as pd
 
-from us_imputation_benchmarking.comparisons.data import prepare_scf_data
-from us_imputation_benchmarking.comparisons.imputations import get_imputations
-from us_imputation_benchmarking.comparisons.plot import plot_loss_comparison
-from us_imputation_benchmarking.comparisons.quantile_loss import \
-    compare_quantile_loss
+from us_imputation_benchmarking.comparisons import *
+from us_imputation_benchmarking.models import *
 from us_imputation_benchmarking.config import RANDOM_STATE
-from us_imputation_benchmarking.models.imputer import Imputer
-from us_imputation_benchmarking.models.matching import Matching
-from us_imputation_benchmarking.models.ols import OLS
-from us_imputation_benchmarking.models.qrf import QRF
-from us_imputation_benchmarking.models.quantreg import QuantReg
 
 
 def test_quantile_comparison() -> None:

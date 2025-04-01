@@ -7,14 +7,10 @@ the package.
 from typing import Any, Dict, List
 import pandas as pd
 from pydantic import ConfigDict, BaseModel, field_validator
-from us_imputation_benchmarking.utils.logging_utils import configure_logging
 
 # Define a configuration for pydantic validation that allows 
 # arbitrary types like pd.DataFrame
 VALIDATE_CONFIG = ConfigDict(arbitrary_types_allowed=True)
-
-# Logging configuration
-configure_logging()
 
 # Data configuration
 VALID_YEARS: List[int] = [
