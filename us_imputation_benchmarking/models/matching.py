@@ -75,7 +75,7 @@ class Matching(Imputer):
             self.logger.info(f"Using predictors: {predictors}")
             self.logger.info(f"Targeting imputed variables: {imputed_variables}")
 
-            return MatchingResults(
+            return _MatchingResults(
                 matching_hotdeck=self.matching_hotdeck,
                 donor_data=self.donor_data,
                 predictors=predictors,
@@ -86,7 +86,7 @@ class Matching(Imputer):
             raise ValueError(f"Failed to set up matching model: {str(e)}") from e
 
 
-class MatchingResults(ImputerResults):
+class _MatchingResults(ImputerResults):
     """
     Fitted Matching instance ready for imputation.
     """

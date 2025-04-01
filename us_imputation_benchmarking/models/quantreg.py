@@ -48,7 +48,7 @@ class QuantReg(Imputer):
         try:
             # Validate quantiles if provided
             if quantiles:
-                invalid_quantiles = [q for q in quantiles if not 0 < q < 1]
+                invalid_quantiles = [q for q in quantiles if not 0 <= q <= 1]
                 if invalid_quantiles:
                     error_msg = (
                         f"Quantiles must be between 0 and 1, got: {invalid_quantiles}"
@@ -81,7 +81,7 @@ class QuantReg(Imputer):
                 self.logger.info(f"Model for q={q:.4f} fitted successfully")
 
             self.logger.info(f"QuantReg has {len(self.models)} fitted models")
-            return QuantRegResults(
+            return _QuantRegResults(
                 models=self.models,
                 predictors=predictors,
                 imputed_variables=imputed_variables,
@@ -91,7 +91,7 @@ class QuantReg(Imputer):
             raise RuntimeError(f"Failed to fit QuantReg model: {str(e)}") from e
 
 
-class QuantRegResults(ImputerResults):
+class _QuantRegResults(ImputerResults):
     """
     Fitted QuantReg instance ready for imputation.
     """

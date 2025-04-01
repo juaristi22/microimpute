@@ -68,7 +68,7 @@ class QRF(Imputer):
             self.logger.info(
                 f"QRF model fitted successfully with {len(X)} training samples"
             )
-            return QRFResults(
+            return _QRFResults(
                 model=self.model,
                 predictors=predictors,
                 imputed_variables=imputed_variables,
@@ -78,7 +78,7 @@ class QRF(Imputer):
             raise RuntimeError(f"Failed to fit QRF model: {str(e)}") from e
 
 
-class QRFResults(ImputerResults):
+class _QRFResults(ImputerResults):
     """
     Fitted QRF instance ready for imputation.
     """

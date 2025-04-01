@@ -53,7 +53,7 @@ class OLS(Imputer):
             self.logger.info(
                 f"OLS model fitted successfully, R-squared: {self.model.rsquared:.4f}"
             )
-            return OLSResults(
+            return _OLSResults(
                 model=self.model,
                 predictors=predictors,
                 imputed_variables=imputed_variables,
@@ -63,7 +63,7 @@ class OLS(Imputer):
             raise RuntimeError(f"Failed to fit OLS model: {str(e)}") from e
 
 
-class OLSResults(ImputerResults):
+class _OLSResults(ImputerResults):
     """
     Fitted OLS instance ready for imputation.
     """

@@ -143,7 +143,7 @@ class ImputerResults(ABC):
                 )
                 raise ValueError(f"quantiles must be a list, got {type(quantiles)}")
 
-            invalid_quantiles = [q for q in quantiles if q < 0 or q > 1]
+            invalid_quantiles = [q for q in quantiles if not 0 <= q <= 1]
             if invalid_quantiles:
                 self.logger.error(
                     f"Invalid quantiles (must be between 0 and 1): {invalid_quantiles}"
