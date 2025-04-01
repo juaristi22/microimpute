@@ -1,6 +1,7 @@
+from typing import List, Optional, Tuple, Union
+
 import io
 import zipfile
-from typing import List, Optional, Tuple, Union
 import logging
 import pandas as pd
 import requests
@@ -9,12 +10,12 @@ from tqdm import tqdm
 from pydantic import validate_call
 
 from us_imputation_benchmarking.config import (RANDOM_STATE, VALID_YEARS,
-                                               test_size, train_size,
-                                               validate_config)
+                                               TRAIN_SIZE, TEST_SIZE,
+                                               VALIDATE_CONFIG)
 
 logger = logging.getLogger(__name__)
 
-@validate_call(config=validate_config)
+@validate_call(config=VALIDATE_CONFIG)
 def scf_url(year: int) -> str:
     """Return the URL of the SCF summary microdata zip file for a year.
 
@@ -39,7 +40,7 @@ def scf_url(year: int) -> str:
     logger.debug(f"Generated URL: {url}")
     return url
 
-@validate_call(config=validate_config)
+@validate_call(config=VALIDATE_CONFIG)
 def _load(
     years: Optional[Union[int, List[int]]] = None,
     columns: Optional[List[str]] = None,
@@ -177,7 +178,7 @@ def _load(
         logger.error(f"Error in _load: {str(e)}")
         raise
 
-@validate_call(config=validate_config)
+@validate_call(config=VALIDATE_CONFIG)
 def prepare_scf_data(
     full_data: bool = False, 
     years: Optional[Union[int, List[int]]] = None
@@ -262,12 +263,12 @@ def prepare_scf_data(
         logger.error(f"Error in prepare_scf_data: {str(e)}")
         raise RuntimeError(f"Failed to prepare SCF data: {str(e)}") from e
 
-@validate_call(config=validate_config)
+@validate_call(config=VALIDATE_CONFIG)
 def preprocess_data(
     data: pd.DataFrame,
     full_data: bool = False,
-    train_size: float = train_size,
-    test_size: float = test_size,
+    train_size: float = TRAIN_SIZE,
+    test_size: float = TEST_SIZE,
 ) -> Union[
     pd.DataFrame,  # when full_data=True
     Tuple[pd.DataFrame, pd.DataFrame],  # when full_data=False

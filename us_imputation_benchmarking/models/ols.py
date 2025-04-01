@@ -4,8 +4,8 @@ import pandas as pd
 import statsmodels.api as sm
 from scipy.stats import norm
 from pydantic import validate_call
-from us_imputation_benchmarking.config import validate_config
 
+from us_imputation_benchmarking.config import VALIDATE_CONFIG
 from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 
 
@@ -23,7 +23,7 @@ class OLS(Imputer):
         self.model = None
         self.logger.debug("Initializing OLS imputer")
 
-    @validate_call(config=validate_config, validate_return=False)
+    @validate_call(config=VALIDATE_CONFIG, validate_return=False)
     def _fit(
         self,
         X_train: pd.DataFrame,
@@ -53,7 +53,7 @@ class OLS(Imputer):
             self.logger.info(
                 f"OLS model fitted successfully, R-squared: {self.model.rsquared:.4f}"
             )
-            return _OLSResults(
+            return OLSResults(
                 model=self.model,
                 predictors=predictors,
                 imputed_variables=imputed_variables,
@@ -63,7 +63,7 @@ class OLS(Imputer):
             raise RuntimeError(f"Failed to fit OLS model: {str(e)}") from e
 
 
-class _OLSResults(ImputerResults):
+class OLSResults(ImputerResults):
     """
     Fitted OLS instance ready for imputation.
     """
@@ -83,7 +83,7 @@ class _OLSResults(ImputerResults):
         super().__init__(predictors, imputed_variables)
         self.model = model
 
-    @validate_call(config=validate_config)
+    @validate_call(config=VALIDATE_CONFIG)
     def _predict(
         self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None
@@ -123,7 +123,7 @@ class _OLSResults(ImputerResults):
             self.logger.error(f"Error during prediction: {str(e)}")
             raise RuntimeError(f"Failed to predict with OLS model: {str(e)}") from e
 
-    @validate_call(config=validate_config)
+    @validate_call(config=VALIDATE_CONFIG)
     def _predict_quantile(self, X: pd.DataFrame, q: float) -> np.ndarray:
         """Predict values at a specified quantile.
 

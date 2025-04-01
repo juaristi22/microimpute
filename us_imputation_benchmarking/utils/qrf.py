@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from quantile_forest import RandomForestQuantileRegressor
 
-from us_imputation_benchmarking.config import RANDOM_STATE, validate_config
+from us_imputation_benchmarking.config import RANDOM_STATE, VALIDATE_CONFIG
 
 
 class QRF:
@@ -51,7 +51,7 @@ class QRF:
                 self.logger.error(f"Failed to load model from {file_path}: {str(e)}")
                 raise RuntimeError(f"Failed to load QRF model from {file_path}") from e
 
-    @validate_call(config=validate_config)
+    @validate_call(config=VALIDATE_CONFIG)
     def fit(self, 
             X: pd.DataFrame, 
             y: pd.DataFrame, 
@@ -102,7 +102,7 @@ class QRF:
             self.logger.error(f"Failed to fit QRF model: {str(e)}")
             raise RuntimeError("Failed to fit QRF model") from e
 
-    @validate_call(config=validate_config)
+    @validate_call(config=VALIDATE_CONFIG)
     def predict(
         self,
         X: pd.DataFrame,
@@ -191,7 +191,7 @@ class QRF:
             self.logger.error(f"Prediction failed: {str(e)}")
             raise RuntimeError("Failed to generate predictions with QRF model") from e
 
-    @validate_call(config=validate_config)
+    @validate_call(config=VALIDATE_CONFIG)
     def save(self, path: str) -> None:
         """Save the model to disk.
 

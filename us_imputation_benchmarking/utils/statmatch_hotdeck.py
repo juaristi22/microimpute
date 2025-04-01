@@ -1,15 +1,13 @@
 import logging
-import os
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple
 from pydantic import validate_call
 import numpy as np
 import pandas as pd
-import rpy2
 import rpy2.robjects as ro
 from rpy2.robjects import numpy2ri, pandas2ri
 from rpy2.robjects.packages import importr
 
-from us_imputation_benchmarking.config import validate_config
+from us_imputation_benchmarking.config import VALIDATE_CONFIG
 
 # Enable R-Python DataFrame and array conversion
 pandas2ri.activate()
@@ -49,7 +47,7 @@ match.vars: A character vector with the names of the matching variables. It has
            specify)
 """
 
-@validate_call(config=validate_config)
+@validate_call(config=VALIDATE_CONFIG)
 def nnd_hotdeck_using_rpy2(
     receiver: Optional[pd.DataFrame] = None,
     donor: Optional[pd.DataFrame] = None,

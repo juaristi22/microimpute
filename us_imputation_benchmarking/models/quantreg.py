@@ -1,9 +1,9 @@
-from typing import Any, Collection, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from pydantic import validate_call
-from us_imputation_benchmarking.config import validate_config
+from us_imputation_benchmarking.config import VALIDATE_CONFIG
 
 from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 
@@ -22,7 +22,7 @@ class QuantReg(Imputer):
         self.models: Dict[float, Any] = {}
         self.logger.debug("Initializing QuantReg imputer")
 
-    @validate_call(config=validate_config, validate_return=False)
+    @validate_call(config=VALIDATE_CONFIG, validate_return=False)
     def _fit(
         self,
         X_train: pd.DataFrame,
@@ -81,7 +81,7 @@ class QuantReg(Imputer):
                 self.logger.info(f"Model for q={q:.4f} fitted successfully")
 
             self.logger.info(f"QuantReg has {len(self.models)} fitted models")
-            return _QuantRegResults(
+            return QuantRegResults(
                 models=self.models,
                 predictors=predictors,
                 imputed_variables=imputed_variables,
@@ -91,7 +91,7 @@ class QuantReg(Imputer):
             raise RuntimeError(f"Failed to fit QuantReg model: {str(e)}") from e
 
 
-class _QuantRegResults(ImputerResults):
+class QuantRegResults(ImputerResults):
     """
     Fitted QuantReg instance ready for imputation.
     """
@@ -111,7 +111,7 @@ class _QuantRegResults(ImputerResults):
         super().__init__(predictors, imputed_variables)
         self.models = models
 
-    @validate_call(config=validate_config)
+    @validate_call(config=VALIDATE_CONFIG)
     def _predict(
         self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None

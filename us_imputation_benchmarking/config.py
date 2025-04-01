@@ -11,26 +11,7 @@ from us_imputation_benchmarking.utils.logging_utils import configure_logging
 
 # Define a configuration for pydantic validation that allows 
 # arbitrary types like pd.DataFrame
-validate_config = ConfigDict(arbitrary_types_allowed=True)
-
-# Function to validate data frames are not empty
-def validate_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    """Validate that a DataFrame is not None or empty."""
-    if df is None or df.empty:
-        raise ValueError("Data must not be None or empty")
-    return df
-
-class DataFrameModel(BaseModel):
-    """
-    A model enforcing that 'df' must be a non-empty pandas DataFrame.
-    """
-    model_config = validate_config
-
-    df: pd.DataFrame
-
-    @field_validator("df")
-    def ensure_nonempty(cls, v: pd.DataFrame) -> pd.DataFrame:
-        return validate_dataframe(v)
+VALIDATE_CONFIG = ConfigDict(arbitrary_types_allowed=True)
 
 # Logging configuration
 configure_logging()
@@ -50,8 +31,8 @@ VALID_YEARS: List[int] = [
     2019,
 ]
 
-train_size: float = 0.8
-test_size: float = 0.2
+TRAIN_SIZE: float = 0.8
+TEST_SIZE: float = 0.2
 
 # Analysis configuration
 QUANTILES: List[float] = [0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95]

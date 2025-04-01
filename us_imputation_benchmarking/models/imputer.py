@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Set, Union
-import numpy as np
+from typing import Any, Dict, List, Optional, Set
+
 import pandas as pd
 import logging
 from pydantic import validate_call
-from us_imputation_benchmarking.config import validate_config
+
+from us_imputation_benchmarking.config import VALIDATE_CONFIG
 
 class Imputer(ABC):
     """
@@ -20,7 +21,7 @@ class Imputer(ABC):
         self.imputed_variables: Optional[List[str]] = None
         self.logger = logging.getLogger(__name__)
 
-    @validate_call(config=validate_config)
+    @validate_call(config=VALIDATE_CONFIG)
     def _validate_data(self, 
         data: pd.DataFrame, 
         columns: List[str]
@@ -43,7 +44,7 @@ class Imputer(ABC):
             self.logger.error(error_msg)
             raise ValueError(error_msg)
 
-    @validate_call(config=validate_config, validate_return=False)
+    @validate_call(config=VALIDATE_CONFIG)
     def fit(
         self,
         X_train: pd.DataFrame,
@@ -82,7 +83,7 @@ class Imputer(ABC):
         return fitted_model
 
     @abstractmethod
-    @validate_call(config=validate_config, validate_return=False)
+    @validate_call(config=VALIDATE_CONFIG)
     def _fit(
         self, 
         X_train: pd.DataFrame,
@@ -124,7 +125,7 @@ class ImputerResults(ABC):
         self.imputed_variables = imputed_variables
         self.logger = logging.getLogger(__name__)
 
-    @validate_call(config=validate_config)
+    @validate_call(config=VALIDATE_CONFIG)
     def _validate_quantiles(self, 
         quantiles: Optional[List[float]],
     ) -> None:
@@ -152,7 +153,7 @@ class ImputerResults(ABC):
                     f"All quantiles must be between 0 and 1, got {invalid_quantiles}"
                 )
 
-    @validate_call(config=validate_config, validate_return=False)
+    @validate_call(config=VALIDATE_CONFIG)
     def predict(self, 
         X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None
@@ -183,7 +184,7 @@ class ImputerResults(ABC):
         return imputations
 
     @abstractmethod
-    @validate_call(config=validate_config)
+    @validate_call(config=VALIDATE_CONFIG)
     def _predict(
         self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None

@@ -4,12 +4,12 @@ import numpy as np
 import pandas as pd
 from pydantic import validate_call
 
-from us_imputation_benchmarking.config import QUANTILES, validate_config
+from us_imputation_benchmarking.config import QUANTILES, VALIDATE_CONFIG
 
 
 log = logging.getLogger(__name__)
 
-@validate_call(config=validate_config)
+@validate_call(config=VALIDATE_CONFIG)
 def quantile_loss(q: float, y: np.ndarray, f: np.ndarray) -> np.ndarray:
     """Calculate the quantile loss.
 
@@ -24,7 +24,7 @@ def quantile_loss(q: float, y: np.ndarray, f: np.ndarray) -> np.ndarray:
     e = y - f
     return np.maximum(q * e, (q - 1) * e)
 
-@validate_call(config=validate_config)
+@validate_call(config=VALIDATE_CONFIG)
 def compute_quantile_loss(
     test_y: np.ndarray, 
     imputations: np.ndarray, 
@@ -76,7 +76,7 @@ def compute_quantile_loss(
 
 quantiles_legend: List[str] = [str(int(q * 100)) + "th percentile" for q in QUANTILES]
 
-@validate_call(config=validate_config)
+@validate_call(config=VALIDATE_CONFIG)
 def compare_quantile_loss(
     test_y: pd.DataFrame,
     method_imputations: Dict[str, Dict[float, pd.DataFrame]],

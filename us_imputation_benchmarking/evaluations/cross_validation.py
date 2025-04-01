@@ -7,13 +7,13 @@ from pydantic import validate_call
 
 from us_imputation_benchmarking.comparisons.quantile_loss import quantile_loss
 from us_imputation_benchmarking.config import (QUANTILES, RANDOM_STATE, 
-                                               validate_config)
+                                               VALIDATE_CONFIG)
 from us_imputation_benchmarking.models.quantreg import QuantReg
 
 
 log = logging.getLogger(__name__)
 
-@validate_call(config=validate_config)
+@validate_call(config=VALIDATE_CONFIG)
 def cross_validate_model(
     model_class: Type,
     data: pd.DataFrame,

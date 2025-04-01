@@ -4,13 +4,13 @@ import numpy as np
 import pandas as pd
 from pydantic import validate_call
 
-from us_imputation_benchmarking.config import QUANTILES, validate_config
+from us_imputation_benchmarking.config import QUANTILES, VALIDATE_CONFIG
 from us_imputation_benchmarking.models.quantreg import QuantReg
 
 
 log = logging.getLogger(__name__)
 
-@validate_call(config=validate_config)
+@validate_call(config=VALIDATE_CONFIG)
 def get_imputations(
     model_classes: List[Type],
     X_train: pd.DataFrame,

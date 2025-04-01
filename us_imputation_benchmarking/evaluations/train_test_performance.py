@@ -1,17 +1,17 @@
 import os
-from typing import Dict, List, Optional, Tuple, Type, Union
+from typing import Optional, Tuple
+
 import logging
-import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from pydantic import validate_call
 
-from us_imputation_benchmarking.config import PLOT_CONFIG, validate_config
+from us_imputation_benchmarking.config import PLOT_CONFIG, VALIDATE_CONFIG
 
 
 logger = logging.getLogger(__name__)
 
-@validate_call(config=validate_config)
+@validate_call(config=VALIDATE_CONFIG)
 def plot_train_test_performance(
     results: pd.DataFrame,
     title: Optional[str] = None,

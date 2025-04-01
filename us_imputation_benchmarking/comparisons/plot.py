@@ -7,12 +7,12 @@ import plotly.graph_objects as go
 from pydantic import validate_call
 
 from us_imputation_benchmarking.config import (PLOT_CONFIG, QUANTILES, 
-                                               validate_config)
+                                               VALIDATE_CONFIG)
 
 
 logger = logging.getLogger(__name__)
 
-@validate_call(config=validate_config)
+@validate_call(config=VALIDATE_CONFIG)
 def plot_loss_comparison(
     loss_comparison_df: pd.DataFrame,
     quantiles: List[float] = QUANTILES,

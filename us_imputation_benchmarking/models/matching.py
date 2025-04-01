@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd
 from rpy2.robjects import pandas2ri
 from pydantic import validate_call
-from us_imputation_benchmarking.config import validate_config
 
-from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults, validate_config
+from us_imputation_benchmarking.config import VALIDATE_CONFIG
+from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 from us_imputation_benchmarking.utils.statmatch_hotdeck import \
     nnd_hotdeck_using_rpy2
 
@@ -48,7 +48,7 @@ class Matching(Imputer):
         self.matching_hotdeck = matching_hotdeck
         self.donor_data: Optional[pd.DataFrame] = None
 
-    @validate_call(config=validate_config, validate_return=False)
+    @validate_call(config=VALIDATE_CONFIG, validate_return=False)
     def _fit(
         self,
         X_train: pd.DataFrame,
@@ -75,7 +75,7 @@ class Matching(Imputer):
             self.logger.info(f"Using predictors: {predictors}")
             self.logger.info(f"Targeting imputed variables: {imputed_variables}")
 
-            return _MatchingResults(
+            return MatchingResults(
                 matching_hotdeck=self.matching_hotdeck,
                 donor_data=self.donor_data,
                 predictors=predictors,
@@ -86,7 +86,7 @@ class Matching(Imputer):
             raise ValueError(f"Failed to set up matching model: {str(e)}") from e
 
 
-class _MatchingResults(ImputerResults):
+class MatchingResults(ImputerResults):
     """
     Fitted Matching instance ready for imputation.
     """
@@ -109,7 +109,7 @@ class _MatchingResults(ImputerResults):
         self.matching_hotdeck = matching_hotdeck
         self.donor_data = donor_data
 
-    @validate_call(config=validate_config)
+    @validate_call(config=VALIDATE_CONFIG)
     def _predict(
         self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None

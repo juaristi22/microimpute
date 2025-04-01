@@ -2,9 +2,8 @@ from typing import Any, Dict, List, Optional, Union
 import numpy as np
 import pandas as pd
 from pydantic import validate_call
-from us_imputation_benchmarking.config import validate_config
 
-from us_imputation_benchmarking.config import RANDOM_STATE
+from us_imputation_benchmarking.config import RANDOM_STATE, VALIDATE_CONFIG
 from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
 from us_imputation_benchmarking.utils import qrf
 
@@ -30,7 +29,7 @@ class QRF(Imputer):
         self.model = qrf.QRF(seed=self.seed)
         self.logger.debug("Initializing QRF imputer")
 
-    @validate_call(config=validate_config, validate_return=False)
+    @validate_call(config=VALIDATE_CONFIG, validate_return=False)
     def _fit(
         self,
         X_train: pd.DataFrame,
@@ -68,7 +67,7 @@ class QRF(Imputer):
             self.logger.info(
                 f"QRF model fitted successfully with {len(X)} training samples"
             )
-            return _QRFResults(
+            return QRFResults(
                 model=self.model,
                 predictors=predictors,
                 imputed_variables=imputed_variables,
@@ -78,7 +77,7 @@ class QRF(Imputer):
             raise RuntimeError(f"Failed to fit QRF model: {str(e)}") from e
 
 
-class _QRFResults(ImputerResults):
+class QRFResults(ImputerResults):
     """
     Fitted QRF instance ready for imputation.
     """
@@ -98,7 +97,7 @@ class _QRFResults(ImputerResults):
         super().__init__(predictors, imputed_variables)
         self.model = model
 
-    @validate_call(config=validate_config)
+    @validate_call(config=VALIDATE_CONFIG)
     def _predict(
         self, X_test: pd.DataFrame, 
         quantiles: Optional[List[float]] = None
