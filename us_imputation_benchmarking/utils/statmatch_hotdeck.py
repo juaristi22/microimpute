@@ -1,3 +1,9 @@
+"""Statistical matching hot deck imputation utilities.
+
+This module provides an interface to R's StatMatch package for performing nearest neighbor
+distance hot deck matching.
+"""
+
 import logging
 from typing import Any, List, Optional, Tuple
 from pydantic import validate_call

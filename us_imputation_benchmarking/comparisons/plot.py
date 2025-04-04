@@ -1,3 +1,9 @@
+"""Visualization utilities for imputation results comparison.
+
+It supports creating bar charts for comparing quantile loss
+across different imputation methods and quantiles.
+"""
+
 from typing import List, Optional
 
 import os

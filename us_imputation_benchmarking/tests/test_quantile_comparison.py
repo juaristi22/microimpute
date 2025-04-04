@@ -1,3 +1,13 @@
+"""Tests for the end-to-end quantile loss comparison workflow.
+
+This module tests the complete workflow of:
+1. Preparing data
+2. Training different imputation models
+3. Generating predictions
+4. Comparing models using quantile loss metrics
+5. Visualizing the results
+"""
+
 from typing import List, Type
 
 import pandas as pd

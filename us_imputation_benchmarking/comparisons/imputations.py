@@ -1,3 +1,10 @@
+"""Imputation generation utilities.
+
+This module handles the generation of imputations using multiple model classes.
+It provides functions to generate predictions at different quantiles,
+and organize results in a consistent format for comparison.
+"""
+
 from typing import Any, Dict, List, Optional, Type, Union
 
 import logging

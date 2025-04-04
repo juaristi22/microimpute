@@ -1,3 +1,6 @@
+"""Tests for the OLS (Ordinary Least Squares) imputation model.
+"""
+
 from typing import Dict, List
 
 import numpy as np

@@ -4,6 +4,7 @@ Configuration module for MicroImpute.
 This module centralizes all constants and configuration parameters used across
 the package.
 """
+
 from typing import Any, Dict, List
 from pydantic import ConfigDict
 

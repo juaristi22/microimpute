@@ -1,3 +1,6 @@
+"""Statistical matching imputation model using hot deck methods.
+"""
+
 from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np

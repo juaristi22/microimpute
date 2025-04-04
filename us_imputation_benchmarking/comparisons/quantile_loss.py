@@ -1,3 +1,10 @@
+"""Quantile loss calculation functions for imputation evaluation.
+
+This module contains utilities for evaluating imputation quality using quantile loss metrics.
+It implements the standard quantile loss function that penalizes under-prediction more heavily
+for higher quantiles and over-prediction more heavily for lower quantiles.
+"""
+
 from typing import Dict, List
 
 import logging

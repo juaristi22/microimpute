@@ -1,4 +1,7 @@
-from typing import Dict, List, Tuple
+"""Tests for the Quantile Regression Forest imputation model.
+"""
+
+from typing import Dict, List
 
 import pandas as pd
 from sklearn.datasets import load_iris

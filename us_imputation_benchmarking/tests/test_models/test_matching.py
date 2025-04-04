@@ -1,3 +1,6 @@
+"""Tests for the Statistical Matching imputation model.
+"""
+
 from typing import Dict, List
 
 import pandas as pd

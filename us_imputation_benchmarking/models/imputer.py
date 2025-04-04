@@ -1,3 +1,13 @@
+"""Abstract base classes for imputation models.
+
+This module defines the core architecture for imputation models in MicroImpute.
+It provides two abstract base classes:
+1. Imputer - For model initialization and fitting
+2. ImputerResults - For storing fitted models and making predictions
+
+All model implementations should extend these classes to ensure a consistent interface.
+"""
+
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Set
 

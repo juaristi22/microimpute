@@ -1,3 +1,10 @@
+"""Cross-validation utilities for imputation model evaluation.
+
+This module provides functions for evaluating imputation models using k-fold
+cross-validation. It calculates train and test quantile loss metrics for
+each fold to provide robust performance estimates.
+"""
+
 from typing import List, Optional, Type
 
 import logging

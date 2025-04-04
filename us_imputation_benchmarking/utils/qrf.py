@@ -1,3 +1,9 @@
+"""Quantile Random Forest (QRF) utilities.
+
+This module provides specialized functionality for Quantile Random Forest implementations.
+It builds on scikit-learn's random forest to enable quantile predictions.
+"""
+
 import logging
 import os
 import pickle

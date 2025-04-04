@@ -1,3 +1,6 @@
+"""Ordinary Least Squares regression model for imputation.
+"""
+
 from typing import Dict, List, Optional, Any
 
 import numpy as np
