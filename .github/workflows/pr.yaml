@@ -12,10 +12,10 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-      - name: Install dependencies
+      - name: Install relevant dependencies
         run: |
           python -m pip install --upgrade pip
-          make install
+          pip install black isort linecheck
       - name: Check code formatting
         run: make check-format
 
