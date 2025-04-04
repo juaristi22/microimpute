@@ -197,7 +197,7 @@ class Matching(Imputer):
         self.matching_hotdeck = matching_hotdeck
         self.donor_data: Optional[pd.DataFrame] = None
 
-    @validate_call(config=VALIDATE_CONFIG, validate_return=False)
+    @validate_call(config=VALIDATE_CONFIG)
     def _fit(
         self,
         X_train: pd.DataFrame,

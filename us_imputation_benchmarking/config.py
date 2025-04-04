@@ -1,5 +1,5 @@
 """
-Configuration module for US imputation benchmarking.
+Configuration module for MicroImpute.
 
 This module centralizes all constants and configuration parameters used across
 the package.

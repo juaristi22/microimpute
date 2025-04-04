@@ -1,7 +1,7 @@
 [project]
-name = "us-imputation-benchmarking"
+name = "microimpute"
 version = "0.1.0"
-description = "Benchmarking imputation models for US household survey data"
+description = "Benchmarking imputation methods for microdata"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -26,4 +26,8 @@ dev = [
     "black",
     "isort",
     "mypy",
+]
+
+docs = [
+    "jupyter-book>=0.15.0,<1.0.0",
 ]

@@ -110,7 +110,7 @@ class OLS(Imputer):
         self.model = None
         self.logger.debug("Initializing OLS imputer")
 
-    @validate_call(config=VALIDATE_CONFIG, validate_return=False)
+    @validate_call(config=VALIDATE_CONFIG)
     def _fit(
         self,
         X_train: pd.DataFrame,

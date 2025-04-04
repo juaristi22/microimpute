@@ -108,7 +108,7 @@ class QuantReg(Imputer):
         self.models: Dict[float, Any] = {}
         self.logger.debug("Initializing QuantReg imputer")
 
-    @validate_call(config=VALIDATE_CONFIG, validate_return=False)
+    @validate_call(config=VALIDATE_CONFIG)
     def _fit(
         self,
         X_train: pd.DataFrame,

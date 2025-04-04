@@ -1,5 +1,5 @@
 """
-US Imputation Benchmarking Package
+MicroImpute Package
 
 A package for benchmarking different imputation methods.
 """

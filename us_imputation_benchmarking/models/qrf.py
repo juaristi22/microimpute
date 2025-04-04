@@ -94,7 +94,7 @@ class QRF(Imputer):
         self.model = qrf.QRF(seed=self.seed)
         self.logger.debug("Initializing QRF imputer")
 
-    @validate_call(config=VALIDATE_CONFIG, validate_return=False)
+    @validate_call(config=VALIDATE_CONFIG)
     def _fit(
         self,
         X_train: pd.DataFrame,

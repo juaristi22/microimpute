@@ -1,6 +1,6 @@
-"""US Imputation Benchmarking Package
+"""MicroImpute Package
 
-A package for benchmarking different imputation methods using US data.
+A package for benchmarking different imputation methods using microdata.
 """
 
 __version__ = "0.1.0"
