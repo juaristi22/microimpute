@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Check formatting
-        uses: "lgeiger/black-action@main"
+        uses: lgeiger/black-action@v0.1.1
         with:
           args: ". -l 79 --check"
       - name: Set up Python
@@ -37,6 +37,10 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install R
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y r-base r-base-dev
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
