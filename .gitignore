@@ -76,4 +76,6 @@ celerybeat.pid
 
 # Ignore Data Files
 *.csv
+*.png
+*.html
 *.h5

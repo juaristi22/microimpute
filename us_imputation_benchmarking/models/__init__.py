@@ -1,7 +1,14 @@
-from .ols import *
-from .quantreg import *
-from .qrf import *
+"""Imputation Models
 
-# These modules don't exist yet
-# from .gradient_boosting import *
-# from .random_forests import *
+This module contains different imputation models for benchmarking.
+"""
+
+# Import base classes
+from .imputer import Imputer, ImputerResults
+
+# Import specific model implementations
+from .ols import OLS
+from .qrf import QRF
+from .quantreg import QuantReg
+from .matching import Matching
+
