@@ -27,30 +27,30 @@ StatMatch = importr("StatMatch")
 log = logging.getLogger(__name__)
 
 """
-data.rec: A matrix or data frame that plays the role of recipient in the 
+data.rec: A matrix or data frame that plays the role of recipient in the
          statistical matching application.
 
-data.don: A matrix or data frame that that plays the role of donor in the 
+data.don: A matrix or data frame that that plays the role of donor in the
          statistical matching application.
 
-mtc.ids: A matrix with two columns. Each row must contain the name or the index 
-         of the recipient record (row) in data.don and the name or the index of 
-         the corresponding donor record (row) in data.don. Note that this type 
-         of matrix is returned by the functions NND.hotdeck, RANDwNND.hotdeck, 
+mtc.ids: A matrix with two columns. Each row must contain the name or the index
+         of the recipient record (row) in data.don and the name or the index of
+         the corresponding donor record (row) in data.don. Note that this type
+         of matrix is returned by the functions NND.hotdeck, RANDwNND.hotdeck,
          rankNND.hotdeck, and mixed.mtc.
 
-z.vars: A character vector with the names of the variables available only in 
+z.vars: A character vector with the names of the variables available only in
         data.don that should be "donated" to data.rec.
 networth
 
-dup.x: Logical. When TRUE the values of the matching variables in data.don are 
-       also "donated" to data.rec. The names of the matching variables have to 
-       be specified with the argument match.vars. To avoid confusion, the 
-       matching variables added to data.rec are renamed by adding the suffix 
+dup.x: Logical. When TRUE the values of the matching variables in data.don are
+       also "donated" to data.rec. The names of the matching variables have to
+       be specified with the argument match.vars. To avoid confusion, the
+       matching variables added to data.rec are renamed by adding the suffix
        "don". By default dup.x=FALSE.
 
-match.vars: A character vector with the names of the matching variables. It has 
-           to be specified only when dup.x=TRUE. All other vars (no need to 
+match.vars: A character vector with the names of the matching variables. It has
+           to be specified only when dup.x=TRUE. All other vars (no need to
            specify)
 """
 
