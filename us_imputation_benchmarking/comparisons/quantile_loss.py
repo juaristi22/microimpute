@@ -5,17 +5,17 @@ It implements the standard quantile loss function that penalizes under-predictio
 for higher quantiles and over-prediction more heavily for lower quantiles.
 """
 
+import logging
 from typing import Dict, List
 
-import logging
 import numpy as np
 import pandas as pd
 from pydantic import validate_call
 
 from us_imputation_benchmarking.config import QUANTILES, VALIDATE_CONFIG
 
-
 log = logging.getLogger(__name__)
+
 
 @validate_call(config=VALIDATE_CONFIG)
 def quantile_loss(q: float, y: np.ndarray, f: np.ndarray) -> np.ndarray:
@@ -32,11 +32,10 @@ def quantile_loss(q: float, y: np.ndarray, f: np.ndarray) -> np.ndarray:
     e = y - f
     return np.maximum(q * e, (q - 1) * e)
 
+
 @validate_call(config=VALIDATE_CONFIG)
 def compute_quantile_loss(
-    test_y: np.ndarray, 
-    imputations: np.ndarray, 
-    q: float
+    test_y: np.ndarray, imputations: np.ndarray, q: float
 ) -> np.ndarray:
     """Compute quantile loss for given true values and imputations.
 
@@ -68,7 +67,9 @@ def compute_quantile_loss(
             log.error(error_msg)
             raise ValueError(error_msg)
 
-        log.debug(f"Computing quantile loss for q={q} with {len(test_y)} samples")
+        log.debug(
+            f"Computing quantile loss for q={q} with {len(test_y)} samples"
+        )
         losses = quantile_loss(q, test_y, imputations)
         mean_loss = np.mean(losses)
         log.debug(f"Quantile loss at q={q}: mean={mean_loss:.6f}")
@@ -82,7 +83,10 @@ def compute_quantile_loss(
         raise RuntimeError(f"Failed to compute quantile loss: {str(e)}") from e
 
 
-quantiles_legend: List[str] = [str(int(q * 100)) + "th percentile" for q in QUANTILES]
+quantiles_legend: List[str] = [
+    str(int(q * 100)) + "th percentile" for q in QUANTILES
+]
+
 
 @validate_call(config=VALIDATE_CONFIG)
 def compare_quantile_loss(
@@ -120,7 +124,9 @@ def compare_quantile_loss(
         # Process each method and quantile
         for method, imputation in method_imputations.items():
             for quantile in QUANTILES:
-                log.debug(f"Computing loss for {method} at quantile {quantile}")
+                log.debug(
+                    f"Computing loss for {method} at quantile {quantile}"
+                )
 
                 # Validate that the quantile exists in the imputation results
                 if quantile not in imputation:

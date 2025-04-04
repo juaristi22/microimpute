@@ -36,13 +36,17 @@ def test_qrf_cross_validation(
             imputed_variables: List of variables to impute.
             quantiles: List of quantiles to predict.
     """
-    qrf_results = cross_validate_model(QRF, data, predictors, imputed_variables)
+    qrf_results = cross_validate_model(
+        QRF, data, predictors, imputed_variables
+    )
 
     qrf_results.to_csv("qrf_results.csv")
 
     assert not qrf_results.isna().any().any()
 
-    plot_train_test_performance(qrf_results, save_path="qrf_train_test_performance.png")
+    plot_train_test_performance(
+        qrf_results, save_path="qrf_train_test_performance.png"
+    )
 
 
 def test_qrf_example(
@@ -81,7 +85,9 @@ def test_qrf_example(
     )
 
     # Predict at multiple quantiles
-    predictions: Dict[float, pd.DataFrame] = fitted_model.predict(X_test, quantiles)
+    predictions: Dict[float, pd.DataFrame] = fitted_model.predict(
+        X_test, quantiles
+    )
 
     # Check structure of predictions
     assert isinstance(predictions, dict)

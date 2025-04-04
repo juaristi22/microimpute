@@ -15,13 +15,3 @@ sphinx:
       - https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js
     html_theme: furo
     pygments_style: default
-  extra_extensions:
-    - "sphinx.ext.autodoc"
-    - "sphinxarg.ext"
-    - "sphinx.ext.viewcode"
-    - "sphinx.ext.napoleon"
-    - "sphinx.ext.mathjax"
-
-# Add GitHub button to the repository
-html:
-  use_repository_button: true

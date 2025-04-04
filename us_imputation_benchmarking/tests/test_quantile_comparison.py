@@ -13,8 +13,8 @@ from typing import List, Type
 import pandas as pd
 
 from us_imputation_benchmarking.comparisons import *
-from us_imputation_benchmarking.models import *
 from us_imputation_benchmarking.config import RANDOM_STATE
+from us_imputation_benchmarking.models import *
 
 
 def test_quantile_comparison() -> None:

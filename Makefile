@@ -4,10 +4,15 @@ install:
 test:
 	pytest us_imputation_benchmarking/tests/ --cov=us_imputation_benchmarking --cov-report=xml --maxfail=0
 
+check-format:
+	linecheck .
+	isort --check-only --profile black us_imputation_benchmarking/
+	black . -l 79 --check
+
 format:
-	black . -l 79
 	linecheck . --fix
-	isort us_imputation_benchmarking/
+	isort --profile black us_imputation_benchmarking/
+	black . -l 79
 
 documentation:
 	cd docs && jupyter-book build .

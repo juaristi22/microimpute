@@ -28,8 +28,17 @@ dev = [
     "isort",
     "mypy",
     "build",
+    "linecheck",
 ]
 
 docs = [
     "jupyter-book>=0.15.0,<1.0.0",
 ]
+
+[tool.isort]
+profile = "black"
+line_length = 79
+
+[tool.black]
+line-length = 79
+target-version = ["py311"]

@@ -16,6 +16,7 @@ class QRFResults(ImputerResults):
     """
     Fitted QRF instance ready for imputation.
     """
+
     def __init__(
         self,
         model: "QRF",
@@ -34,8 +35,7 @@ class QRFResults(ImputerResults):
 
     @validate_call(config=VALIDATE_CONFIG)
     def _predict(
-        self, X_test: pd.DataFrame, 
-        quantiles: Optional[List[float]] = None
+        self, X_test: pd.DataFrame, quantiles: Optional[List[float]] = None
     ) -> Dict[float, pd.DataFrame]:
         """Predict values at specified quantiles using the QRF model.
 
@@ -65,15 +65,21 @@ class QRFResults(ImputerResults):
             else:
                 q = np.random.uniform(0, 1)
                 self.logger.info(f"Predicting at random quantile: {q:.4f}")
-                imputation = self.model.predict(X_test[self.predictors], mean_quantile=q)
+                imputation = self.model.predict(
+                    X_test[self.predictors], mean_quantile=q
+                )
                 imputations[q] = pd.DataFrame(imputation)
 
-            self.logger.info(f"QRF predictions completed for {len(X_test)} samples")
+            self.logger.info(
+                f"QRF predictions completed for {len(X_test)} samples"
+            )
             return imputations
 
         except Exception as e:
             self.logger.error(f"Error during QRF prediction: {str(e)}")
-            raise RuntimeError(f"Failed to predict with QRF model: {str(e)}") from e
+            raise RuntimeError(
+                f"Failed to predict with QRF model: {str(e)}"
+            ) from e
 
 
 class QRF(Imputer):
@@ -89,7 +95,7 @@ class QRF(Imputer):
 
         The random seed is set through the RANDOM_STATE constant from config.
 
-        Args: 
+        Args:
             random_seed: Seed for replicability.
         """
         super().__init__()
