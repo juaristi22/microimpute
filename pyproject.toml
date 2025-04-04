@@ -22,10 +22,12 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "pytest-cov",
     "flake8",
     "black",
     "isort",
     "mypy",
+    "build",
 ]
 
 docs = [
