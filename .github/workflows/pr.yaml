@@ -14,12 +14,9 @@ jobs:
           python-version: "3.11"
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-      - name: uv pip install
-        run: uv pip install
       - name: Install relevant dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install black isort linecheck
+          uv pip install black isort linecheck
       - name: Check code formatting
         run: make check-format
 
@@ -35,8 +32,6 @@ jobs:
         uses: actions/checkout@v3
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-      - name: uv pip install
-        run: uv pip install
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
@@ -50,8 +45,7 @@ jobs:
           sudo Rscript -e 'install.packages("StatMatch", repos="https://cloud.r-project.org")'
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          make install
+          uv pip install --editable . --extras dev
       - name: Run tests with coverage
         run: make test
       - name: Upload coverage to Codecov
@@ -68,8 +62,6 @@ jobs:
         uses: actions/checkout@v3
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-      - name: uv pip install
-        run: uv pip install
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -83,8 +75,7 @@ jobs:
           sudo Rscript -e 'install.packages("StatMatch", repos="https://cloud.r-project.org")'
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          make install
+          uv pip install --editable . --extras dev,docs
       - name: Build package
         run: make build
       - name: Test documentation builds
