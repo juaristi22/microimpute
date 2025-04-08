@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional, Set
 import pandas as pd
 from pydantic import validate_call
 
-from us_imputation_benchmarking.config import VALIDATE_CONFIG
+from microimpute.config import VALIDATE_CONFIG
 
 
 class Imputer(ABC):

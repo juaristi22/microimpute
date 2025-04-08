@@ -6,7 +6,7 @@ A package for benchmarking different imputation methods.
 
 __version__ = "0.1.0"
 
-from us_imputation_benchmarking.utils.logging_utils import configure_logging
+from microimpute.utils.logging_utils import configure_logging
 
 
 def main():

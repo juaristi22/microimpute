@@ -1,16 +1,15 @@
-"""Tests for the OLS (Ordinary Least Squares) imputation model.
+"""Tests for the Quantile Regression Forest imputation model.
 """
 
 from typing import Dict, List
 
-import numpy as np
 import pandas as pd
 from sklearn.datasets import load_iris
 
-from us_imputation_benchmarking.comparisons.data import preprocess_data
-from us_imputation_benchmarking.config import QUANTILES
-from us_imputation_benchmarking.evaluations import *
-from us_imputation_benchmarking.models.ols import OLS
+from microimpute.comparisons.data import preprocess_data
+from microimpute.config import QUANTILES
+from microimpute.evaluations import *
+from microimpute.models.qrf import QRF
 
 # Test Method on iris dataset
 iris_data = load_iris()
@@ -22,14 +21,14 @@ imputed_variables = ["petal width (cm)"]
 iris_df = iris_df[predictors + imputed_variables]
 
 
-def test_ols_cross_validation(
+def test_qrf_cross_validation(
     data: pd.DataFrame = iris_df,
     predictors: List[str] = predictors,
     imputed_variables: List[str] = imputed_variables,
     quantiles: List[float] = QUANTILES,
 ) -> None:
     """
-    Test the OLS model on a specific dataset.
+    Test the QRF model on a specific dataset.
 
     Args:
             data: DataFrame with the dataset of interest.
@@ -37,33 +36,33 @@ def test_ols_cross_validation(
             imputed_variables: List of variables to impute.
             quantiles: List of quantiles to predict.
     """
-    ols_results = cross_validate_model(
-        OLS, data, predictors, imputed_variables
+    qrf_results = cross_validate_model(
+        QRF, data, predictors, imputed_variables
     )
 
-    ols_results.to_csv("ols_results.csv")
+    qrf_results.to_csv("qrf_results.csv")
 
-    assert not ols_results.isna().any().any()
+    assert not qrf_results.isna().any().any()
 
     plot_train_test_performance(
-        ols_results, save_path="ols_train_test_performance.png"
+        qrf_results, save_path="qrf_train_test_performance.png"
     )
 
 
-def test_ols_example(
+def test_qrf_example(
     data: pd.DataFrame = iris_df,
     predictors: List[str] = predictors,
     imputed_variables: List[str] = imputed_variables,
     quantiles: List[float] = QUANTILES,
 ) -> None:
     """
-    Example of how to use the OLS imputer model.
+    Example of how to use the Quantile Random Forest imputer model.
 
     This example demonstrates:
-    - Initializing an OLS model
-    - Fitting the model to training data
+    - Initializing a QRF model
+    - Fitting the model with optional hyperparameters
     - Predicting quantiles on test data
-    - How OLS models assume normally distributed residuals
+    - How QRF can capture complex nonlinear relationships
 
     Args:
         data: DataFrame with the dataset to use.
@@ -73,11 +72,17 @@ def test_ols_example(
     """
     X_train, X_test = preprocess_data(data)
 
-    # Initialize OLS model
-    model = OLS()
+    # Initialize QRF model
+    model = QRF()
 
-    # Fit the model
-    fitted_model = model.fit(X_train, predictors, imputed_variables)
+    # Fit the model with RF hyperparameters
+    fitted_model = model.fit(
+        X_train,
+        predictors,
+        imputed_variables,
+        n_estimators=100,  # Number of trees
+        min_samples_leaf=5,  # Min samples in leaf nodes
+    )
 
     # Predict at multiple quantiles
     predictions: Dict[float, pd.DataFrame] = fitted_model.predict(
@@ -88,20 +93,5 @@ def test_ols_example(
     assert isinstance(predictions, dict)
     assert set(predictions.keys()) == set(quantiles)
 
-    # Demonstrate how OLS uses normal distribution assumption
-    median_pred = predictions[0.5]
-    q10_pred = predictions[0.1]
-    q90_pred = predictions[0.9]
-
-    # The difference between q90 and median should approximately equal
-    # the difference between median and q10 for OLS (symmetric distribution)
-    upper_diff = q90_pred - median_pred
-    lower_diff = median_pred - q10_pred
-
-    # Allow some numerical error
-    np.testing.assert_allclose(
-        upper_diff.mean(),
-        lower_diff.mean(),
-        rtol=0.1,
-        err_msg="OLS should have symmetric quantile predictions around the median",
-    )
+    # QRF should capture nonlinear relationships
+    # We'd need more complex tests to verify this in detail

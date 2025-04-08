@@ -14,7 +14,7 @@ from pydantic import validate_call
 from rpy2.robjects import numpy2ri, pandas2ri
 from rpy2.robjects.packages import importr
 
-from us_imputation_benchmarking.config import VALIDATE_CONFIG
+from microimpute.config import VALIDATE_CONFIG
 
 # Enable R-Python DataFrame and array conversion
 pandas2ri.activate()

@@ -7,9 +7,9 @@ import numpy as np
 import pandas as pd
 from pydantic import validate_call
 
-from us_imputation_benchmarking.config import RANDOM_STATE, VALIDATE_CONFIG
-from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
-from us_imputation_benchmarking.utils import qrf
+from microimpute.config import RANDOM_STATE, VALIDATE_CONFIG
+from microimpute.models.imputer import Imputer, ImputerResults
+from microimpute.utils import qrf
 
 
 class QRFResults(ImputerResults):

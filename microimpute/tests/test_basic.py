@@ -3,6 +3,6 @@
 
 def test_import() -> None:
     """Test that the package can be imported."""
-    import us_imputation_benchmarking
+    import microimpute
 
-    assert us_imputation_benchmarking is not None
+    assert microimpute is not None

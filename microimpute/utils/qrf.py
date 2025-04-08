@@ -14,7 +14,7 @@ import pandas as pd
 from pydantic import validate_call
 from quantile_forest import RandomForestQuantileRegressor
 
-from us_imputation_benchmarking.config import RANDOM_STATE, VALIDATE_CONFIG
+from microimpute.config import RANDOM_STATE, VALIDATE_CONFIG
 
 
 class QRF:

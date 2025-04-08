@@ -13,7 +13,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from pydantic import validate_call
 
-from us_imputation_benchmarking.config import (
+from microimpute.config import (
     PLOT_CONFIG,
     QUANTILES,
     VALIDATE_CONFIG,

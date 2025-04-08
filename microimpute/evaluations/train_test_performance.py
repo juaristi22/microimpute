@@ -13,7 +13,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from pydantic import validate_call
 
-from us_imputation_benchmarking.config import PLOT_CONFIG, VALIDATE_CONFIG
+from microimpute.config import PLOT_CONFIG, VALIDATE_CONFIG
 
 logger = logging.getLogger(__name__)
 

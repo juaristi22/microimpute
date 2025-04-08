@@ -11,9 +11,9 @@ import pandas as pd
 import pytest
 from sklearn.datasets import load_iris
 
-from us_imputation_benchmarking.comparisons.data import preprocess_data
-from us_imputation_benchmarking.config import QUANTILES
-from us_imputation_benchmarking.models import *
+from microimpute.comparisons.data import preprocess_data
+from microimpute.config import QUANTILES
+from microimpute.models import *
 
 
 @pytest.fixture

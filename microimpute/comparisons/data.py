@@ -16,7 +16,7 @@ from pydantic import validate_call
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-from us_imputation_benchmarking.config import (
+from microimpute.config import (
     RANDOM_STATE,
     TEST_SIZE,
     TRAIN_SIZE,

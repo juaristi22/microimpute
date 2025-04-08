@@ -12,8 +12,8 @@ import numpy as np
 import pandas as pd
 from pydantic import validate_call
 
-from us_imputation_benchmarking.config import QUANTILES, VALIDATE_CONFIG
-from us_imputation_benchmarking.models.quantreg import QuantReg
+from microimpute.config import QUANTILES, VALIDATE_CONFIG
+from microimpute.models.quantreg import QuantReg
 
 log = logging.getLogger(__name__)
 

@@ -8,8 +8,8 @@ import pandas as pd
 import statsmodels.api as sm
 from pydantic import validate_call
 
-from us_imputation_benchmarking.config import VALIDATE_CONFIG
-from us_imputation_benchmarking.models.imputer import Imputer, ImputerResults
+from microimpute.config import VALIDATE_CONFIG
+from microimpute.models.imputer import Imputer, ImputerResults
 
 
 class QuantRegResults(ImputerResults):

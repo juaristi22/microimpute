@@ -13,13 +13,13 @@ import pandas as pd
 from pydantic import validate_call
 from sklearn.model_selection import KFold
 
-from us_imputation_benchmarking.comparisons.quantile_loss import quantile_loss
-from us_imputation_benchmarking.config import (
+from microimpute.comparisons.quantile_loss import quantile_loss
+from microimpute.config import (
     QUANTILES,
     RANDOM_STATE,
     VALIDATE_CONFIG,
 )
-from us_imputation_benchmarking.models.quantreg import QuantReg
+from microimpute.models.quantreg import QuantReg
 
 log = logging.getLogger(__name__)
 
