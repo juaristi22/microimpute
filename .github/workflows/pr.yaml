@@ -45,7 +45,6 @@ jobs:
           sudo Rscript -e 'install.packages("StatMatch", repos="https://cloud.r-project.org")'
       - name: Install Python dependencies
         run: |
-          ls -la
           uv pip install -e ".[dev]" --system
       - name: Run tests with coverage
         run: make test
@@ -76,7 +75,6 @@ jobs:
           sudo Rscript -e 'install.packages("StatMatch", repos="https://cloud.r-project.org")'
       - name: Install dependencies
         run: |
-          ls -la
           uv pip install -e ".[dev,docs]" --system
       - name: Build package
         run: make build
