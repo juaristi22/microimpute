@@ -1,5 +1,4 @@
-"""Statistical matching imputation model using hot deck methods.
-"""
+"""Statistical matching imputation model using hot deck methods."""
 
 from typing import Callable, Dict, List, Optional, Tuple
 
@@ -10,9 +9,7 @@ from rpy2.robjects import pandas2ri
 
 from microimpute.config import VALIDATE_CONFIG
 from microimpute.models.imputer import Imputer, ImputerResults
-from microimpute.utils.statmatch_hotdeck import (
-    nnd_hotdeck_using_rpy2,
-)
+from microimpute.utils.statmatch_hotdeck import nnd_hotdeck_using_rpy2
 
 MatchingHotdeckFn = Callable[
     [

@@ -1,5 +1,4 @@
-"""Quantile Regression imputation model.
-"""
+"""Quantile Regression imputation model."""
 
 from typing import Any, Dict, List, Optional
 

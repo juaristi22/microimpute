@@ -1,5 +1,4 @@
-"""Quantile Random Forest imputation model.
-"""
+"""Quantile Random Forest imputation model."""
 
 from typing import Any, Dict, List, Optional
 

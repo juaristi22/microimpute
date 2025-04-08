@@ -1,5 +1,4 @@
-"""Tests for the Quantile Regression Forest imputation model.
-"""
+"""Tests for the Quantile Regression Forest imputation model."""
 
 from typing import Dict, List
 

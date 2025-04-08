@@ -2,7 +2,7 @@ title: MicroImpute
 author: PolicyEngine
 
 execute:
-  execute_notebooks: off
+  execute_notebooks: force
 
 repository:
   url: https://github.com/policyengine/us-imputation-benchmarking

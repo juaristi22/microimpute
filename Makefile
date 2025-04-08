@@ -2,16 +2,16 @@ install:
 	pip install -e ".[dev,docs]"
 
 test:
-	pytest us_imputation_benchmarking/tests/ --cov=us_imputation_benchmarking --cov-report=xml --maxfail=0
+	pytest microimpute/tests/ --cov=microimpute --cov-report=xml --maxfail=0
 
 check-format:
 	linecheck .
-	isort --check-only --profile black us_imputation_benchmarking/
+	isort --check-only --profile black microimpute/
 	black . -l 79 --check
 
 format:
 	linecheck . --fix
-	isort --profile black us_imputation_benchmarking/
+	isort --profile black microimpute/
 	black . -l 79
 
 documentation:

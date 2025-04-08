@@ -1,5 +1,4 @@
-"""Tests for the Statistical Matching imputation model.
-"""
+"""Tests for the Statistical Matching imputation model."""
 
 from typing import Dict, List
 

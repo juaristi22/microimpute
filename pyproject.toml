@@ -21,14 +21,14 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
-    "pytest-cov",
-    "flake8",
+    "pytest==8.3.4",
+    "pytest-cov==6.1.0",
+    "flake8==6.0.0",
     "black",
     "isort",
     "mypy",
-    "build",
-    "linecheck",
+    "build==1.2.2",
+    "linecheck==0.1.0",
 ]
 
 docs = [

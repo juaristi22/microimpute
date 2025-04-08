@@ -3,7 +3,7 @@ root: index
 
 parts: 
 
-  - caption: Available models
+  - caption: Models
     chapters:
       - file: models/imputer/index
         sections:

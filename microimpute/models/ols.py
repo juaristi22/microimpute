@@ -1,5 +1,4 @@
-"""Ordinary Least Squares regression model for imputation.
-"""
+"""Ordinary Least Squares regression model for imputation."""
 
 from typing import Dict, List, Optional
 

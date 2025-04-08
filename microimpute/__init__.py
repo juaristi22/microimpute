@@ -6,10 +6,7 @@ A package for benchmarking different imputation methods using microdata.
 __version__ = "0.1.0"
 
 # Import data handling functions
-from microimpute.comparisons.data import (
-    prepare_scf_data,
-    preprocess_data,
-)
+from microimpute.comparisons.data import prepare_scf_data, preprocess_data
 from microimpute.comparisons.imputations import get_imputations
 from microimpute.comparisons.plot import plot_loss_comparison
 
@@ -29,9 +26,7 @@ from microimpute.config import (
 )
 
 # Import evaluation modules
-from microimpute.evaluations.cross_validation import (
-    cross_validate_model,
-)
+from microimpute.evaluations.cross_validation import cross_validate_model
 from microimpute.evaluations.train_test_performance import (
     plot_train_test_performance,
 )
