@@ -41,8 +41,8 @@ class QuantRegResults(ImputerResults):
 
         Args:
             X_test: DataFrame containing the test data.
-            quantiles: List of quantiles to predict. If None, uses the quantiles
-                from training.
+            quantiles: List of quantiles to predict. If None, uses the
+                quantiles from training.
 
         Returns:
             Dictionary mapping quantiles to predicted values.

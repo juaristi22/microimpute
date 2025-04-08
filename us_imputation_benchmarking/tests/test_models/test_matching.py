@@ -81,7 +81,7 @@ def test_matching_example_use(
     # Predict for the test data
     # For matching, quantiles don't have the same meaning as in regression
     # The same matched value is used for all quantiles
-    test_quantiles: List[float] = [0.5]  # Just use one quantile for simplicity
+    test_quantiles: List[float] = [0.5]  # Just one quantile for simplicity
     predictions: Dict[float, pd.DataFrame] = fitted_model.predict(
         X_test, test_quantiles
     )
