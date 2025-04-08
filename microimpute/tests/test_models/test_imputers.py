@@ -9,7 +9,7 @@ from typing import Type
 
 import pandas as pd
 import pytest
-from sklearn.datasets import load_iris
+from sklearn.datasets import load_diabetes
 
 from microimpute.comparisons.data import preprocess_data
 from microimpute.config import QUANTILES
@@ -17,20 +17,20 @@ from microimpute.models import *
 
 
 @pytest.fixture
-def iris_data() -> pd.DataFrame:
-    """Create a dataset from the Iris dataset for testing.
+def diabetes_data() -> pd.DataFrame:
+    """Create a dataset from the Diabetes dataset for testing.
 
     Returns:
-        A DataFrame with the Iris dataset.
+        A DataFrame with the Diabetes dataset.
     """
-    # Load the Iris dataset
-    iris = load_iris()
+    # Load the Diabetes dataset
+    diabetes = load_diabetes()
 
     # Create DataFrame with feature names
-    data = pd.DataFrame(iris.data, columns=iris.feature_names)
+    data = pd.DataFrame(diabetes.data, columns=diabetes.feature_names)
 
-    predictors = ["sepal length (cm)", "sepal width (cm)", "petal length (cm)"]
-    imputed_variables = ["petal width (cm)"]
+    predictors = ["age", "sex", "bmi", "bp"]
+    imputed_variables = ["s1"]
 
     data = data[predictors + imputed_variables]
 
@@ -65,20 +65,20 @@ def test_init_signatures(model_class: Type[Imputer]) -> None:
     "model_class", ALL_IMPUTER_MODELS, ids=lambda cls: cls.__name__
 )
 def test_fit_predict_interface(
-    model_class: Type[Imputer], iris_data: pd.DataFrame
+    model_class: Type[Imputer], diabetes_data: pd.DataFrame
 ) -> None:
     """Test the fit and predict methods for each model.
     Demonstrating models can be interchanged through the Imputer interface.
 
     Args:
         model_class: The model class to test
-        iris_data: DataFrame with sample data
+        diabetes_data: DataFrame with sample data
     """
     quantiles = QUANTILES
-    predictors = ["sepal length (cm)", "sepal width (cm)", "petal length (cm)"]
-    imputed_variables = ["petal width (cm)"]
+    predictors = ["age", "sex", "bmi", "bp"]
+    imputed_variables = ["s1"]
 
-    X_train, X_test = preprocess_data(iris_data)
+    X_train, X_test = preprocess_data(diabetes_data)
 
     # Test with specified quantiles
 

@@ -1,7 +1,7 @@
 """Data preparation utilities for imputation benchmarking.
 
-This module provides functions for acquiring, preprocessing, and splitting data for
-imputation benchmarking. It includes utilities for downloading Survey of Consumer Finances
+This module provides functions for acquiring, preprocessing, and splitting data for imputation benchmarking. 
+It includes utilities for downloading Survey of Consumer Finances
 (SCF) data, normalizing features, and creating train-test splits with consistent parameters.
 """
 

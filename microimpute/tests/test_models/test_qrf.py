@@ -3,25 +3,25 @@
 from typing import Dict, List
 
 import pandas as pd
-from sklearn.datasets import load_iris
+from sklearn.datasets import load_diabetes
 
 from microimpute.comparisons.data import preprocess_data
 from microimpute.config import QUANTILES
 from microimpute.evaluations import *
 from microimpute.models.qrf import QRF
 
-# Test Method on iris dataset
-iris_data = load_iris()
-iris_df = pd.DataFrame(iris_data.data, columns=iris_data.feature_names)
+# Test Method on diabetes dataset
+diabetes_data = load_diabetes()
+diabetes_df = pd.DataFrame(diabetes_data.data, columns=diabetes_data.feature_names)
 
-predictors = ["sepal length (cm)", "sepal width (cm)", "petal length (cm)"]
-imputed_variables = ["petal width (cm)"]
+predictors = ["age", "sex", "bmi", "bp"]
+imputed_variables = ["s1"]
 
-iris_df = iris_df[predictors + imputed_variables]
+diabetes_df = diabetes_df[predictors + imputed_variables]
 
 
 def test_qrf_cross_validation(
-    data: pd.DataFrame = iris_df,
+    data: pd.DataFrame = diabetes_df,
     predictors: List[str] = predictors,
     imputed_variables: List[str] = imputed_variables,
     quantiles: List[float] = QUANTILES,
@@ -49,7 +49,7 @@ def test_qrf_cross_validation(
 
 
 def test_qrf_example(
-    data: pd.DataFrame = iris_df,
+    data: pd.DataFrame = diabetes_df,
     predictors: List[str] = predictors,
     imputed_variables: List[str] = imputed_variables,
     quantiles: List[float] = QUANTILES,
