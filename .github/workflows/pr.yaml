@@ -16,7 +16,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
       - name: Install relevant dependencies
         run: |
-          uv pip install black isort linecheck
+          uv pip install black isort linecheck --system
       - name: Check code formatting
         run: make check-format
 
@@ -45,7 +45,7 @@ jobs:
           sudo Rscript -e 'install.packages("StatMatch", repos="https://cloud.r-project.org")'
       - name: Install Python dependencies
         run: |
-          uv pip install --editable . --extras dev
+          uv pip install --editable . --extra dev --system
       - name: Run tests with coverage
         run: make test
       - name: Upload coverage to Codecov
@@ -75,7 +75,7 @@ jobs:
           sudo Rscript -e 'install.packages("StatMatch", repos="https://cloud.r-project.org")'
       - name: Install dependencies
         run: |
-          uv pip install --editable . --extras dev,docs
+          uv pip install --editable . --extra dev,docs --system
       - name: Build package
         run: make build
       - name: Test documentation builds
