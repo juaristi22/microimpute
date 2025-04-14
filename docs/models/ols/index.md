@@ -1,14 +1,13 @@
 # Ordinary Least Squares Linear Regression
 
-The `OLS` model uses linear regression to predict missing values based on relationships between predictor and target variables.
+The `OLS` model employs linear regression techniques to predict missing values by leveraging the relationships between predictor and target variables. This classic statistical approach provides a computationally efficient method for imputation while offering theoretical guarantees under certain assumptions.
 
 ## How It Works
-- Fits a linear regression model using statsmodels OLS implementation
-- Assumes normally distributed residuals to generate different quantiles
-- For prediction, computes the mean prediction and adds a quantile-specific offset
+
+The OLS imputer works by fitting a linear regression model using the statsmodels implementation of Ordinary Least Squares. During the training phase, it identifies the coefficients that minimize the sum of squared residuals between the predicted and actual values in the training data. This creates a model that captures the linear relationship between the predictors and target variables.
+
+For prediction at different quantiles, the model makes an important assumption that the residuals (the differences between predicted and actual values) follow a normal distribution. This assumption allows the model to generate predictions at various quantiles by starting with the mean prediction and adding a quantile-specific offset derived from the normal distribution. Specifically, it computes the standard error of the predictions and applies the inverse normal cumulative distribution function to generate predictions at the requested quantiles.
 
 ## Key Features
-- Simple parametric approach with fast training and prediction
-- Assumes linear relationships between variables
-- Models uncertainty by assuming normal distribution of residuals
-- Uses the inverse normal CDF (norm.ppf) to generate quantile-specific predictions
+
+The OLS imputer offers a simple yet powerful parametric approach with fast training and prediction times compared to more complex models. It relies on the assumption of linear relationships between variables, making it particularly suitable for datasets where such relationships hold or as a baseline comparison for more complex approaches.

@@ -178,7 +178,8 @@ class ImputerResults(ABC):
 
     @validate_call(config=VALIDATE_CONFIG)
     def predict(
-        self, X_test: pd.DataFrame, quantiles: Optional[List[float]] = None
+        self, X_test: pd.DataFrame, 
+        quantiles: Optional[List[float]] = None
     ) -> Dict[float, pd.DataFrame]:
         """Predict imputed values at specified quantiles.
 

@@ -17,6 +17,9 @@ format:
 documentation:
 	cd docs && jupyter-book build .
 
+documentation-with-r-setup:
+	cd docs && python setup_docs_build.py && python prepare_notebooks.py && jupyter-book build .
+
 build:
 	pip install build
 	python -m build

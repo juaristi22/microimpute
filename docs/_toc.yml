@@ -9,8 +9,6 @@ parts:
         sections:
           - file: models/imputer/implement-new-model
       - file: models/matching/index
-        sections:
-          - file: models/matching/matching-imputation
       - file: models/ols/index
         sections:
           - file: models/ols/ols-imputation
@@ -24,6 +22,7 @@ parts:
     chapters:
       - file: imputation-benchmarking/index
         sections:
+          - file: imputation-benchmarking/benchmarking-methods
           - file: imputation-benchmarking/imputing-across-surveys
   - caption: CPS example
     chapters:
