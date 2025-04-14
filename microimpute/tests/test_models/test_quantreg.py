@@ -12,7 +12,9 @@ from microimpute.models.quantreg import QuantReg
 
 # Test Method on diabetes dataset
 diabetes_data = load_diabetes()
-diabetes_df = pd.DataFrame(diabetes_data.data, columns=diabetes_data.feature_names)
+diabetes_df = pd.DataFrame(
+    diabetes_data.data, columns=diabetes_data.feature_names
+)
 
 predictors = ["age", "sex", "bmi", "bp"]
 imputed_variables = ["s1"]
