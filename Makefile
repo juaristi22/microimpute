@@ -16,9 +16,10 @@ format:
 
 documentation:
 	cd docs && jupyter-book build .
+	python docs/add_plotly_to_book.py docs/_build/html
 
 documentation-with-r-setup:
-	cd docs && python setup_docs_build.py && python prepare_notebooks.py && jupyter-book build .
+	cd docs && python build_docs_with_r.py
 
 build:
 	pip install build
