@@ -7,6 +7,7 @@ the package.
 
 from typing import Any, Dict, List
 
+import numpy as np
 from pydantic import ConfigDict
 
 # Define a configuration for pydantic validation that allows
@@ -32,7 +33,7 @@ TRAIN_SIZE: float = 0.8
 TEST_SIZE: float = 0.2
 
 # Analysis configuration
-QUANTILES: List[float] = [0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95]
+QUANTILES: List[float] = [round(q, 2) for q in np.arange(0.05, 1.00, 0.05)]
 
 # Random state for reproducibility
 RANDOM_STATE: int = 42
@@ -47,7 +48,7 @@ DEFAULT_MODEL_PARAMS: Dict[str, Dict[str, Any]] = {
 
 # Plotting configuration
 PLOT_CONFIG: Dict[str, Any] = {
-    "width": 650,
-    "height": 500,
+    "width": 750,
+    "height": 600,
     "colors": {},
 }

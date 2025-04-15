@@ -83,9 +83,7 @@ def compute_quantile_loss(
         raise RuntimeError(f"Failed to compute quantile loss: {str(e)}") from e
 
 
-quantiles_legend: List[str] = [
-    str(int(q * 100)) + "th percentile" for q in QUANTILES
-]
+quantiles_legend: List[str] = [str(int(q * 100)) + "th" for q in QUANTILES]
 
 
 @validate_call(config=VALIDATE_CONFIG)
@@ -148,7 +146,7 @@ def compare_quantile_loss(
                 # Create new row and add to results
                 new_row = {
                     "Method": method,
-                    "Percentile": str(int(quantile * 100)) + "th percentile",
+                    "Percentile": str(int(quantile * 100)) + "th",
                     "Loss": q_loss.mean(),
                 }
 
