@@ -2,13 +2,13 @@
 
 The `QRF` model harnesses the power of ensemble learning by utilizing multiple decision trees to predict different quantiles of the target variable distribution. This sophisticated approach allows for flexible modeling of complex relationships while providing robust estimates of uncertainty.
 
-## How It Works
+## How it works
 
 Quantile Regression Forests build upon the foundation of random forests by implementing a specialized algorithm from the utils.qrf module. The method begins by constructing an ensemble of decision trees, each trained on different bootstrapped samples of the original data. This process, known as bagging, introduces diversity among the individual trees and helps reduce overfitting.
 
 During training, each tree in the forest predicts the target variable using only a random subset of the available features at each split point. This feature randomization further enhances diversity within the ensemble and improves its ability to capture various aspects of the underlying data relationships.
 
-## Key Features
+## Key features
 
 The Quantile Regression Forest (QRF) imputer provides a robust non-parametric method particularly effective for datasets exhibiting complex, non-linear relationships and heteroscedasticity. Unlike linear models, which rely on strong distributional assumptions, QRF makes minimal assumptions about the underlying data structure, adapting its uncertainty measures to reflect varying levels of variability within different regions of the input data.
 

@@ -1,8 +1,8 @@
-# Imputing Across Surveys
+# Imputing across surveys
 
 This document explains what the workflow for imputing variables from one survey to another using MicroImpute may look like. We'll use the example of imputing wealth data from the Survey of Consumer Finances (SCF) into the Current Population Survey (CPS).
 
- ## 1. Identifying Receiver and Donor Datasets
+ ## Identifying receiver and donor datasets
 
 The first step is to identify your donor and receiver datasets. The Donor dataset is that containing the variable you want to impute (e.g., SCF contains wealth data). The Receiver dataset will receive the imputed variable (e.g., CPS which originally did not contain wealth data but will after our imputation is completed). It is important for these two datasets to have predictor variables in common for the imputation to be succcesful. For example, both the SCF and CPS surveys contain demographic and financial data that may help us understand how wealth values may be distributed. 
 
@@ -17,7 +17,7 @@ scf_data = pd.read_csv("scf_data.csv")
 cps_data = pd.read_csv("cps_data.csv")
 ```
 
-## 2. Cleaning and Aligning Variables
+## Cleaning and aligning variables
 
 Before imputation, you need to ensure both datasets have compatible variables. Identify common variables present in both datasets
 and standardize their variable formats, units, and categories so that Python can recognize they indeed represent the same the same data. Remember to also handle missing values in common variables. Lastly, identify the target variable in the donor dataset which will directly inform the values of the imputed variable in the receiver dataset. 
@@ -47,11 +47,11 @@ for dataset in [scf_data, cps_data]:
 target_variable = ['networth']
 ```
 
-## 3. Performing Imputation
+## Performing imputation
 
 MicroImpute offers several methods for imputation across surveys. The approach under the hood will differ based on the method chosen, although the workflow will remain constant. Let us see this for two different example methods.
 
-### Matching Imputation
+### Matching imputation
 
 Matching finds similar observations in the donor dataset for each observation in the receiver dataset and imputes the values for those receiver observations based on the values of the target value in the donor dataset. To do so it should be fitted on the donor dataset and predict using the receiver dataset. This will ensure the correct mapping of variables from one survey to the other. 
 
@@ -69,7 +69,7 @@ matching_imputer.fit(scf_data)
 cps_data_with_wealth_matching = matching_imputer.predict(cps_data)
 ```
 
-### Regression Imputation (OLS)
+### Regression imputation (OLS)
 
 OLS imputation builds a linear regression model using the donor dataset and applies it to the receiver dataset, predicting what wealth values may be for a specific combination of predictor variable values. To do so, again we need to make sure that we first fit the model on the donor dataset, while calling predict on the receiver dataset.
 
@@ -87,7 +87,7 @@ ols_imputer.fit(scf_data)
 cps_data_with_wealth_ols = ols_imputer.impute(cps_data)
 ```
 
-## 4. Evaluating Imputation Quality
+## Evaluating imputation quality
 
 Evaluating imputation quality across surveys can be challenging since the true values aren't known in the receiver dataset. Comparing the distribution of the target variable in the donor dataset to the distribution of the variable we imputed in the receiver dataset may give us an understanding of the imputation quality for different sections of the distribution. We may want to pay particular attention to obtaining accurate prediction not only for mean or median values but also look at the performance at the distribution tales. This can be achieved computing the quantile loss supported by MicroImpute. Additionally, if we have performed imputation accross multiple methods we may want to compare across them. MicroImpute supports this through the easy workflow described in the [benchmarking-methods.ipynb](./benchmarking-methods.ipynb) file.
 
@@ -103,7 +103,7 @@ method_imputations = {
 loss_comparison_df = compare_quantile_loss(Y_test, method_imputations)
 ```
 
-## 5. Incorporating the Imputed Variable
+## Incorporating the imputed variable
 
 Once you've chosen the best imputation method, you may want to incorporate the imputed variable into your receiver dataset for future analysis.
 
@@ -115,6 +115,6 @@ final_imputed_dataset = cps_data_with_wealth_qrf
 final_imputed_dataset.to_csv("cps_with_imputed_wealth.csv", index=False)
 ```
 
-## Key Considerations
+## Key considerations
 
 Model selection plays a critical role in this workflow because different imputation methods have unique strengths. For example, a Quantile Regression Forest (QRF) often performs better when capturing complex relationships between variables, while a Matching approach may be more effective at preserving the original distributional properties of the data. Variable selection is equally important, since the common predictors across datasets should have strong power for explaining the target variable to ensure a reliable imputation. Because the ground truth is typically unknown in the receiver dataset, validation can involve simulation studies or comparing imputed values against known aggregate statistics. Finally, it is crucial to maintain documentation of the imputation process, from the choice of model to any adjustments made, so that the analysis remains transparent and reproducible for others.

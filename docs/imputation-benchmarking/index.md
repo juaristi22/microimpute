@@ -1,4 +1,4 @@
-# Benchmarking Different Imputation Methods
+# Benchmarking different imputation methods
 
 This documentation describes how the MicroImpute package allows you to compare different imputation methods using quantile loss metrics.
 

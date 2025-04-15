@@ -1,8 +1,8 @@
-# Creating a New Imputer Model
+# Creating a new imputer model
 
 This document demonstrates how to create a new imputation model by extending the `Imputer` and `ImputerResults` abstract base classes in MicroImpute.
 
-## 1. Understanding the MicroImpute Architecture
+## Understanding the microImpute architecture
 
 MicroImpute uses a two-class architecture for imputation models:
 
@@ -21,7 +21,7 @@ from microimpute.models.imputer import Imputer, ImputerResults
 from microimpute.config import VALIDATE_CONFIG
 ```
 
-## 2. Implementing a Model Results Class
+## Implementing a model results class
 
 First, we need to implement the `ImputerResults` subclass that will represent our fitted model and handle predictions. Let's create a model-specific imputer results class:
 
@@ -78,7 +78,7 @@ class NewModelResults(ImputerResults):
             ) from e
 ```
 
-## 3. Implementing the Main Model Class
+## Implementing the main model class
 
 Next, let's implement the main `Imputer` subclass that will handle model initialization and fitting:
 
@@ -130,7 +130,7 @@ class NewModel(Imputer):
             raise RuntimeError(f"Failed to fit Model: {str(e)}") from e
 ```
 
-## 4. Testing the New Model
+## Testing the new model
 
 You can test the functionality of your newly implemented `NewModel` imputer model with a simple example using the Iris dataset:
 
@@ -172,7 +172,7 @@ for q in test_quantiles:
     print(predictions[q].head())
 ```
 
-## 5. Integrating with the Benchmarking Framework
+## Integrating with the benchmarking framework
 
 The new `NewModel` model is then ready to be integrated into the MicroImpute benchmarking framework. Here's how you would compare it with other models:
 
@@ -202,7 +202,7 @@ loss_comparison_df = compare_quantile_loss(Y_test, method_imputations, imputed_v
 plot_loss_comparison(loss_comparison_df)
 ```
 
-## 6. Best Practices for Implementing New Models
+## Best practices for implementing new models
 
 When implementing a new imputation model for MicroImpute, adhering to certain best practices will ensure your model integrates seamlessly with the framework and provides a consistent experience for users.
 
@@ -212,13 +212,13 @@ The two-class architecture forms the foundation of a well-designed imputation mo
 
 Within these classes, you must implement the required abstract methods to fulfill the contract with the base classes. Your `Imputer` subclass should provide a thorough implementation of the `_fit()` method that handles the training process for your specific algorithm. Similarly, your `ImputerResults` subclass needs to implement the `_predict()` method that applies the fitted model to new data and generates predictions at requested quantiles.
 
-### Error Handling
+### Error handling
 
 Robust error handling is crucial for creating reliable imputation models. Your implementation should wrap model fitting and prediction operations in appropriate try/except blocks to capture and handle potential errors gracefully. When exceptions occur, provide informative error messages that help users understand what went wrong and how to address the issue. Use appropriate error types such as ValueError for input validation failures and RuntimeError for operational failures during model execution.
 
 Effective logging complements good error handling by providing visibility into the model's operation. Use the self.logger instance consistently throughout your code to record important information about the model's state and progress. Log significant events like the start and completion of fitting operations, parameter values, and any potential issues or warnings that arise during execution.
 
-### Parameters and Validation
+### Parameters and validation
 
 Type safety and parameter validation enhance the usability and reliability of your model. Add comprehensive type hints to all methods and parameters to enable better IDE support and make your code more self-documenting. Apply the `validate_call` decorator with the standard VALIDATE_CONFIG configuration to method signatures to enforce parameter validation consistently.
 

@@ -2,7 +2,7 @@
 
 The `Matching` model implements imputation through an elegant nearest neighbor distance hot deck matching approach. This technique draws from the principles of statistical matching, using existing complete records (donors) to provide values for records with missing data (recipients) by establishing meaningful connections based on similarities in predictor variables.
 
-## How It Works
+## How it works
 
 Statistical Matching in MicroImpute builds upon the foundation of R's StatMatch package, accessed through the rpy2 interface to provide a seamless integration of R's statistical power with Python's flexibility. The implementation leverages the well-established nearest neighbor distance hot deck matching algorithm, which has a strong theoretical foundation in statistical literature.
 
@@ -12,7 +12,7 @@ The prediction stage initiates a deliberate matching process where each record i
 
 Once the matching is complete, the model transfers the values from the matched donors to the recipients for the specified imputed variable. This transfer preserves the natural relationships and patterns present in the original data, as the values being imputed were actually observed rather than synthetically generated.
 
-## Key Features
+## Key features
 
 The Statistical Matching imputer offers a truly non-parametric approach that operates without imposing restrictive assumptions about the underlying data distribution. This distribution-free nature makes it particularly valuable in scenarios where the data doesn't conform to common statistical assumptions or when the relationships are too complex to model parametrically.
 

@@ -2,7 +2,7 @@
 
 The `QuantReg` model takes a direct approach to modeling specific quantiles of the target variable distribution. Unlike methods that model the mean and then derive quantiles from distributional assumptions, quantile regression addresses each conditional quantile explicitly, providing greater flexibility and robustness in heterogeneous data settings.
 
-## How It Works
+## How it works
 
 Quantile Regression in MicroImpute leverages the statsmodels' QuantReg implementation to create precise models of conditional quantiles. During the training phase, the approach fits separate regression models for each requested quantile level, creating a focused model for each part of the conditional distribution you wish to estimate.
 
@@ -10,7 +10,7 @@ The mathematical foundation of the method lies in its objective function, which 
 
 When making predictions, the system applies the appropriate quantile-specific model for each requested quantile level. This direct approach means predictions at different quantiles come from distinct models optimized for those specific portions of the distribution, rather than from a single model with assumptions about the error distribution.
 
-## Key Features
+## Key features
 
 Quantile Regression offers several compelling advantages for imputation tasks. It allows direct modeling of conditional quantiles without making restrictive assumptions about the underlying distribution of the data. This distribution-free approach makes the method robust to outliers and applicable in a wide range of scenarios where normal distribution assumptions might be violated.
 
