@@ -47,7 +47,7 @@ DEFAULT_MODEL_PARAMS: Dict[str, Dict[str, Any]] = {
 
 # Plotting configuration
 PLOT_CONFIG: Dict[str, Any] = {
-    "width": 1000,
-    "height": 600,
+    "width": 650,
+    "height": 500,
     "colors": {},
 }
