@@ -46,7 +46,7 @@ def test_matching_cross_validation(
     assert not quantreg_results.isna().any().any()
 
     plot_train_test_performance(
-        quantreg_results, save_path="quantreg_train_test_performance.png"
+        quantreg_results, save_path="quantreg_train_test_performance.jpg"
     )
 
 

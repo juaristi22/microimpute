@@ -46,7 +46,7 @@ def test_qrf_cross_validation(
     assert not qrf_results.isna().any().any()
 
     plot_train_test_performance(
-        qrf_results, save_path="qrf_train_test_performance.png"
+        qrf_results, save_path="qrf_train_test_performance.jpg"
     )
 
 

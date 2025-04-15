@@ -108,7 +108,7 @@ def plot_loss_comparison(
                 fig.write_image(save_path)
 
                 # Also save as HTML for interactive viewing
-                html_path = save_path.replace(".png", ".html").replace(
+                html_path = save_path.replace(
                     ".jpg", ".html"
                 )
                 fig.write_html(html_path)

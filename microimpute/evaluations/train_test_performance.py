@@ -132,7 +132,7 @@ def plot_train_test_performance(
                 fig.write_image(save_path)
 
                 # Also save HTML version for interactive viewing
-                html_path = save_path.replace(".png", ".html").replace(
+                html_path = save_path.replace(
                     ".jpg", ".html"
                 )
                 fig.write_html(html_path)

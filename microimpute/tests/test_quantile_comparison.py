@@ -37,4 +37,4 @@ def test_quantile_comparison() -> None:
 
     assert not loss_comparison_df.isna().any().any()
 
-    plot_loss_comparison(loss_comparison_df, save_path="loss_comparison.png")
+    plot_loss_comparison(loss_comparison_df, save_path="loss_comparison.jpg")

@@ -46,7 +46,7 @@ def test_matching_cross_validation(
     assert not matching_results.isna().any().any()
 
     plot_train_test_performance(
-        matching_results, save_path="matching_train_test_performance.png"
+        matching_results, save_path="matching_train_test_performance.jpg"
     )
 
 

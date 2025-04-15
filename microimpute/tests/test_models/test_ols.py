@@ -47,7 +47,7 @@ def test_ols_cross_validation(
     assert not ols_results.isna().any().any()
 
     plot_train_test_performance(
-        ols_results, save_path="ols_train_test_performance.png"
+        ols_results, save_path="ols_train_test_performance.jpg"
     )
 
 
