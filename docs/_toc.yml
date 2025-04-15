@@ -9,8 +9,8 @@ parts:
         sections:
           - file: models/imputer/implement-new-model
       - file: models/matching/index
-        #sections:
-        #  - file: models/matching/matching-imputation
+        sections:
+          - file: models/matching/matching-imputation
       - file: models/ols/index
         sections:
           - file: models/ols/ols-imputation
