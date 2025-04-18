@@ -18,7 +18,7 @@ class QRFResults(ImputerResults):
 
     def __init__(
         self,
-        model: "QRF",
+        models: Dict[str, "QRF"],
         predictors: List[str],
         imputed_variables: List[str],
     ) -> None:
@@ -30,7 +30,7 @@ class QRFResults(ImputerResults):
             imputed_variables: List of column names to be imputed.
         """
         super().__init__(predictors, imputed_variables)
-        self.model = model
+        self.models = models
 
     @validate_call(config=VALIDATE_CONFIG)
     def _predict(
@@ -57,17 +57,23 @@ class QRFResults(ImputerResults):
                     f"Predicting at {len(quantiles)} quantiles: {quantiles}"
                 )
                 for q in quantiles:
-                    imputation = self.model.predict(
-                        X_test[self.predictors], mean_quantile=q
-                    )
-                    imputations[q] = pd.DataFrame(imputation)
+                    imputed_df = pd.DataFrame()
+                    for variable in self.imputed_variables:
+                        model = self.models[variable]
+                        imputed_df[variable] = model.predict(
+                            X_test[self.predictors], mean_quantile=q
+                        )
+                    imputations[q] = imputed_df
             else:
                 q = np.random.uniform(0, 1)
                 self.logger.info(f"Predicting at random quantile: {q:.4f}")
-                imputation = self.model.predict(
-                    X_test[self.predictors], mean_quantile=q
-                )
-                imputations[q] = pd.DataFrame(imputation)
+                imputed_df = pd.DataFrame()
+                for variable in self.imputed_variables:
+                    model = self.models[variable]
+                    imputed_df = model.predict(
+                        X_test[self.predictors], mean_quantile=q
+                    )
+                imputations[q] = imputed_df
 
             self.logger.info(
                 f"QRF predictions completed for {len(X_test)} samples"
@@ -99,7 +105,7 @@ class QRF(Imputer):
         """
         super().__init__()
         self.seed = random_seed
-        self.model = qrf.QRF(seed=self.seed)
+        self.models = {}
         self.logger.debug("Initializing QRF imputer")
 
     @validate_call(config=VALIDATE_CONFIG)
@@ -132,16 +138,20 @@ class QRF(Imputer):
 
             # Extract training data
             X = X_train[predictors]
-            y = X_train[imputed_variables]
+            # Initialize and fit a QRF model for each variable
+            for variable in imputed_variables:
+                model = qrf.QRF(seed=self.seed)
+                y = pd.DataFrame(X_train[variable])
+                # Fit the QRF model
+                model.fit(X, y, **qrf_kwargs)
 
-            # Fit the QRF model
-            self.model.fit(X, y, **qrf_kwargs)
+                self.logger.info(
+                    f"QRF model fitted successfully with {len(X)} training samples"
+                )
 
-            self.logger.info(
-                f"QRF model fitted successfully with {len(X)} training samples"
-            )
+                self.models[variable] = model
             return QRFResults(
-                model=self.model,
+                models=self.models,
                 predictors=predictors,
                 imputed_variables=imputed_variables,
             )

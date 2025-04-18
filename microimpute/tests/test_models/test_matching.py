@@ -17,7 +17,7 @@ diabetes_df = pd.DataFrame(
 )
 
 predictors = ["age", "sex", "bmi", "bp"]
-imputed_variables = ["s1"]
+imputed_variables = ["s1", "s4"]
 
 diabetes_df = diabetes_df[predictors + imputed_variables]
 
@@ -41,7 +41,7 @@ def test_matching_cross_validation(
         Matching, data, predictors, imputed_variables
     )
 
-    matching_results.to_csv("matching_results.csv")
+    matching_results.to_csv("matching_cv_results.csv")
 
     assert not matching_results.isna().any().any()
 
@@ -93,3 +93,17 @@ def test_matching_example_use(
 
     # Check that predictions are pandas DataFrame for matching model
     assert isinstance(predictions[0.5], pd.DataFrame)
+
+    transformed_df = pd.DataFrame()
+    for quantile, pred_df in predictions.items():
+        # For each quantile and its predictions DataFrame
+        for variable in imputed_variables:
+            # Calculate the mean of predictions for this variable at this quantile
+            mean_value = pred_df[variable].mean()
+            # Create or update the value in our transformed DataFrame
+            if variable not in transformed_df.columns:
+                transformed_df[variable] = pd.Series(dtype="float64")
+            transformed_df.loc[quantile, variable] = mean_value
+
+    # Save to CSV for further analysis
+    transformed_df.to_csv("matching_predictions_by_quantile.csv")

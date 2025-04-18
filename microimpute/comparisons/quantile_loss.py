@@ -53,7 +53,7 @@ def compute_quantile_loss(
     """
     try:
         # Validate quantile value
-        if not 0 < q < 1:
+        if not 0 <= q <= 1:
             error_msg = f"Quantile must be between 0 and 1, got {q}"
             log.error(error_msg)
             raise ValueError(error_msg)
@@ -90,6 +90,7 @@ quantiles_legend: List[str] = [str(int(q * 100)) + "th" for q in QUANTILES]
 def compare_quantile_loss(
     test_y: pd.DataFrame,
     method_imputations: Dict[str, Dict[float, pd.DataFrame]],
+    imputed_variables: List[str],
 ) -> pd.DataFrame:
     """Compare quantile loss across different imputation methods.
 
@@ -116,11 +117,12 @@ def compare_quantile_loss(
 
         # Initialize empty dataframe with method names, quantile, and loss columns
         results_df: pd.DataFrame = pd.DataFrame(
-            columns=["Method", "Percentile", "Loss"]
+            columns=["Method", "Imputed Variable", "Percentile", "Loss"]
         )
 
         # Process each method and quantile
         for method, imputation in method_imputations.items():
+            quantile_losses = []
             for quantile in QUANTILES:
                 log.debug(
                     f"Computing loss for {method} at quantile {quantile}"
@@ -132,31 +134,75 @@ def compare_quantile_loss(
                     log.error(error_msg)
                     raise ValueError(error_msg)
 
-                # Flatten arrays for computation
-                test_values = test_y.values.flatten()
-                pred_values = imputation[quantile].values.flatten()
+                variable_losses = []
+                for variable in imputed_variables:
+                    if variable not in imputation[quantile].columns:
+                        error_msg = f"Variable {variable} not found in imputation results for method {method}"
+                        log.error(error_msg)
+                        raise ValueError(error_msg)
 
-                # Compute loss
-                q_loss = compute_quantile_loss(
-                    test_values,
-                    pred_values,
-                    quantile,
-                )
+                    # Flatten arrays for computation
+                    test_values = test_y[variable].values
 
-                # Create new row and add to results
+                    pred_values = imputation[quantile][variable].values
+
+                    # Compute loss
+                    q_loss = compute_quantile_loss(
+                        test_values,
+                        pred_values,
+                        quantile,
+                    )
+
+                    variable_losses.append(q_loss)
+
+                    # Create new row and add to results
+                    new_row = {
+                        "Method": method,
+                        "Imputed Variable": variable,
+                        "Percentile": str(int(quantile * 100)) + "th",
+                        "Loss": q_loss.mean(),
+                    }
+
+                    log.debug(
+                        f"Mean loss for {method} at q={quantile}: {q_loss.mean():.6f}"
+                    )
+
+                    results_df = pd.concat(
+                        [results_df, pd.DataFrame([new_row])],
+                        ignore_index=True,
+                    )
+
+                # Compute the average loss across all variables
+                avg_var_loss = np.mean(variable_losses)
+
+                # Create a new row for "average"
                 new_row = {
                     "Method": method,
-                    "Percentile": str(int(quantile * 100)) + "th",
-                    "Loss": q_loss.mean(),
+                    "Imputed Variable": "average",
+                    "Percentile": f"{int(quantile * 100)}th",
+                    "Loss": avg_var_loss,
                 }
-
-                log.debug(
-                    f"Mean loss for {method} at q={quantile}: {q_loss.mean():.6f}"
-                )
 
                 results_df = pd.concat(
                     [results_df, pd.DataFrame([new_row])], ignore_index=True
                 )
+
+            quantile_losses.append(avg_var_loss)
+
+            # Compute the average loss across all quantiles
+            avg_quant_loss = np.mean(quantile_losses)
+
+            # Create a new row for "average"
+            new_row = {
+                "Method": method,
+                "Imputed Variable": "average",
+                "Percentile": "average",
+                "Loss": avg_quant_loss,
+            }
+
+            results_df = pd.concat(
+                [results_df, pd.DataFrame([new_row])], ignore_index=True
+            )
 
         return results_df
 

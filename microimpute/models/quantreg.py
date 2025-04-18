@@ -60,32 +60,38 @@ class QuantRegResults(ImputerResults):
             if quantiles is not None:
                 # Predict for each requested quantile
                 for q in quantiles:
-                    try:
-                        if q not in self.models:
-                            error_msg = f"Model for quantile {q} not fitted. Available quantiles: {list(self.models.keys())}"
-                            self.logger.error(error_msg)
-                            raise ValueError(error_msg)
-                    except Exception as quantile_error:
-                        self.logger.error(
-                            f"Error accessing quantiles: {str(quantile_error)}"
-                        )
-                        raise RuntimeError(
-                            f"Failed to access {q} quantile for prediction"
-                        ) from quantile_error
-
+                    imputed_df = pd.DataFrame()
                     self.logger.info(f"Predicting with model for q={q}")
-                    imputation = self.models[q].predict(X_test_with_const)
-                    imputations[q] = pd.DataFrame(imputation)
+                    for variable in self.imputed_variables:
+                        try:
+                            if q not in self.models[variable]:
+                                error_msg = f"Model for quantile {q} not fitted. Available quantiles: {list(self.models.keys())}"
+                                self.logger.error(error_msg)
+                                raise ValueError(error_msg)
+                        except Exception as quantile_error:
+                            self.logger.error(
+                                f"Error accessing quantiles: {str(quantile_error)}"
+                            )
+                            raise RuntimeError(
+                                f"Failed to access {q} quantile for prediction"
+                            ) from quantile_error
+
+                        model = self.models[variable][q]
+                        imputed_df[variable] = model.predict(X_test_with_const)
+                    imputations[q] = imputed_df
             else:
                 # Predict for all quantiles that were already fitted
-                quantiles = list(self.models.keys())
+                quantiles = list(self.models[self.imputed_variables[0]].keys())
                 self.logger.info(
                     f"Predicting on already fitted {quantiles} quantiles"
                 )
                 for q in quantiles:
                     self.logger.info(f"Predicting with model for q={q}")
-                    imputation = self.models[q].predict(X_test_with_const)
-                    imputations[q] = pd.DataFrame(imputation)
+                    imputed_df = pd.DataFrame()
+                    for variable in self.imputed_variables:
+                        model = self.models[variable][q]
+                        imputed_df[variable] = model.predict(X_test_with_const)
+                    imputations[q] = imputed_df
 
             self.logger.info(
                 f"Completed predictions for {len(quantiles)} quantiles"
@@ -113,7 +119,7 @@ class QuantReg(Imputer):
     def __init__(self) -> None:
         """Initialize the Quantile Regression model."""
         super().__init__()
-        self.models: Dict[float, Any] = {}
+        self.models: Dict[str, Any] = {}
         self.logger.debug("Initializing QuantReg imputer")
 
     @validate_call(config=VALIDATE_CONFIG)
@@ -140,6 +146,9 @@ class QuantReg(Imputer):
             RuntimeError: If model fitting fails.
         """
         try:
+            for variable in imputed_variables:
+                self.models[variable] = {}
+
             # Validate quantiles if provided
             if quantiles:
                 invalid_quantiles = [q for q in quantiles if not 0 <= q <= 1]
@@ -155,7 +164,6 @@ class QuantReg(Imputer):
                     "No quantiles provided, will fit a single random quantile"
                 )
 
-            Y = X_train[imputed_variables]
             X_with_const = sm.add_constant(X_train[predictors])
             self.logger.info(
                 f"Prepared training data with {len(X_train)} samples, {len(predictors)} predictors"
@@ -164,14 +172,22 @@ class QuantReg(Imputer):
             if quantiles:
                 for q in quantiles:
                     self.logger.info(f"Fitting quantile regression for q={q}")
-                    self.models[q] = sm.QuantReg(Y, X_with_const).fit(q=q)
+                    for variable in imputed_variables:
+                        Y = X_train[variable]
+                        self.models[variable][q] = sm.QuantReg(
+                            Y, X_with_const
+                        ).fit(q=q)
                     self.logger.info(f"Model for q={q} fitted successfully")
             else:
                 q = np.random.uniform(0, 1)
                 self.logger.info(
                     f"Fitting quantile regression for random q={q:.4f}"
                 )
-                self.models[q] = sm.QuantReg(Y, X_with_const).fit(q=q)
+                for variable in imputed_variables:
+                    Y = X_train[variable]
+                    self.models[variable][q] = sm.QuantReg(
+                        Y, X_with_const
+                    ).fit(q=q)
                 self.logger.info(f"Model for q={q:.4f} fitted successfully")
 
             self.logger.info(f"QuantReg has {len(self.models)} fitted models")

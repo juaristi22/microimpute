@@ -150,15 +150,25 @@ class MatchingResults(ImputerResults):
                     self.logger.info(
                         f"Creating imputations for {len(quantiles)} quantiles"
                     )
+                    # For each quantile, return a DataFrame with all imputed variables
                     for q in quantiles:
-                        self.logger.debug(f"Adding result for quantile {q}")
-                        imputations[q] = fused0_pd[self.imputed_variables]
+                        imputed_df = pd.DataFrame()
+                        for variable in self.imputed_variables:
+                            self.logger.debug(
+                                f"Adding result for imputed variable {variable} at quantile {q}"
+                            )
+                            imputed_df[variable] = fused0_pd[variable]
+                        imputations[q] = imputed_df
                 else:
-                    q = np.random.uniform(0, 1)
+                    # If no quantiles specified, use a default one
+                    q = 0.5
                     self.logger.info(
-                        f"Creating imputation for random quantile {q:.3f}"
+                        f"Creating imputation for default quantile {q}"
                     )
-                    imputations[q] = fused0_pd[self.imputed_variables]
+                    imputed_df = pd.DataFrame()
+                    for variable in self.imputed_variables:
+                        imputed_df[variable] = fused0_pd[variable]
+                    imputations[q] = imputed_df
 
                 # Verify output shapes
                 for q, df in imputations.items():

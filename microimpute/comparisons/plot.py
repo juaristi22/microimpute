@@ -44,7 +44,7 @@ def plot_loss_comparison(
     )
 
     # Validate inputs
-    required_columns = ["Percentile", "Loss", "Method"]
+    required_columns = ["Method", "Imputed Variable", "Percentile", "Loss"]
     missing_columns = [
         col
         for col in required_columns
@@ -64,8 +64,11 @@ def plot_loss_comparison(
 
     try:
         logger.debug("Creating bar chart with plotly express")
+        df_avg = loss_comparison_df[
+            loss_comparison_df["Imputed Variable"] == "average"
+        ]
         fig = px.bar(
-            loss_comparison_df,
+            df_avg,
             x="Percentile",
             y="Loss",
             color="Method",

@@ -19,7 +19,7 @@ class OLSResults(ImputerResults):
 
     def __init__(
         self,
-        model: "OLS",
+        models: Dict[str, "OLS"],
         predictors: List[str],
         imputed_variables: List[str],
     ) -> None:
@@ -31,7 +31,7 @@ class OLSResults(ImputerResults):
             imputed_variables: List of imputed variable names.
         """
         super().__init__(predictors, imputed_variables)
-        self.model = model
+        self.models = models
 
     @validate_call(config=VALIDATE_CONFIG)
     def _predict(
@@ -60,13 +60,23 @@ class OLSResults(ImputerResults):
                     f"Predicting at {len(quantiles)} quantiles: {quantiles}"
                 )
                 for q in quantiles:
-                    imputation = self._predict_quantile(X_test_with_const, q)
-                    imputations[q] = pd.DataFrame(imputation)
+                    imputed_df = pd.DataFrame()
+                    for variable in self.imputed_variables:
+                        model = self.models[variable]
+                        imputed_df[variable] = self._predict_quantile(
+                            model, X_test_with_const, q
+                        )
+                    imputations[q] = pd.DataFrame(imputed_df)
             else:
                 q = np.random.uniform(0, 1)
                 self.logger.info(f"Predicting at random quantile: {q:.3f}")
-                imputation = self._predict_quantile(X_test_with_const, q)
-                imputations[q] = pd.DataFrame(imputation)
+                imputed_df = pd.DataFrame()
+                for variable in self.imputed_variables:
+                    model = self.models[variable]
+                    imputed_df[variable] = self._predict_quantile(
+                        model, X_test_with_const, q
+                    )
+                imputations[q] = pd.DataFrame(imputed_df)
             return imputations
 
         except Exception as e:
@@ -76,7 +86,9 @@ class OLSResults(ImputerResults):
             ) from e
 
     @validate_call(config=VALIDATE_CONFIG)
-    def _predict_quantile(self, X: pd.DataFrame, q: float) -> np.ndarray:
+    def _predict_quantile(
+        self, model, X: pd.DataFrame, q: float
+    ) -> np.ndarray:
         """Predict values at a specified quantile.
 
         Args:
@@ -90,8 +102,8 @@ class OLSResults(ImputerResults):
             RuntimeError: If prediction fails.
         """
         try:
-            mean_pred = self.model.predict(X)
-            se = np.sqrt(self.model.scale)
+            mean_pred = model.predict(X)
+            se = np.sqrt(model.scale)
 
             return mean_pred + norm.ppf(q) * se
         except Exception as e:
@@ -142,15 +154,17 @@ class OLS(Imputer):
                 f"Fitting OLS model with {len(predictors)} predictors"
             )
 
-            Y = X_train[imputed_variables]
+            self.models = {}
             X_with_const = sm.add_constant(X_train[predictors])
-
-            self.model = sm.OLS(Y, X_with_const).fit()
-            self.logger.info(
-                f"OLS model fitted successfully, R-squared: {self.model.rsquared:.4f}"
-            )
+            for variable in imputed_variables:
+                Y = X_train[variable]
+                model = sm.OLS(Y, X_with_const).fit()
+                self.logger.info(
+                    f"OLS model fitted successfully for the imputed variable {variable}, R-squared: {model.rsquared:.4f}"
+                )
+                self.models[variable] = model
             return OLSResults(
-                model=self.model,
+                models=self.models,
                 predictors=predictors,
                 imputed_variables=imputed_variables,
             )

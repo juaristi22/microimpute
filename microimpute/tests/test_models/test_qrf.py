@@ -17,7 +17,7 @@ diabetes_df = pd.DataFrame(
 )
 
 predictors = ["age", "sex", "bmi", "bp"]
-imputed_variables = ["s1"]
+imputed_variables = ["s1", "s4"]
 
 diabetes_df = diabetes_df[predictors + imputed_variables]
 
@@ -41,7 +41,7 @@ def test_qrf_cross_validation(
         QRF, data, predictors, imputed_variables
     )
 
-    qrf_results.to_csv("qrf_results.csv")
+    qrf_results.to_csv("qrf_cv_results.csv")
 
     assert not qrf_results.isna().any().any()
 
@@ -94,5 +94,16 @@ def test_qrf_example(
     assert isinstance(predictions, dict)
     assert set(predictions.keys()) == set(quantiles)
 
-    # QRF should capture nonlinear relationships
-    # We'd need more complex tests to verify this in detail
+    transformed_df = pd.DataFrame()
+    for quantile, pred_df in predictions.items():
+        # For each quantile and its predictions DataFrame
+        for variable in imputed_variables:
+            # Calculate the mean of predictions for this variable at this quantile
+            mean_value = pred_df[variable].mean()
+            # Create or update the value in our transformed DataFrame
+            if variable not in transformed_df.columns:
+                transformed_df[variable] = pd.Series(dtype="float64")
+            transformed_df.loc[quantile, variable] = mean_value
+
+    # Save to CSV for further analysis
+    transformed_df.to_csv("qrf_predictions_by_quantile.csv")
