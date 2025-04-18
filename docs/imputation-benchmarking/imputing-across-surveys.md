@@ -20,7 +20,7 @@ cps_data = pd.read_csv("cps_data.csv")
 ## Cleaning and aligning variables
 
 Before imputation, you need to ensure both datasets have compatible variables. Identify common variables present in both datasets
-and standardize their variable formats, units, and categories so that Python can recognize they indeed represent the same the same data. Remember to also handle missing values in common variables. Lastly, identify the target variable in the donor dataset which will directly inform the values of the imputed variable in the receiver dataset. 
+and standardize their variable formats, units, and categories so that Python can recognize they indeed represent the same the same data. Remember to also handle missing values in common variables. Lastly, identify the target variables in the donor dataset which will directly inform the values of the imputed variables in the receiver dataset. 
 
 ```python
 # Identify common variables 
@@ -89,7 +89,7 @@ cps_data_with_wealth_ols = ols_imputer.impute(cps_data)
 
 ## Evaluating imputation quality
 
-Evaluating imputation quality across surveys can be challenging since the true values aren't known in the receiver dataset. Comparing the distribution of the target variable in the donor dataset to the distribution of the variable we imputed in the receiver dataset may give us an understanding of the imputation quality for different sections of the distribution. We may want to pay particular attention to obtaining accurate prediction not only for mean or median values but also look at the performance at the distribution tales. This can be achieved computing the quantile loss supported by MicroImpute. Additionally, if we have performed imputation accross multiple methods we may want to compare across them. MicroImpute supports this through the easy workflow described in the [benchmarking-methods.ipynb](./benchmarking-methods.ipynb) file.
+Evaluating imputation quality across surveys can be challenging since the true values aren't known in the receiver dataset. Comparing the distribution of the target variables in the donor dataset to the distribution of the variables we imputed in the receiver dataset may give us an understanding of the imputation quality for different sections of the distribution. We may want to pay particular attention to obtaining accurate prediction not only for mean or median values but also look at the performance at the distribution tails. This can be achieved computing the quantile loss supported by MicroImpute. Additionally, if we have performed imputation accross multiple methods we may want to compare across them. MicroImpute supports this through the easy workflow described in the [benchmarking-methods.ipynb](./benchmarking-methods.ipynb) file.
 
 ```python
 # Ensure all imputations are in a dictionary mapping quantiles to dataframes containing imputed values

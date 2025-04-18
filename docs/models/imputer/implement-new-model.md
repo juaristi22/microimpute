@@ -9,7 +9,7 @@ MicroImpute uses a two-class architecture for imputation models:
 1. **Imputer**: The base model class that handles model initialization and fitting
 2. **ImputerResults**: Represents a fitted model and handles prediction
 
-This separation provides a clean distinction between the model definition and the fitted model instance, similar to statsmodels' approach.
+This separation provides a clean distinction between the model definition and the fitted model instance, similar to statsmodels' approach. Remember to check how currently supported models have been implemented if you would like to ensure full compatibility. 
 
 ```python
 from typing import Dict, List, Optional, Any
@@ -132,22 +132,22 @@ class NewModel(Imputer):
 
 ## Testing the new model
 
-You can test the functionality of your newly implemented `NewModel` imputer model with a simple example using the Iris dataset:
+You can test the functionality of your newly implemented `NewModel` imputer model with a simple example using the Diabetes dataset:
 
 ```python
-from sklearn.datasets import load_iris
+from sklearn.datasets import load_diabetes
 from microimpute.comparisons.data import preprocess_data
 
-# Load the Iris dataset
-iris = load_iris()
-iris_df = pd.DataFrame(iris.data, columns=iris.feature_names)
+# Load the Diabetes dataset
+diabetes = load_diabetes()
+diabetes_df = pd.DataFrame(diabetes.data, columns=diabetes.feature_names)
 
 # Define predictors and variables to impute
-predictors = ["sepal length (cm)", "sepal width (cm)", "petal length (cm)"]
-imputed_variables = ["petal width (cm)"]
+predictors = ["age", "sex", "bmi", "bp"]
+imputed_variables = ["s1", "s4"]
 
 # Filter the data
-data = iris_df[predictors + imputed_variables]
+data = diabetes_df[predictors + imputed_variables]
 
 # Split into train and test
 X_train, X_test = preprocess_data(data)
@@ -210,7 +210,7 @@ When implementing a new imputation model for MicroImpute, adhering to certain be
 
 The two-class architecture forms the foundation of a well-designed imputation model. You should create an `Imputer` subclass that handles model definition and fitting operations, establishing the core functionality of your approach. This class should be complemented by an `ImputerResults` subclass that represents the fitted model state and handles all prediction-related tasks. This separation of concerns creates a clean distinction between the fitting and prediction phases of your model's lifecycle.
 
-Within these classes, you must implement the required abstract methods to fulfill the contract with the base classes. Your `Imputer` subclass should provide a thorough implementation of the `_fit()` method that handles the training process for your specific algorithm. Similarly, your `ImputerResults` subclass needs to implement the `_predict()` method that applies the fitted model to new data and generates predictions at requested quantiles.
+Within these classes, you must implement the required abstract methods to fulfill the contract with the base classes. Your `Imputer` subclass should provide a thorough implementation of the `_fit()` method that handles the training process for your specific algorithm. Similarly, your `ImputerResults` subclass needs to implement the `_predict()` method that applies the fitted model to new data and generates predictions at requested quantiles. Check how currently supported models have been implemented if you would like to ensure iterative imputation for multiple target variables fully compatible with how other models do it. For example, to be able to compute quantile loss accross imputed quantiles and variables and compare it with different methods you must ensure iterative imputation within the fitting and predicting methods.
 
 ### Error handling
 
