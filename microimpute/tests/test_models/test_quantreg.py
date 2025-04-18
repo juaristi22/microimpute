@@ -101,8 +101,8 @@ def test_quantreg_example(
             mean_value = pred_df[variable].mean()
             # Create or update the value in our transformed DataFrame
             if variable not in transformed_df.columns:
-                transformed_df[variable] = pd.Series(dtype="float64")
+                transformed_df[variable] = pd.Series(dtype='float64')
             transformed_df.loc[quantile, variable] = mean_value
-
+    
     # Save to CSV for further analysis
     transformed_df.to_csv("quantreg_predictions_by_quantile.csv")
