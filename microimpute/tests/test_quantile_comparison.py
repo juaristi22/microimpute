@@ -12,6 +12,7 @@ from typing import List, Type
 
 import pandas as pd
 from sklearn.datasets import load_diabetes
+from sklearn.model_selection import train_test_split
 
 from microimpute.comparisons import *
 from microimpute.config import RANDOM_STATE
@@ -29,7 +30,9 @@ def test_quantile_comparison_diabetes() -> None:
     imputed_variables = ["s1", "s4"]
 
     diabetes_df = diabetes_df[predictors + imputed_variables]
-    X_train, X_test, dummy_info = preprocess_data(diabetes_df)
+    X_train, X_test = train_test_split(
+        diabetes_df, test_size=0.2, random_state=RANDOM_STATE
+    )
 
     Y_test: pd.DataFrame = X_test[imputed_variables]
 
