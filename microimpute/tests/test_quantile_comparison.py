@@ -29,7 +29,7 @@ def test_quantile_comparison_diabetes() -> None:
     imputed_variables = ["s1", "s4"]
 
     diabetes_df = diabetes_df[predictors + imputed_variables]
-    X_train, X_test = preprocess_data(diabetes_df)
+    X_train, X_test, dummy_info = preprocess_data(diabetes_df)
 
     Y_test: pd.DataFrame = X_test[imputed_variables]
 
@@ -51,11 +51,18 @@ def test_quantile_comparison_diabetes() -> None:
     )
 
 
-def test_quantile_comparison_cps() -> None:
-    """Test the end-to-end quantile loss comparison workflow on the cps data set."""
-    X_train, X_test, PREDICTORS, IMPUTED_VARIABLES = prepare_scf_data(
-        full_data=False, years=2019
+def test_quantile_comparison_scf() -> None:
+    """Test the end-to-end quantile loss comparison workflow on the scf data set."""
+    X_train, X_test, PREDICTORS, IMPUTED_VARIABLES, dummy_info = (
+        prepare_scf_data(full_data=False, years=2019)
     )
+
+    if dummy_info:
+        # Retrieve new predictors after processed data
+        for orig_col, dummy_cols in dummy_info.items():
+            IMPUTED_VARIABLES.remove(orig_col)
+            IMPUTED_VARIABLES + dummy_cols
+
     # Shrink down the data by sampling
     X_train = X_train.sample(frac=0.01, random_state=RANDOM_STATE)
     X_test = X_test.sample(frac=0.01, random_state=RANDOM_STATE)
@@ -73,8 +80,8 @@ def test_quantile_comparison_cps() -> None:
 
     assert not loss_comparison_df.isna().any().any()
 
-    loss_comparison_df.to_csv("cps_comparison_results.csv")
+    loss_comparison_df.to_csv("scf_comparison_results.csv")
 
     plot_loss_comparison(
-        loss_comparison_df, save_path="cps_loss_comparison.jpg"
+        loss_comparison_df, save_path="scf_loss_comparison.jpg"
     )

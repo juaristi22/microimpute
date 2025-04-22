@@ -52,6 +52,16 @@ class Imputer(ABC):
             self.logger.error(error_msg)
             raise ValueError(error_msg)
 
+        string_columns = [
+            col
+            for col in data.columns
+            if data[col].dtype == "object" or data[col].dtype == "string"
+        ]
+        if string_columns:
+            error_msg = f"String columns detected: {string_columns}. All columns must be numeric."
+            self.logger.error(error_msg)
+            raise ValueError(error_msg)
+
     @validate_call(config=VALIDATE_CONFIG)
     def fit(
         self,

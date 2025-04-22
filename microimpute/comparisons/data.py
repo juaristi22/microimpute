@@ -211,9 +211,9 @@ def _load(
 def prepare_scf_data(
     full_data: bool = False, years: Optional[Union[int, List[int]]] = None
 ) -> Union[
-    Tuple[pd.DataFrame, List[str], List[str]],  # when full_data=True
+    Tuple[pd.DataFrame, List[str], List[str], dict],  # when full_data=True
     Tuple[
-        pd.DataFrame, pd.DataFrame, List[str], List[str]
+        pd.DataFrame, pd.DataFrame, List[str], List[str], dict
     ],  # when full_data=False
 ]:
     """Preprocess the Survey of Consumer Finances data for model training and testing.
@@ -224,9 +224,11 @@ def prepare_scf_data(
 
     Returns:
         Different tuple formats depending on the value of full_data:
-          - If full_data=True: (data, predictor_columns, imputed_columns)
+          - If full_data=True: (data, predictor_columns, imputed_columns, dummy_info)
           - If full_data=False: (train_data, test_data,
-                predictor_columns, imputed_columns)
+                predictor_columns, imputed_columns, dummy_info)
+
+        Where dummy_info is a dictionary with information about dummy variables created from string columns.
 
     Raises:
         ValueError: If required columns are missing from the data
@@ -282,18 +284,18 @@ def prepare_scf_data(
 
         if full_data:
             logger.info("Processing full dataset without splitting")
-            data = preprocess_data(data, full_data=True)
+            data, dummy_info = preprocess_data(data, full_data=True)
             logger.info(
                 f"Returning full processed dataset with shape {data.shape}"
             )
-            return data, PREDICTORS, IMPUTED_VARIABLES
+            return data, PREDICTORS, IMPUTED_VARIABLES, dummy_info
         else:
             logger.info("Splitting data into train and test sets")
-            X_train, X_test = preprocess_data(data)
+            X_train, X_test, dummy_info = preprocess_data(data)
             logger.info(
                 f"Train set shape: {X_train.shape}, Test set shape: {X_test.shape}"
             )
-            return X_train, X_test, PREDICTORS, IMPUTED_VARIABLES
+            return X_train, X_test, PREDICTORS, IMPUTED_VARIABLES, dummy_info
 
     except Exception as e:
         logger.error(f"Error in prepare_scf_data: {str(e)}")
@@ -307,14 +309,10 @@ def preprocess_data(
     train_size: float = TRAIN_SIZE,
     test_size: float = TEST_SIZE,
 ) -> Union[
-    pd.DataFrame,  # when full_data=True
-    Tuple[pd.DataFrame, pd.DataFrame],  # when full_data=False
+    Tuple[pd.DataFrame, dict],  # when full_data=True
+    Tuple[pd.DataFrame, pd.DataFrame, dict],  # when full_data=False
 ]:
     """Preprocess the data for model training and testing.
-
-    # Validate data is not empty
-    if data is None or data.empty:
-        raise ValueError("Data must not be None or empty")
 
     Args:
         data: DataFrame containing the data to preprocess.
@@ -324,8 +322,10 @@ def preprocess_data(
 
     Returns:
         Different tuple formats depending on the value of full_data:
-          - If full_data=True: (data)
-          - If full_data=False: (X_train, X_test)
+          - If full_data=True: (data, dummy_info)
+          - If full_data=False: (X_train, X_test, dummy_info)
+
+        Where dummy_info is a dictionary mapping original columns to their resulting dummy columns
 
     Raises:
         ValueError: If data is empty or invalid
@@ -336,6 +336,13 @@ def preprocess_data(
         f"Preprocessing data with shape {data.shape}, full_data={full_data}"
     )
 
+    # Initialize dummy information dictionary
+    dummy_info = {
+        "original_columns": [],
+        "dummy_columns": [],
+        "column_mapping": {},
+    }
+
     try:
         if data.empty:
             raise ValueError("Data must not be None or empty")
@@ -343,6 +350,59 @@ def preprocess_data(
         missing_count = data.isna().sum().sum()
         if missing_count > 0:
             logger.warning(f"Data contains {missing_count} missing values")
+
+        # Transform string columns to dummy variables
+        logger.debug("Converting string columns to dummy variables")
+        try:
+            # Identify string and object columns
+            string_columns = [
+                col
+                for col in data.columns
+                if pd.api.types.is_string_dtype(data[col])
+                or pd.api.types.is_object_dtype(data[col])
+            ]
+
+            if string_columns:
+                logger.info(
+                    f"Found {len(string_columns)} string columns to convert: {string_columns}"
+                )
+                dummy_info["original_columns"] = string_columns
+
+                # Use pandas get_dummies to create one-hot encoded features
+                dummy_data = pd.get_dummies(
+                    data[string_columns], drop_first=True, dtype=float
+                )
+                dummy_info["dummy_columns"] = dummy_data.columns.tolist()
+                logger.debug(
+                    f"Created {dummy_data.shape[1]} dummy variables from {len(string_columns)} string columns"
+                )
+
+                # Create mapping from original columns to their resulting dummy columns
+                for orig_col in string_columns:
+                    # Find all dummy columns that came from this original column
+                    related_dummies = [
+                        col
+                        for col in dummy_data.columns
+                        if col.startswith(f"{orig_col}_")
+                    ]
+                    dummy_info["column_mapping"][orig_col] = related_dummies
+
+                # Drop original string columns and join the dummy variables
+                numeric_data = data.drop(columns=string_columns)
+                logger.debug(
+                    f"Removed original string columns, data shape: {numeric_data.shape}"
+                )
+
+                # Combine numeric columns with dummy variables
+                data = pd.concat([numeric_data, dummy_data], axis=1)
+                logger.info(
+                    f"Data shape after dummy variable conversion: {data.shape}"
+                )
+        except Exception as e:
+            logger.error(f"Error during string column conversion: {str(e)}")
+            raise RuntimeError(
+                "Failed to convert string columns to dummy variables"
+            ) from e
 
         # Normalize data
         logger.debug("Normalizing data")
@@ -370,7 +430,7 @@ def preprocess_data(
 
         if full_data:
             logger.info("Returning full preprocessed dataset")
-            return data
+            return data, dummy_info["column_mapping"]
         else:
             logger.debug(
                 f"Splitting data with train_size={train_size}, test_size={test_size}"
@@ -385,7 +445,7 @@ def preprocess_data(
                 logger.info(
                     f"Data split into train ({X_train.shape}) and test ({X_test.shape}) sets"
                 )
-                return X_train, X_test
+                return X_train, X_test, dummy_info["column_mapping"]
 
             except Exception as e:
                 logger.error(f"Error during train-test split: {str(e)}")

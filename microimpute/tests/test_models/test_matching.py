@@ -71,7 +71,7 @@ def test_matching_example_use(
         imputed_variables: List of variables to impute.
         quantiles: List of quantiles to predict.
     """
-    X_train, X_test = preprocess_data(data)
+    X_train, X_test, dummy_info = preprocess_data(data)
 
     # Initialize Matching model
     model = Matching()

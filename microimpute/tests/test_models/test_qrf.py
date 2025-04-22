@@ -71,7 +71,7 @@ def test_qrf_example(
         imputed_variables: List of target column names.
         quantiles: List of quantiles to predict.
     """
-    X_train, X_test = preprocess_data(data)
+    X_train, X_test, dummy_info = preprocess_data(data)
 
     # Initialize QRF model
     model = QRF()

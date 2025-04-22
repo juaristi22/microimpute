@@ -150,7 +150,7 @@ imputed_variables = ["s1", "s4"]
 data = diabetes_df[predictors + imputed_variables]
 
 # Split into train and test
-X_train, X_test = preprocess_data(data)
+X_train, X_test, dummy_info = preprocess_data(data)
 
 # Initialize our new model
 new_imputer = NewModel()

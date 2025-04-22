@@ -78,9 +78,7 @@ def test_fit_predict_interface(
     predictors = ["age", "sex", "bmi", "bp"]
     imputed_variables = ["s1"]
 
-    X_train, X_test = preprocess_data(diabetes_data)
-
-    # Test with specified quantiles
+    X_train, X_test, dummy_info = preprocess_data(diabetes_data)
 
     # Initialize the model
     model = model_class()
@@ -131,3 +129,24 @@ def test_fit_predict_interface(
         f"{model_class.__name__} predict should return a dictionary even with "
         f"default quantiles"
     )
+
+
+def test_string_column_validation():
+    """Test that the _validate_data method raises an error for string columns."""
+    # Create a simple dataframe with a string column
+    data = pd.DataFrame(
+        {"numeric_col": [1, 2, 3], "string_col": ["a", "b", "c"]}
+    )
+
+    # Create a model to test
+    model = OLS()
+
+    data, dummy_info = preprocess_data(data, full_data=True)
+
+    new_cols = []
+    for orig_col, dummy_cols in dummy_info.items():
+        new_cols + dummy_cols
+
+    new_cols.append("numeric_col")
+    # Test that it raises a ValueError with the expected message
+    model._validate_data(data, new_cols)
