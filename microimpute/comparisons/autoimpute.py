@@ -20,7 +20,7 @@ def autoimpute(donor_data: pd.DataFrame,
                imputed_variables: List[str], 
                models: Optional[List["Imputer"]] = None,
                quantiles: Optional[List[float]] = QUANTILES,
-               hyperparameters: Optional[Dict[str, Any]] = None,
+               hyperparameters: Optional[Dict[str, Dict[str, Any]]] = None,
                random_state: Optional[int] = RANDOM_STATE,
                train_size: Optional[float] = TRAIN_SIZE,
                k_folds: Optional[int] = 5,
@@ -99,11 +99,24 @@ def autoimpute(donor_data: pd.DataFrame,
 
         # Step 2: Imputation with each method
 
-        ## We evaluate imputation methods with a test donor subset right?
+        ## We evaluate imputation methods with a test donor subset right? And we train on all passed data and hope the user makes decisions about size?
 
         if not models:
             # If no models are provided, use default models
             model_classes: List[Type[Imputer]] = [QRF, OLS, QuantReg, Matching]
+
+        ## How do we want to handle the hyperparameters? Do we want to optimize in autoimpute as well and restructure all other functions to accept hyperparameters?
+
+        if hyperparameters:
+            model_names = [model_class.__name__ for model_class in model_classes]
+            for model_name, model_params in hyperparameters.items():
+                if model_name in model_names:
+                    # Update the model class with the provided hyperparameters
+                    if model_name == "QRF":
+                        log.info(f"Using hyperparameters for QRF: {model_params}")
+                else:
+                    log.info(f"None of the hyperparameters provided are relevant for the supported models: {model_names}. Using default hyperparameters.")
+
         method_imputations, fitted_models = get_imputations(
             model_classes, X_train, X_test, predictors, imputed_variables, quantiles,
         )
