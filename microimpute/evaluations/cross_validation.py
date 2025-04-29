@@ -29,6 +29,7 @@ def cross_validate_model(
     quantiles: Optional[List[float]] = QUANTILES,
     n_splits: int = 5,
     random_state: int = RANDOM_STATE,
+    model_hyperparams: Optional[dict] = None,
 ) -> pd.DataFrame:
     """Perform cross-validation for an imputation model.
 
@@ -42,6 +43,8 @@ def cross_validate_model(
             set if None.
         n_splits: Number of cross-validation folds.
         random_state: Random seed for reproducibility.
+        model_hyperparams: Hyperparameters for the model class.
+            Defaults to None and uses default model hyperparameters then.
 
     Returns:
         DataFrame with train and test rows, quantiles as columns, and average

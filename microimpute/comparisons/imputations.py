@@ -159,7 +159,7 @@ def get_imputations(
         log.info(
             f"Successfully generated imputations for all {len(model_classes)} models"
         )
-        return method_imputations, fitted_models
+        return method_imputations
 
     except ValueError as e:
         # Re-raise validation errors directly

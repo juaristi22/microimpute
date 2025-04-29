@@ -8,7 +8,7 @@ It includes utilities for downloading Survey of Consumer Finances
 import io
 import logging
 import zipfile
-from typing import List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 import requests
@@ -308,6 +308,7 @@ def preprocess_data(
     full_data: bool = False,
     train_size: float = TRAIN_SIZE,
     test_size: float = TEST_SIZE,
+    normalizing_features: bool = False,
 ) -> Union[
     Tuple[pd.DataFrame, dict],  # when full_data=True
     Tuple[pd.DataFrame, pd.DataFrame, dict],  # when full_data=False
@@ -424,11 +425,25 @@ def preprocess_data(
             data = (data - mean) / std
             logger.debug("Data normalized successfully")
 
+            if normalizing_features:
+                # Store normalization parameters
+                normalization_params = {
+                    col: {"mean": mean[col], "std": std[col]}
+                    for col in data.columns
+                }
+
+                logger.debug(
+                    f"Normalization parameters: {normalization_params}"
+                )
+
         except Exception as e:
             logger.error(f"Error during data normalization: {str(e)}")
             raise RuntimeError("Failed to normalize data") from e
 
-        if full_data:
+        if full_data and normalizing_features:
+            logger.info("Returning full preprocessed dataset")
+            return data, dummy_info["column_mapping"], normalization_params
+        elif full_data:
             logger.info("Returning full preprocessed dataset")
             return data, dummy_info["column_mapping"]
         else:
@@ -445,7 +460,15 @@ def preprocess_data(
                 logger.info(
                     f"Data split into train ({X_train.shape}) and test ({X_test.shape}) sets"
                 )
-                return X_train, X_test, dummy_info["column_mapping"]
+                if normalizing_features:
+                    return (
+                        X_train,
+                        X_test,
+                        dummy_info["column_mapping"],
+                        normalization_params,
+                    )
+                else:
+                    return X_train, X_test, dummy_info["column_mapping"]
 
             except Exception as e:
                 logger.error(f"Error during train-test split: {str(e)}")

@@ -10,6 +10,7 @@ import pandas as pd
 
 from microimpute.comparisons import *
 from microimpute.config import QUANTILES, RANDOM_STATE, TRAIN_SIZE
+from microimpute.evaluations import cross_validate_model
 from microimpute.models import *
 
 log = logging.getLogger(__name__)
@@ -77,16 +78,26 @@ def autoimpute(
         )
 
         # Step 1: Data preparation
+        training_data = donor_data.copy()
+        imputing_data = receiver_data.copy()
 
-        ## Normalizing ?? should we drop the columns that are not predictors or imputed variables?
-
-        X_train, X_test, dummy_info = preprocess_data(
-            donor_data[predictors + imputed_variables],
+        training_data[predictors], dummy_info = preprocess_data(
+            training_data[predictors],
+            full_data=True,
             train_size=train_size,
             test_size=(1 - train_size),
         )
-        receiver_data, dummy_info = preprocess_data(
-            receiver_data[predictors],
+        training_data[imputed_variables], dummy_info, normalizing_params = (
+            preprocess_data(
+                training_data[imputed_variables],
+                full_data=True,
+                train_size=train_size,
+                test_size=(1 - train_size),
+                normalizing_features=True,
+            )
+        )
+        imputing_data, dummy_info = preprocess_data(
+            imputing_data[predictors],
             full_data=True,
             train_size=train_size,
             test_size=(1 - train_size),
@@ -102,22 +113,19 @@ def autoimpute(
                     imputed_variables.remove(orig_col)
                     imputed_variables + dummy_cols
 
-        Y_test = X_test[imputed_variables]
-
         # If imputed variables are in receiver data, remove them
-        receiver_data = receiver_data.drop(
+        imputing_data = imputing_data.drop(
             columns=imputed_variables, errors="ignore"
         )
 
         # Step 2: Imputation with each method
-
-        ## We evaluate imputation methods with a test donor subset right? And we train on all passed data and hope the user makes decisions about size?
-
         if not models:
             # If no models are provided, use default models
             model_classes: List[Type[Imputer]] = [QRF, OLS, QuantReg, Matching]
+        else:
+            model_classes = models
 
-        ## How do we want to handle the hyperparameters? Do we want to optimize in autoimpute as well and restructure all other functions to accept hyperparameters?
+        ## Fix passing hyperparameters, tuning for later
 
         if hyperparameters:
             model_names = [
@@ -135,52 +143,98 @@ def autoimpute(
                         f"None of the hyperparameters provided are relevant for the supported models: {model_names}. Using default hyperparameters."
                     )
 
-        method_imputations, fitted_models = get_imputations(
-            model_classes,
-            X_train,
-            X_test,
-            predictors,
-            imputed_variables,
-            quantiles,
+        method_test_losses = {}
+        for model in model_classes:
+            if hyperparameters and model.__name__ in hyperparameters:
+                cv_results = cross_validate_model(
+                    model_class=model,
+                    data=training_data,
+                    predictors=predictors,
+                    imputed_variables=imputed_variables,
+                    quantiles=quantiles,
+                    n_splits=k_folds,
+                    random_state=RANDOM_STATE,
+                    model_hyperparams=hyperparameters[model.__name__],
+                )
+            else:
+                cv_results = cross_validate_model(
+                    model_class=model,
+                    data=training_data,
+                    predictors=predictors,
+                    imputed_variables=imputed_variables,
+                    quantiles=quantiles,
+                    n_splits=k_folds,
+                    random_state=RANDOM_STATE,
+                )
+
+            method_test_losses[model.__name__] = cv_results.loc["test"]
+
+        method_results_df = pd.DataFrame.from_dict(
+            method_test_losses, orient="index"
         )
 
         # Step 3: Compare imputation methods
         log.info(f"Comparing across {model_classes} methods. ")
 
-        ## And do we want to compare only imputations once as per our compare_quantile_loss function? Or do we also want to include comparisons running cv for each method? Do we want to compare the mean or do a more specific evaluation across quantiles? Should this be a parameter?
-
-        loss_comparison_df = compare_quantile_loss(
-            Y_test, method_imputations, imputed_variables
-        )
+        # add a column called "mean_loss" with the average loss across quantiles
+        method_results_df["mean_loss"] = method_results_df.mean(axis=1)
 
         # Step 4: Select best method
-        average_losses = loss_comparison_df.query(
-            "`Imputed Variable` == 'average' and Percentile == 'average'"
-        )
-        best_row = average_losses.loc[average_losses["Loss"].idxmin()]
-        best_method = best_row["Method"]
+        best_method = method_results_df["mean_loss"].idxmin()
+        best_row = method_results_df.loc[best_method]
 
         log.info(
-            f"The method with the lowest average loss is {best_method}, with an average loss across variables and quantiles of {best_row['Loss']}. "
+            f"The method with the lowest average loss is {best_method}, with an average loss across variables and quantiles of {best_row['mean_loss']}. "
         )
 
         # Step 5: Generate imputations with the best method on the receiver data
-        fitted_best = fitted_models[best_method]
+        models_dict = {model.__name__: model for model in model_classes}
+        chosen_model = models_dict[best_method]
 
-        imputations_per_quantile = fitted_best.predict(
-            X_test=receiver_data,
-            quantiles=quantiles,
+        # Initialize the model
+        model = chosen_model()
+
+        # Fit the model
+        if best_method == "QuantReg":
+            # For QuantReg, we need to explicitly fit the quantiles
+            fitted_model = model.fit(
+                training_data,
+                predictors,
+                imputed_variables,
+                quantiles=quantiles,
+            )
+        else:
+            fitted_model = model.fit(
+                training_data, predictors, imputed_variables
+            )
+
+        # Predict with explicit quantiles
+        imputations = fitted_model.predict(imputing_data, quantiles)
+
+        # Unnormalize the imputations
+        mean = pd.Series(
+            {col: p["mean"] for col, p in normalizing_params.items()}
         )
+        std = pd.Series(
+            {col: p["std"] for col, p in normalizing_params.items()}
+        )
+        unnormalized_imputations = {}
+        for q, df in imputations.items():
+            cols = df.columns  # the imputed vars
+            df_unnorm = df.mul(std[cols], axis=1)  # × std
+            df_unnorm = df_unnorm.add(mean[cols], axis=1)  # + mean
+            unnormalized_imputations[q] = df_unnorm
 
         log.info(
-            f"Imputation generation completed for {len(receiver_data)} samples using the best method: {best_method} and {len(imputations_per_quantile)} quantiles. "
+            f"Imputation generation completed for {len(receiver_data)} samples using the best method: {best_method} and {len(imputations)} quantiles. "
         )
 
+        ## How should we combine imputed values into the receiver data? How is the quantile decision made?
+
         return (
-            imputations_per_quantile,
-            fitted_best,
-            average_losses,
-            loss_comparison_df,
+            imputations,
+            fitted_model,
+            method_results_df,
         )
 
     except ValueError as e:

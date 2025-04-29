@@ -37,7 +37,7 @@ def test_quantile_comparison_diabetes() -> None:
     Y_test: pd.DataFrame = X_test[imputed_variables]
 
     model_classes: List[Type[Imputer]] = [QRF, OLS, QuantReg, Matching]
-    method_imputations, fitted_models = get_imputations(
+    method_imputations = get_imputations(
         model_classes, X_train, X_test, predictors, imputed_variables
     )
 
@@ -73,7 +73,7 @@ def test_quantile_comparison_scf() -> None:
     Y_test: pd.DataFrame = X_test[IMPUTED_VARIABLES]
 
     model_classes: List[Type[Imputer]] = [QRF, OLS, QuantReg, Matching]
-    method_imputations, fitted_models = get_imputations(
+    method_imputations = get_imputations(
         model_classes, X_train, X_test, PREDICTORS, IMPUTED_VARIABLES
     )
 
