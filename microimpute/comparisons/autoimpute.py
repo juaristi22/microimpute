@@ -6,29 +6,30 @@ This module integrates all steps necessary for method selection and imputation o
 import logging
 from typing import Any, Dict, List, Optional, Type
 
-from microimpute.comparisons import *
-from microimpute.config import RANDOM_STATE, QUANTILES, TRAIN_SIZE
-from microimpute. models import *
-
 import pandas as pd
+
+from microimpute.comparisons import *
+from microimpute.config import QUANTILES, RANDOM_STATE, TRAIN_SIZE
+from microimpute.models import *
 
 log = logging.getLogger(__name__)
 
-def autoimpute(donor_data: pd.DataFrame,
-               receiver_data: pd.DataFrame,
-               predictors: List[str],
-               imputed_variables: List[str], 
-               models: Optional[List["Imputer"]] = None,
-               quantiles: Optional[List[float]] = QUANTILES,
-               hyperparameters: Optional[Dict[str, Dict[str, Any]]] = None,
-               random_state: Optional[int] = RANDOM_STATE,
-               train_size: Optional[float] = TRAIN_SIZE,
-               k_folds: Optional[int] = 5,
-               ) -> Any:
-    """
-    """
-    # Step 0: Input validation
-    try: 
+
+def autoimpute(
+    donor_data: pd.DataFrame,
+    receiver_data: pd.DataFrame,
+    predictors: List[str],
+    imputed_variables: List[str],
+    models: Optional[List["Imputer"]] = None,
+    quantiles: Optional[List[float]] = QUANTILES,
+    hyperparameters: Optional[Dict[str, Dict[str, Any]]] = None,
+    random_state: Optional[int] = RANDOM_STATE,
+    train_size: Optional[float] = TRAIN_SIZE,
+    k_folds: Optional[int] = 5,
+) -> Any:
+    """ """
+    # Step 0: Input validation
+    try:
         # Validate quantiles if provided
         if quantiles:
             invalid_quantiles = [q for q in quantiles if not 0 <= q <= 1]
@@ -45,7 +46,7 @@ def autoimpute(donor_data: pd.DataFrame,
             error_msg = f"Missing predictor columns in donor data: {missing_predictors_donor}"
             log.error(error_msg)
             raise ValueError(error_msg)
-        
+
         missing_predictors_receiver = [
             col for col in predictors if col not in receiver_data.columns
         ]
@@ -77,10 +78,19 @@ def autoimpute(donor_data: pd.DataFrame,
 
         # Step 1: Data preparation
 
-        ## Normalizing ?? should we drop the columns that are not predictors or imputed variables? 
+        ## Normalizing ?? should we drop the columns that are not predictors or imputed variables?
 
-        X_train, X_test, dummy_info = preprocess_data(donor_data[predictors + imputed_variables], train_size=train_size, test_size=(1-train_size))
-        receiver_data, dummy_info = preprocess_data(receiver_data[predictors], full_data=True, train_size=train_size, test_size=(1-train_size))
+        X_train, X_test, dummy_info = preprocess_data(
+            donor_data[predictors + imputed_variables],
+            train_size=train_size,
+            test_size=(1 - train_size),
+        )
+        receiver_data, dummy_info = preprocess_data(
+            receiver_data[predictors],
+            full_data=True,
+            train_size=train_size,
+            test_size=(1 - train_size),
+        )
 
         if dummy_info:
             # Retrieve new predictors and imputed variables after processed data
@@ -95,7 +105,9 @@ def autoimpute(donor_data: pd.DataFrame,
         Y_test = X_test[imputed_variables]
 
         # If imputed variables are in receiver data, remove them
-        receiver_data = receiver_data.drop(columns=imputed_variables, errors='ignore')
+        receiver_data = receiver_data.drop(
+            columns=imputed_variables, errors="ignore"
+        )
 
         # Step 2: Imputation with each method
 
@@ -108,23 +120,32 @@ def autoimpute(donor_data: pd.DataFrame,
         ## How do we want to handle the hyperparameters? Do we want to optimize in autoimpute as well and restructure all other functions to accept hyperparameters?
 
         if hyperparameters:
-            model_names = [model_class.__name__ for model_class in model_classes]
+            model_names = [
+                model_class.__name__ for model_class in model_classes
+            ]
             for model_name, model_params in hyperparameters.items():
                 if model_name in model_names:
                     # Update the model class with the provided hyperparameters
                     if model_name == "QRF":
-                        log.info(f"Using hyperparameters for QRF: {model_params}")
+                        log.info(
+                            f"Using hyperparameters for QRF: {model_params}"
+                        )
                 else:
-                    log.info(f"None of the hyperparameters provided are relevant for the supported models: {model_names}. Using default hyperparameters.")
+                    log.info(
+                        f"None of the hyperparameters provided are relevant for the supported models: {model_names}. Using default hyperparameters."
+                    )
 
         method_imputations, fitted_models = get_imputations(
-            model_classes, X_train, X_test, predictors, imputed_variables, quantiles,
+            model_classes,
+            X_train,
+            X_test,
+            predictors,
+            imputed_variables,
+            quantiles,
         )
 
         # Step 3: Compare imputation methods
-        log.info(
-            f"Comparing across {model_classes} methods. "
-        )
+        log.info(f"Comparing across {model_classes} methods. ")
 
         ## And do we want to compare only imputations once as per our compare_quantile_loss function? Or do we also want to include comparisons running cv for each method? Do we want to compare the mean or do a more specific evaluation across quantiles? Should this be a parameter?
 
@@ -133,7 +154,9 @@ def autoimpute(donor_data: pd.DataFrame,
         )
 
         # Step 4: Select best method
-        average_losses = loss_comparison_df.query("`Imputed Variable` == 'average' and Percentile == 'average'")
+        average_losses = loss_comparison_df.query(
+            "`Imputed Variable` == 'average' and Percentile == 'average'"
+        )
         best_row = average_losses.loc[average_losses["Loss"].idxmin()]
         best_method = best_row["Method"]
 
@@ -153,7 +176,12 @@ def autoimpute(donor_data: pd.DataFrame,
             f"Imputation generation completed for {len(receiver_data)} samples using the best method: {best_method} and {len(imputations_per_quantile)} quantiles. "
         )
 
-        return imputations_per_quantile, fitted_best, average_losses, loss_comparison_df
+        return (
+            imputations_per_quantile,
+            fitted_best,
+            average_losses,
+            loss_comparison_df,
+        )
 
     except ValueError as e:
         # Re-raise validation errors directly
