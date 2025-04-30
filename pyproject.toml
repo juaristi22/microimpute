@@ -34,8 +34,8 @@ dev = [
 
 docs = [
     "sphinx==5.3.0",
-    "docutils==0.17.1",
     "jupyter-book==0.13.1",
+    "docutils==0.17.1",
     "sphinx-book-theme==0.3.3",
     "myst-nb==0.13.1",
     "myst-parser==0.15.2",
