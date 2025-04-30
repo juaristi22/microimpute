@@ -10,7 +10,7 @@ from .data import prepare_scf_data, preprocess_data, scf_url
 from .imputations import get_imputations
 
 # Import plotting functions
-from .plot import plot_loss_comparison
+from .plot import plot_autoimpute_method_comparison, plot_loss_comparison
 
 # Import loss functions
 from .quantile_loss import (

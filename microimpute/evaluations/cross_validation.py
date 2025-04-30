@@ -113,19 +113,46 @@ def cross_validate_model(
                 model = model_class()
 
                 # Handle different model fitting requirements
-                if model_class == QuantReg:
-                    log.info(f"Fitting QuantReg model with explicit quantiles")
-                    fitted_model = model.fit(
-                        train_data,
-                        predictors,
-                        imputed_variables,
-                        quantiles=quantiles,
-                    )
+                if model_hyperparams and model_class.__name__ == "QRF":
+                    try:
+                        log.info(
+                            f"Fitting {model_class.__name__} model with hyperparameters: {model_hyperparams}"
+                        )
+                        fitted_model = model.fit(
+                            X_train=train_data,
+                            predictors=predictors,
+                            imputed_variables=imputed_variables,
+                            **model_hyperparams,  # Unpack all provided hyperparameters
+                        )
+                    except TypeError as e:
+                        log.warning(
+                            f"Invalid hyperparameters, using defaults: {str(e)}"
+                        )
+                        fitted_model = model.fit(
+                            X_train=train_data,
+                            predictors=predictors,
+                            imputed_variables=imputed_variables,
+                        )
+                        raise ValueError(
+                            f"Invalid hyperparameters for model initialization. Current model hyperparameters: {fitted_qrf_imputer.models[imputed_variables[0]].qrf.get_params()}"
+                        ) from e
+
                 else:
-                    log.info(f"Fitting {model_class.__name__} model")
-                    fitted_model = model.fit(
-                        train_data, predictors, imputed_variables
-                    )
+                    if model_class == QuantReg:
+                        log.info(
+                            f"Fitting QuantReg model with explicit quantiles"
+                        )
+                        fitted_model = model.fit(
+                            train_data,
+                            predictors,
+                            imputed_variables,
+                            quantiles=quantiles,
+                        )
+                    else:
+                        log.info(f"Fitting {model_class.__name__} model")
+                        fitted_model = model.fit(
+                            train_data, predictors, imputed_variables
+                        )
 
                 # Get predictions for this fold
                 log.info(f"Generating predictions for train and test data")

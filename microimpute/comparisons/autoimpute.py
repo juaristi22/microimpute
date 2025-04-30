@@ -27,8 +27,42 @@ def autoimpute(
     random_state: Optional[int] = RANDOM_STATE,
     train_size: Optional[float] = TRAIN_SIZE,
     k_folds: Optional[int] = 5,
-) -> Any:
-    """ """
+) -> tuple[dict[float, pd.DataFrame], "Imputer", pd.DataFrame]:
+    """Automatically select and apply the best imputation model.
+
+    This function evaluates multiple imputation methods using cross-validation
+    to determine which performs best on the provided donor data, then applies
+    the winning method to impute values in the receiver data.
+
+    Args:
+        donor_data : Dataframe containing both predictor and target variables
+            used  to train models
+        receiver_data : Dataframe containing predictor variables where imputed
+            values will be generated
+        predictors : List of column names of predictor variables used to
+            predict imputed variables
+        imputed_variables : List of column names of variables to be imputed in
+            the receiver data
+        models : List of imputer model classes to compare.
+            If None, uses [QRF, OLS, QuantReg, Matching]
+        quantiles : List of quantiles to predict for each imputed variable.
+            Uses default QUANTILES if not passed.
+        hyperparameters : Dictionary of hyperparameters for specific models,
+            with model names as keys. Defaults to None and uses default model hyperparameters then.
+        random_state : Random seed for reproducibility
+        train_size : Proportion of data to use for training in preprocessing
+        k_folds : Number of folds for cross-validation. Defaults to 5.
+
+    Returns:
+        A tuple containing:
+        - Dictionary mapping quantiles to DataFrames of imputed values
+        - The fitted imputation model (best performing)
+        - DataFrame with cross-validation performance metrics for all evaluated models
+
+    Raises:
+        ValueError: If inputs are invalid (e.g., invalid quantiles, missing columns)
+        RuntimeError: For unexpected errors during imputation
+    """
     # Step 0: Input validation
     try:
         # Validate quantiles if provided
@@ -125,8 +159,6 @@ def autoimpute(
         else:
             model_classes = models
 
-        ## Fix passing hyperparameters, tuning for later
-
         if hyperparameters:
             model_names = [
                 model_class.__name__ for model_class in model_classes
@@ -220,7 +252,7 @@ def autoimpute(
         )
         unnormalized_imputations = {}
         for q, df in imputations.items():
-            cols = df.columns  # the imputed vars
+            cols = df.columns  # the imputed variables
             df_unnorm = df.mul(std[cols], axis=1)  # × std
             df_unnorm = df_unnorm.add(mean[cols], axis=1)  # + mean
             unnormalized_imputations[q] = df_unnorm
