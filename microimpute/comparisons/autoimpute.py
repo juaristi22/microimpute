@@ -112,6 +112,11 @@ def autoimpute(
         )
 
         # Step 1: Data preparation
+        # If imputed variables are in receiver data, remove them
+        receiver_data = receiver_data.drop(
+            columns=imputed_variables, errors="ignore"
+        )
+
         training_data = donor_data.copy()
         imputing_data = receiver_data.copy()
 
@@ -146,11 +151,6 @@ def autoimpute(
                 elif orig_col in imputed_variables:
                     imputed_variables.remove(orig_col)
                     imputed_variables + dummy_cols
-
-        # If imputed variables are in receiver data, remove them
-        imputing_data = imputing_data.drop(
-            columns=imputed_variables, errors="ignore"
-        )
 
         # Step 2: Imputation with each method
         if not models:
@@ -225,15 +225,15 @@ def autoimpute(
 
         # Initialize the model
         model = chosen_model()
-
+        imputation_q = 0.5  # this can be an input parameter, or if unspecified will default to a random quantile
         # Fit the model
         if best_method == "QuantReg":
-            # For QuantReg, we need to explicitly fit the quantiles
+            # For QuantReg, we need to explicitly fit the quantile
             fitted_model = model.fit(
                 training_data,
                 predictors,
                 imputed_variables,
-                quantiles=quantiles,
+                quantiles=[imputation_q],
             )
         else:
             fitted_model = model.fit(
@@ -241,7 +241,9 @@ def autoimpute(
             )
 
         # Predict with explicit quantiles
-        imputations = fitted_model.predict(imputing_data, quantiles)
+        imputations = fitted_model.predict(
+            imputing_data, quantiles=[imputation_q]
+        )
 
         # Unnormalize the imputations
         mean = pd.Series(
@@ -258,13 +260,31 @@ def autoimpute(
             unnormalized_imputations[q] = df_unnorm
 
         log.info(
-            f"Imputation generation completed for {len(receiver_data)} samples using the best method: {best_method} and {len(imputations)} quantiles. "
+            f"Imputation generation completed for {len(receiver_data)} samples using the best method: {best_method} and the median quantile. "
         )
 
-        ## How should we combine imputed values into the receiver data? How is the quantile decision made?
+        median_imputations = unnormalized_imputations[
+            0.5
+        ]  # this may not work if we change the value of imputation_q
+        # Add the imputed variables to the receiver data
+        try:
+            missing_imputed_vars = []
+            for var in imputed_variables:
+                if var in median_imputations.columns:
+                    receiver_data[var] = median_imputations[var]
+                else:
+                    missing_imputed_vars.append(var)
+                    log.warning(
+                        f"Imputed variable {var} not found in the imputations. "
+                    )
+        except KeyError as e:
+            error_msg = f"Missing imputed variable in the imputations: {e}"
+            log.error(error_msg)
+            raise ValueError(error_msg)
 
         return (
-            imputations,
+            unnormalized_imputations,
+            receiver_data,
             fitted_model,
             method_results_df,
         )

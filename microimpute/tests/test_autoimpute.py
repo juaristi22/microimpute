@@ -25,7 +25,7 @@ def test_autoimpute_basic():
     predictors = ["age", "sex", "bmi", "bp"]
     imputed_variables = ["s1", "s4"]
 
-    imputations, fitted_model, method_results_df = autoimpute(
+    imputations, imputed_data, fitted_model, method_results_df = autoimpute(
         donor_data=diabetes_donor,
         receiver_data=diabetes_receiver,
         predictors=predictors,
@@ -51,6 +51,7 @@ def test_autoimpute_basic():
     quantiles = [q for q in method_results_df.columns if isinstance(q, float)]
 
     imputations[0.5].to_csv("autoimpute_bestmodel_median_imputations.csv")
+    imputed_data.to_csv("autoimpute_bestmodel_imputed_dataset.csv")
 
     method_results_df.to_csv("autoimpute_model_comparison_results.csv")
 
