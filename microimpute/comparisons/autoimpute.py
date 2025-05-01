@@ -6,16 +6,17 @@ This module integrates all steps necessary for method selection and imputation o
 import logging
 from typing import Any, Dict, List, Optional, Type
 
+from pydantic import validate_call
 import pandas as pd
 
 from microimpute.comparisons import *
-from microimpute.config import QUANTILES, RANDOM_STATE, TRAIN_SIZE
+from microimpute.config import QUANTILES, RANDOM_STATE, TRAIN_SIZE, VALIDATE_CONFIG
 from microimpute.evaluations import cross_validate_model
 from microimpute.models import *
 
 log = logging.getLogger(__name__)
 
-
+@validate_call(config=VALIDATE_CONFIG)
 def autoimpute(
     donor_data: pd.DataFrame,
     receiver_data: pd.DataFrame,

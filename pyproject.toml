@@ -17,6 +17,7 @@ dependencies = [
     "statsmodels>=0.14.0,<0.15.0",
     "quantile-forest>=1.4.0,<1.5.0",
     "pydantic>=2.8.0,<3.0.0",
+    "optuna==4.3.0",
 ]
 [project.optional-dependencies]
 dev = [
