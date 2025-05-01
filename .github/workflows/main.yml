@@ -38,3 +38,9 @@ jobs:
           file: ./coverage.xml
           fail_ci_if_error: false
           verbose: true
+      - name: Deploy documentation
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages  # The branch the action should deploy to.
+          FOLDER: docs/_build/html  # The folder the action should deploy.
