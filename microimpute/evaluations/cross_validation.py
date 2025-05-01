@@ -15,6 +15,7 @@ from sklearn.model_selection import KFold
 
 from microimpute.comparisons.quantile_loss import quantile_loss
 from microimpute.config import QUANTILES, RANDOM_STATE, VALIDATE_CONFIG
+from microimpute.models.qrf import QRF
 from microimpute.models.quantreg import QuantReg
 
 log = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ def cross_validate_model(
     n_splits: int = 5,
     random_state: int = RANDOM_STATE,
     model_hyperparams: Optional[dict] = None,
+    tune_hyperparameters: Optional[bool] = False,
 ) -> pd.DataFrame:
     """Perform cross-validation for an imputation model.
 
@@ -45,6 +47,8 @@ def cross_validate_model(
         random_state: Random seed for reproducibility.
         model_hyperparams: Hyperparameters for the model class.
             Defaults to None and uses default model hyperparameters then.
+        tune_hyperparameters: Whether to tune hyperparameters for QRF
+            model. Defaults to False.
 
     Returns:
         DataFrame with train and test rows, quantiles as columns, and average
@@ -134,7 +138,7 @@ def cross_validate_model(
                             imputed_variables=imputed_variables,
                         )
                         raise ValueError(
-                            f"Invalid hyperparameters for model initialization. Current model hyperparameters: {fitted_qrf_imputer.models[imputed_variables[0]].qrf.get_params()}"
+                            f"Invalid hyperparameters for model initialization. Current model hyperparameters: {fitted_model.models[imputed_variables[0]].qrf.get_params()}"
                         ) from e
 
                 else:
@@ -147,6 +151,16 @@ def cross_validate_model(
                             predictors,
                             imputed_variables,
                             quantiles=quantiles,
+                        )
+                    elif model_class == QRF and tune_hyperparameters == True:
+                        log.info(
+                            f"Tuning QRF hyperparameters model when fitting"
+                        )
+                        fitted_model = model.fit(
+                            train_data,
+                            predictors,
+                            imputed_variables,
+                            tune_hyperparameters=True,
                         )
                     else:
                         log.info(f"Fitting {model_class.__name__} model")

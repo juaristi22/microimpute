@@ -6,15 +6,21 @@ This module integrates all steps necessary for method selection and imputation o
 import logging
 from typing import Any, Dict, List, Optional, Type
 
-from pydantic import validate_call
 import pandas as pd
+from pydantic import validate_call
 
 from microimpute.comparisons import *
-from microimpute.config import QUANTILES, RANDOM_STATE, TRAIN_SIZE, VALIDATE_CONFIG
+from microimpute.config import (
+    QUANTILES,
+    RANDOM_STATE,
+    TRAIN_SIZE,
+    VALIDATE_CONFIG,
+)
 from microimpute.evaluations import cross_validate_model
 from microimpute.models import *
 
 log = logging.getLogger(__name__)
+
 
 @validate_call(config=VALIDATE_CONFIG)
 def autoimpute(
@@ -22,9 +28,10 @@ def autoimpute(
     receiver_data: pd.DataFrame,
     predictors: List[str],
     imputed_variables: List[str],
-    models: Optional[List["Imputer"]] = None,
+    models: Optional[List[Type]] = None,
     quantiles: Optional[List[float]] = QUANTILES,
     hyperparameters: Optional[Dict[str, Dict[str, Any]]] = None,
+    tune_hyperparameters: Optional[bool] = False,
     random_state: Optional[int] = RANDOM_STATE,
     train_size: Optional[float] = TRAIN_SIZE,
     k_folds: Optional[int] = 5,
@@ -50,6 +57,8 @@ def autoimpute(
             Uses default QUANTILES if not passed.
         hyperparameters : Dictionary of hyperparameters for specific models,
             with model names as keys. Defaults to None and uses default model hyperparameters then.
+        tune_hyperparameters : Whether to tune hyperparameters for the models.
+            Defaults to False.
         random_state : Random seed for reproducibility
         train_size : Proportion of data to use for training in preprocessing
         k_folds : Number of folds for cross-validation. Defaults to 5.
@@ -111,6 +120,11 @@ def autoimpute(
         log.info(
             f"Generating imputations to impute from {len(donor_data)} donor data to {len(receiver_data)} receiver data for variables {imputed_variables} with predictors {predictors}. "
         )
+
+        if (hyperparameters is not None) and (tune_hyperparameters == True):
+            error_msg = "Cannot specify both model_hyperparams and request to automatically tune hyperparameters, please select one or the other."
+            log.error(error_msg)
+            raise ValueError(error_msg)
 
         # Step 1: Data preparation
         # If imputed variables are in receiver data, remove them
@@ -190,15 +204,27 @@ def autoimpute(
                     model_hyperparams=hyperparameters[model.__name__],
                 )
             else:
-                cv_results = cross_validate_model(
-                    model_class=model,
-                    data=training_data,
-                    predictors=predictors,
-                    imputed_variables=imputed_variables,
-                    quantiles=quantiles,
-                    n_splits=k_folds,
-                    random_state=RANDOM_STATE,
-                )
+                if tune_hyperparameters:
+                    cv_results = cross_validate_model(
+                        model_class=model,
+                        data=training_data,
+                        predictors=predictors,
+                        imputed_variables=imputed_variables,
+                        quantiles=quantiles,
+                        n_splits=k_folds,
+                        random_state=RANDOM_STATE,
+                        tune_hyperparameters=True,
+                    )
+                else:
+                    cv_results = cross_validate_model(
+                        model_class=model,
+                        data=training_data,
+                        predictors=predictors,
+                        imputed_variables=imputed_variables,
+                        quantiles=quantiles,
+                        n_splits=k_folds,
+                        random_state=RANDOM_STATE,
+                    )
 
             method_test_losses[model.__name__] = cv_results.loc["test"]
 

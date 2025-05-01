@@ -4,6 +4,7 @@ logo: logo.png
 
 execute:
   execute_notebooks: force
+  timeout: 120
 
 repository:
   url: https://github.com/policyengine/microimpute
