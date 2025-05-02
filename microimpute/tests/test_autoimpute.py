@@ -10,6 +10,7 @@ from microimpute.comparisons.plot import (
     plot_autoimpute_method_comparison,
     plot_loss_comparison,
 )
+from microimpute.visualizations.plotting import *
 
 
 def test_autoimpute_basic():
@@ -60,4 +61,16 @@ def test_autoimpute_basic():
         quantiles=quantiles,
         metric_name="Quantile Loss",
         save_path="autoimpute_model_comparison.jpg",
+    )
+
+    # Create visualization using the statsmodels-like interface
+    comparison_viz = create_method_comparison(
+        data=method_results_df,
+        metric_name="Test Quantile Loss",
+        data_format="wide",  # Explicitly using wide format
+    )
+    fig = comparison_viz.plot(
+        title="Autoimpute Method Comparison",
+        show_mean=True,
+        save_path="autoimpute_model_comparison_viz_new_interface.jpg",
     )

@@ -1,8 +1,6 @@
 """Train-test performance visualization for imputation models.
 
-This module provides functions for visualizing the performance of imputation models
-on both training and test datasets. It helps identify overfitting and compare
-model performance across different quantiles.
+This module provides functions for visualizing the performance of imputation models on both training and test datasets. It helps identify overfitting and compare model performance across different quantiles.
 """
 
 import logging

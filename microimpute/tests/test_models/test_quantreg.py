@@ -9,6 +9,7 @@ from microimpute.comparisons.data import preprocess_data
 from microimpute.config import QUANTILES
 from microimpute.evaluations import *
 from microimpute.models.quantreg import QuantReg
+from microimpute.visualizations.plotting import *
 
 # Test Method on diabetes dataset
 diabetes_data = load_diabetes()
@@ -47,6 +48,17 @@ def test_matching_cross_validation(
 
     plot_train_test_performance(
         quantreg_results, save_path="quantreg_train_test_performance.jpg"
+    )
+
+    # Create a plot with the statsmodels-like interface
+    perf_results_viz = create_performance_results(
+        results=quantreg_results,
+        model_name="QuantReg",
+        method_name="Cross-Validation Quantile Loss Average",
+    )
+    fig = perf_results_viz.plot(
+        title="QuantReg Cross-Validation Performance",
+        save_path="quantreg_cv_performance_viz_new_interface.jpg",
     )
 
 
