@@ -64,7 +64,7 @@ def test_autoimpute_basic():
     )
 
     # Create visualization using the statsmodels-like interface
-    comparison_viz = create_method_comparison(
+    comparison_viz = method_comparison_results(
         data=method_results_df,
         metric_name="Test Quantile Loss",
         data_format="wide",  # Explicitly using wide format

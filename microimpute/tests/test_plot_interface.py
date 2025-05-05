@@ -39,7 +39,7 @@ def test_model_cv_visualization():
     assert not ols_results.isna().any().any()
 
     # Create a PerformanceResults object for visualization
-    perf_results_viz = create_performance_results(
+    perf_results_viz = model_performance_results(
         results=ols_results,
         model_name="OLS",
         method_name="Cross-Validation Quantile Loss Average",
@@ -91,7 +91,7 @@ def test_model_performance_comparison():
     # The loss_comparison_df is in long format suitable for the MethodComparison class
 
     # Create a MethodComparison object using the factory function
-    comparison = create_method_comparison(
+    comparison = method_comparison_results(
         data=loss_comparison_df,
         metric_name="Quantile Loss",
         data_format="long",
@@ -229,7 +229,7 @@ def test_autoimpute_wide_format_visualization():
     wide_format_df["mean_loss"] = wide_format_df.mean(axis=1)
 
     # 3. Create visualization using the statsmodels-like interface
-    comparison = create_method_comparison(
+    comparison = method_comparison_results(
         data=wide_format_df,
         metric_name="Test Quantile Loss",
         data_format="wide",  # Explicitly using wide format
@@ -257,7 +257,7 @@ def test_autoimpute_wide_format_visualization():
     top_methods_df = wide_format_df.loc[["QRF", "OLS"]]
 
     # Create a new comparison object
-    top_comparison = create_method_comparison(
+    top_comparison = method_comparison_results(
         data=top_methods_df,
         metric_name="Test Quantile Loss",
         data_format="wide",

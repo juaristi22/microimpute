@@ -51,7 +51,7 @@ def test_matching_cross_validation(
     )
 
     # Create a plot with the statsmodels-like interface
-    perf_results_viz = create_performance_results(
+    perf_results_viz = model_performance_results(
         results=quantreg_results,
         model_name="QuantReg",
         method_name="Cross-Validation Quantile Loss Average",

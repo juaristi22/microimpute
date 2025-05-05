@@ -175,10 +175,10 @@ def compare_quantile_loss(
                 # Compute the average loss across all variables
                 avg_var_loss = np.mean(variable_losses)
 
-                # Create a new row for "average"
+                # Create a new row for "mean_loss"
                 new_row = {
                     "Method": method,
-                    "Imputed Variable": "average",
+                    "Imputed Variable": "mean_loss",
                     "Percentile": f"{int(quantile * 100)}th",
                     "Loss": avg_var_loss,
                 }
@@ -192,11 +192,11 @@ def compare_quantile_loss(
             # Compute the average loss across all quantiles
             avg_quant_loss = np.mean(quantile_losses)
 
-            # Create a new row for "average"
+            # Create a new row for "mean_loss"
             new_row = {
                 "Method": method,
-                "Imputed Variable": "average",
-                "Percentile": "average",
+                "Imputed Variable": "mean_loss",
+                "Percentile": "mean_loss",
                 "Loss": avg_quant_loss,
             }
 

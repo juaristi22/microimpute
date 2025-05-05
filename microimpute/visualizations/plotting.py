@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class PerformanceResults:
     """Class to store and visualize model performance results.
 
-    This class provides a statsmodels-like interface for storing and visualizing
+    This class provides an interface for storing and visualizing
     performance metrics, with methods like plot() and summary().
     """
 
@@ -88,16 +88,6 @@ class PerformanceResults:
         )
 
         try:
-            # Default title if none provided
-            if title is None:
-                title = (
-                    f"Average Quantile Loss: Train vs Test - {self.model_name}"
-                )
-                logger.debug(f"Using default title: '{title}'")
-            else:
-                logger.debug(f"Using custom title: '{title}'")
-
-            # Create a new figure
             logger.debug("Creating Plotly figure")
             fig = go.Figure()
 
@@ -109,7 +99,7 @@ class PerformanceResults:
                         x=self.results.columns,
                         y=self.results.loc["train"],
                         name="Train",
-                        marker_color="rgba(0, 128, 0, 0.7)",  # green with transparency
+                        marker_color="rgba(0, 128, 0, 0.7)",
                     )
                 )
 
@@ -121,11 +111,10 @@ class PerformanceResults:
                         x=self.results.columns,
                         y=self.results.loc["test"],
                         name="Test",
-                        marker_color="rgba(255, 0, 0, 0.7)",  # red with transparency
+                        marker_color="rgba(255, 0, 0, 0.7)",
                     )
                 )
 
-            # Update layout with title, axis labels, etc.
             logger.debug("Updating plot layout")
             fig.update_layout(
                 title=title,
@@ -138,12 +127,10 @@ class PerformanceResults:
                 margin=dict(l=50, r=50, t=80, b=50),
             )
 
-            # Add grid lines
             fig.update_yaxes(
                 showgrid=True, gridwidth=1, gridcolor="rgba(0,0,0,0.1)"
             )
 
-            # Save or show the plot
             if save_path:
                 try:
                     logger.info(f"Saving plot to {save_path}")
@@ -154,7 +141,6 @@ class PerformanceResults:
                         logger.debug(f"Creating directory: {save_dir}")
                         os.makedirs(save_dir, exist_ok=True)
 
-                    # Save as image
                     fig.write_image(save_path)
 
                     # Also save HTML version for interactive viewing
@@ -192,7 +178,6 @@ class PerformanceResults:
         logger.debug("Generating performance summary statistics")
 
         try:
-            # Calculate summary statistics
             summary_data = {}
 
             # Overall mean loss
@@ -216,7 +201,6 @@ class PerformanceResults:
                     "min": ratio.min(),
                 }
 
-            # Format results as DataFrame
             summary_df = pd.DataFrame(
                 {
                     "Model": self.model_name,
@@ -246,12 +230,10 @@ class PerformanceResults:
             ) from e
 
 
-class MethodComparison:
+class MethodComparisonResults:
     """Class to store and visualize performance comparison across different methods.
 
-    This unified comparison class provides a statsmodels-like interface for
-    comparing and visualizing performance metrics across different imputation methods,
-    with support for diverse dataset shapes, different quantiles, and various metrics.
+    This unified comparison class provides an interface for comparing and visualizing performance metrics across different imputation methods, with support for diverse dataset shapes, different quantiles, and various metrics.
     """
 
     def __init__(
@@ -265,7 +247,7 @@ class MethodComparison:
 
         This class supports multiple input formats through the data_format parameter:
         - "wide": DataFrame with methods as index and quantiles as columns (and
-                 optional 'mean_loss' column)
+                optional 'mean_loss' column)
         - "long": DataFrame with columns ["Method", "Imputed Variable", "Percentile", "Loss"]
 
         Args:
@@ -301,7 +283,6 @@ class MethodComparison:
 
         self.method_results_df = data.copy()
 
-        # Check if the DataFrame structure is valid (quantiles as columns)
         expected_columns = [str(q) for q in self.quantiles]
         if not all(
             str(q) in self.method_results_df.columns
@@ -313,13 +294,11 @@ class MethodComparison:
                 f"Expected: {expected_columns}, Found: {list(self.method_results_df.columns)}"
             )
 
-        # Additional metadata
         self.methods = self.method_results_df.index.tolist()
         self.data_subset = "test"  # Default to test data for wide format
 
         # Compute mean loss if not already present
         if "mean_loss" not in self.method_results_df.columns:
-            # Extract only quantile columns
             quantile_cols = [
                 col
                 for col in self.method_results_df.columns
@@ -351,14 +330,12 @@ class MethodComparison:
 
         self.loss_comparison_df = data.copy()
 
-        # Convert to wide format for internal storage
-        # Filter for 'average' imputed variable and non-'average' percentiles
+        # Convert to w<ide format for internal storage
         df_avg = self.loss_comparison_df[
-            self.loss_comparison_df["Imputed Variable"] == "average"
+            self.loss_comparison_df["Imputed Variable"] == "mean_loss"
         ]
-        df_regular = df_avg[df_avg["Percentile"] != "average"]
+        df_regular = df_avg[df_avg["Percentile"] != "mean_loss"]
 
-        # Pivot to get methods as index and percentiles as columns
         wide_df = df_regular.pivot(
             index="Method", columns="Percentile", values="Loss"
         )
@@ -405,7 +382,6 @@ class MethodComparison:
                 columns={"index": "Method"}
             )
 
-            # Melt the DataFrame to get it in the right format for plotting
             id_vars = ["Method"]
             value_vars = [
                 col
@@ -421,10 +397,8 @@ class MethodComparison:
                 value_name=self.metric_name,
             )
 
-            # Convert percentile column to string if it's not already
             melted_df["Percentile"] = melted_df["Percentile"].astype(str)
 
-            # Use custom title if provided
             if title is None:
                 title = f"Test {self.metric_name} Across Quantiles for Different Imputation Methods"
 
@@ -457,15 +431,10 @@ class MethodComparison:
                         line=dict(
                             color=px.colors.qualitative.Plotly[
                                 i % len(px.colors.qualitative.Plotly)
-                            ],
-                            width=2,
-                            dash="dot",
-                        ),
+                            ], width=2, dash="dot"),
                         name=f"{method} Mean",
                     )
 
-            logger.debug("Updating plot layout")
-            # Update layout for better appearance
             fig.update_layout(
                 title_font_size=14,
                 xaxis_title_font_size=12,
@@ -475,7 +444,6 @@ class MethodComparison:
                 width=figsize[0],
             )
 
-            # Add grid lines on y-axis
             fig.update_yaxes(
                 showgrid=True, gridwidth=1, gridcolor="rgba(0,0,0,0.1)"
             )
@@ -491,7 +459,6 @@ class MethodComparison:
                         logger.debug(f"Creating directory: {save_dir}")
                         os.makedirs(save_dir, exist_ok=True)
 
-                    # Save as image
                     fig.write_image(save_path)
 
                     # Also save as HTML for interactive viewing
@@ -539,19 +506,16 @@ class MethodComparison:
         logger.debug("Generating method comparison summary statistics")
 
         try:
-            # Prepare summary data
             methods = self.method_results_df.index.tolist()
             summary_data = []
 
             for method in methods:
                 method_data = self.method_results_df.loc[method]
 
-                # Skip non-quantile columns
                 quantile_cols = [
                     col for col in method_data.index if col != "mean_loss"
                 ]
 
-                # Calculate stats
                 if "mean_loss" in method_data.index:
                     mean_loss = method_data["mean_loss"]
                 else:
@@ -570,7 +534,6 @@ class MethodComparison:
                     best_quantile = worst_quantile = "N/A"
                     best_loss = worst_loss = np.nan
 
-                # Add to summary data
                 summary_data.append(
                     {
                         "Method": method,
@@ -605,9 +568,9 @@ class MethodComparison:
             ) from e
 
 
-# Factory functions to create objects with statsmodels-like interface
+# Functions to create visualization objects
 @validate_call(config=VALIDATE_CONFIG)
-def create_performance_results(
+def model_performance_results(
     results: pd.DataFrame,
     model_name: Optional[str] = None,
     method_name: Optional[str] = None,
@@ -621,7 +584,7 @@ def create_performance_results(
         method_name: Name of the imputation method.
 
     Returns:
-        PerformanceResults object with statsmodels-like interface
+        PerformanceResults object for visualization
     """
     return PerformanceResults(
         results=results,
@@ -631,12 +594,12 @@ def create_performance_results(
 
 
 @validate_call(config=VALIDATE_CONFIG)
-def create_method_comparison(
+def method_comparison_results(
     data: pd.DataFrame,
     metric_name: str = "Quantile Loss",
     quantiles: List[float] = QUANTILES,
     data_format: str = "wide",
-) -> MethodComparison:
+) -> MethodComparisonResults:
     """Create a MethodComparison object for visualizing performance comparisons.
 
     This unified factory function supports multiple input formats:
@@ -651,10 +614,9 @@ def create_method_comparison(
         data_format: Format of the input data ("wide" or "long").
 
     Returns:
-        MethodComparison object with statsmodels-like interface for
-        visualizing and comparing model performance
+        MethodComparison object for visualization
     """
-    return MethodComparison(
+    return MethodComparisonResults(
         data=data,
         metric_name=metric_name,
         quantiles=quantiles,

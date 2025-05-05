@@ -4,8 +4,8 @@ This module contains functions for visualizing imputation model performance and 
 """
 
 from .plotting import (
-    MethodComparison,
+    MethodComparisonResults,
     PerformanceResults,
-    create_method_comparison,
-    create_performance_results,
+    method_comparison_results,
+    model_performance_results,
 )

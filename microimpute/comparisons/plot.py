@@ -65,10 +65,10 @@ def plot_loss_comparison(
     try:
         logger.debug("Creating bar chart with plotly express")
         df_avg = loss_comparison_df[
-            loss_comparison_df["Imputed Variable"] == "average"
+            loss_comparison_df["Imputed Variable"] == "mean_loss"
         ]
-        df_regular = df_avg[df_avg["Percentile"] != "average"]
-        df_average = df_avg[df_avg["Percentile"] == "average"]
+        df_regular = df_avg[df_avg["Percentile"] != "mean_loss"]
+        df_average = df_avg[df_avg["Percentile"] == "mean_loss"]
         fig = px.bar(
             df_regular,
             x="Percentile",
