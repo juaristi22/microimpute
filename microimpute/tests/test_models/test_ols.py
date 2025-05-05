@@ -10,6 +10,7 @@ from microimpute.comparisons.data import preprocess_data
 from microimpute.config import QUANTILES
 from microimpute.evaluations import *
 from microimpute.models.ols import OLS
+from microimpute.visualizations.plotting import *
 
 # Test Method on diabetes dataset
 diabetes_data = load_diabetes()
@@ -46,8 +47,14 @@ def test_ols_cross_validation(
 
     assert not ols_results.isna().any().any()
 
-    plot_train_test_performance(
-        ols_results, save_path="ols_train_test_performance.jpg"
+    perf_results_viz = model_performance_results(
+        results=ols_results,
+        model_name="OLS",
+        method_name="Cross-Validation Quantile Loss Average",
+    )
+    fig = perf_results_viz.plot(
+        title="OLS Cross-Validation Performance",
+        save_path="ols_cv_performance.jpg",
     )
 
 

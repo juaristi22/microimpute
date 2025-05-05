@@ -6,10 +6,6 @@ import pandas as pd
 from sklearn.datasets import load_diabetes
 
 from microimpute.comparisons.autoimpute import autoimpute
-from microimpute.comparisons.plot import (
-    plot_autoimpute_method_comparison,
-    plot_loss_comparison,
-)
 from microimpute.visualizations.plotting import *
 
 
@@ -56,14 +52,6 @@ def test_autoimpute_basic():
 
     method_results_df.to_csv("autoimpute_model_comparison_results.csv")
 
-    plot_autoimpute_method_comparison(
-        method_results_df=method_results_df,
-        quantiles=quantiles,
-        metric_name="Quantile Loss",
-        save_path="autoimpute_model_comparison.jpg",
-    )
-
-    # Create visualization using the statsmodels-like interface
     comparison_viz = method_comparison_results(
         data=method_results_df,
         metric_name="Test Quantile Loss",
@@ -72,5 +60,5 @@ def test_autoimpute_basic():
     fig = comparison_viz.plot(
         title="Autoimpute Method Comparison",
         show_mean=True,
-        save_path="autoimpute_model_comparison_viz_new_interface.jpg",
+        save_path="autoimpute_model_comparison.jpg",
     )

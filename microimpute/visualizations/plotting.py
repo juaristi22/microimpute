@@ -330,7 +330,7 @@ class MethodComparisonResults:
 
         self.loss_comparison_df = data.copy()
 
-        # Convert to w<ide format for internal storage
+        # Convert to wide format for internal storage
         df_avg = self.loss_comparison_df[
             self.loss_comparison_df["Imputed Variable"] == "mean_loss"
         ]
@@ -431,7 +431,10 @@ class MethodComparisonResults:
                         line=dict(
                             color=px.colors.qualitative.Plotly[
                                 i % len(px.colors.qualitative.Plotly)
-                            ], width=2, dash="dot"),
+                            ],
+                            width=2,
+                            dash="dot",
+                        ),
                         name=f"{method} Mean",
                     )
 

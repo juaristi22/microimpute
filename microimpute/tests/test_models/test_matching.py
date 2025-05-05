@@ -9,6 +9,7 @@ from microimpute.comparisons.data import preprocess_data
 from microimpute.config import QUANTILES
 from microimpute.evaluations import *
 from microimpute.models.matching import Matching
+from microimpute.visualizations.plotting import *
 
 # Test Method on diabetes dataset
 diabetes_data = load_diabetes()
@@ -45,8 +46,14 @@ def test_matching_cross_validation(
 
     assert not matching_results.isna().any().any()
 
-    plot_train_test_performance(
-        matching_results, save_path="matching_train_test_performance.jpg"
+    perf_results_viz = model_performance_results(
+        results=matching_results,
+        model_name="QRF",
+        method_name="Cross-Validation Quantile Loss Average",
+    )
+    fig = perf_results_viz.plot(
+        title="Matching Cross-Validation Performance",
+        save_path="matching_cv_performance.jpg",
     )
 
 

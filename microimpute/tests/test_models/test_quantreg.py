@@ -46,11 +46,6 @@ def test_matching_cross_validation(
 
     assert not quantreg_results.isna().any().any()
 
-    plot_train_test_performance(
-        quantreg_results, save_path="quantreg_train_test_performance.jpg"
-    )
-
-    # Create a plot with the statsmodels-like interface
     perf_results_viz = model_performance_results(
         results=quantreg_results,
         model_name="QuantReg",
@@ -58,7 +53,7 @@ def test_matching_cross_validation(
     )
     fig = perf_results_viz.plot(
         title="QuantReg Cross-Validation Performance",
-        save_path="quantreg_cv_performance_viz_new_interface.jpg",
+        save_path="quantreg_cv_performance.jpg",
     )
 
 

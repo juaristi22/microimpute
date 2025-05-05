@@ -11,6 +11,7 @@ from microimpute.comparisons.data import preprocess_data
 from microimpute.config import QUANTILES
 from microimpute.evaluations import *
 from microimpute.models.qrf import QRF
+from microimpute.visualizations.plotting import *
 
 # Test Method on diabetes dataset
 diabetes_data = load_diabetes()
@@ -47,8 +48,14 @@ def test_qrf_cross_validation(
 
     assert not qrf_results.isna().any().any()
 
-    plot_train_test_performance(
-        qrf_results, save_path="qrf_train_test_performance.jpg"
+    perf_results_viz = model_performance_results(
+        results=qrf_results,
+        model_name="QRF",
+        method_name="Cross-Validation Quantile Loss Average",
+    )
+    fig = perf_results_viz.plot(
+        title="QRF Cross-Validation Performance",
+        save_path="qrf_cv_performance.jpg",
     )
 
 

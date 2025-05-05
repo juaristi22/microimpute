@@ -17,6 +17,7 @@ from sklearn.model_selection import train_test_split
 from microimpute.comparisons import *
 from microimpute.config import RANDOM_STATE
 from microimpute.models import *
+from microimpute.visualizations.plotting import *
 
 
 def test_quantile_comparison_diabetes() -> None:
@@ -49,8 +50,15 @@ def test_quantile_comparison_diabetes() -> None:
 
     loss_comparison_df.to_csv("diabetes_comparison_results.csv")
 
-    plot_loss_comparison(
-        loss_comparison_df, save_path="diabetes_loss_comparison.jpg"
+    comparison_viz = method_comparison_results(
+        data=loss_comparison_df,
+        metric_name="Test Quantile Loss",
+        data_format="long",  # Explicitly using wide format
+    )
+    fig = comparison_viz.plot(
+        title="Method Comparison for Diabetes Dataset",
+        show_mean=True,
+        save_path="diabetes_model_comparison.jpg",
     )
 
 
@@ -85,6 +93,13 @@ def test_quantile_comparison_scf() -> None:
 
     loss_comparison_df.to_csv("scf_comparison_results.csv")
 
-    plot_loss_comparison(
-        loss_comparison_df, save_path="scf_loss_comparison.jpg"
+    comparison_viz = method_comparison_results(
+        data=loss_comparison_df,
+        metric_name="Test Quantile Loss",
+        data_format="long",  # Explicitly using wide format
+    )
+    fig = comparison_viz.plot(
+        title="Method Comparison for SCF Dataset",
+        show_mean=True,
+        save_path="scf_model_comparison.jpg",
     )
