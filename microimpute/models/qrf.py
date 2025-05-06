@@ -205,7 +205,6 @@ class QRF(Imputer):
         )
 
         def objective(trial: optuna.Trial) -> float:
-            # we may want to add / change some hyperparameters
             params = {
                 "n_estimators": trial.suggest_int("n_estimators", 50, 300),
                 "min_samples_split": trial.suggest_int(

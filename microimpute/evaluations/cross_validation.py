@@ -15,6 +15,7 @@ from sklearn.model_selection import KFold
 
 from microimpute.comparisons.quantile_loss import quantile_loss
 from microimpute.config import QUANTILES, RANDOM_STATE, VALIDATE_CONFIG
+from microimpute.models.matching import Matching
 from microimpute.models.qrf import QRF
 from microimpute.models.quantreg import QuantReg
 
@@ -117,7 +118,11 @@ def cross_validate_model(
                 model = model_class()
 
                 # Handle different model fitting requirements
-                if model_hyperparams and model_class.__name__ == "QRF":
+                if (
+                    model_hyperparams
+                    and model_class.__name__ == "QRF"
+                    and ("QRF" in model_hyperparams)
+                ):
                     try:
                         log.info(
                             f"Fitting {model_class.__name__} model with hyperparameters: {model_hyperparams}"
@@ -126,7 +131,9 @@ def cross_validate_model(
                             X_train=train_data,
                             predictors=predictors,
                             imputed_variables=imputed_variables,
-                            **model_hyperparams,  # Unpack all provided hyperparameters
+                            **model_hyperparams[
+                                "QRF"
+                            ],  # Unpack all provided hyperparameters
                         )
                     except TypeError as e:
                         log.warning(
@@ -140,6 +147,35 @@ def cross_validate_model(
                         raise ValueError(
                             f"Invalid hyperparameters for model initialization. Current model hyperparameters: {fitted_model.models[imputed_variables[0]].qrf.get_params()}"
                         ) from e
+                    if (
+                        model_hyperparams
+                        and model_class.__name__ == "Matching"
+                        and ("Matching" in model_hyperparams)
+                    ):
+                        try:
+                            log.info(
+                                f"Fitting {model_class.__name__} model with hyperparameters: {model_hyperparams}"
+                            )
+                            fitted_model = model.fit(
+                                X_train=train_data,
+                                predictors=predictors,
+                                imputed_variables=imputed_variables,
+                                **model_hyperparams[
+                                    "Matching"
+                                ],  # Unpack all provided hyperparameters
+                            )
+                        except TypeError as e:
+                            log.warning(
+                                f"Invalid hyperparameters, using defaults: {str(e)}"
+                            )
+                            fitted_model = model.fit(
+                                X_train=train_data,
+                                predictors=predictors,
+                                imputed_variables=imputed_variables,
+                            )
+                            raise ValueError(
+                                f"Invalid hyperparameters for model initialization. Current model hyperparameters: dist_fun=Manhattan, constrained=False"
+                            ) from e
 
                 else:
                     if model_class == QuantReg:
@@ -152,9 +188,11 @@ def cross_validate_model(
                             imputed_variables,
                             quantiles=quantiles,
                         )
-                    elif model_class == QRF and tune_hyperparameters == True:
+                    elif (
+                        model_class == QRF or model_class == Matching
+                    ) and tune_hyperparameters == True:
                         log.info(
-                            f"Tuning QRF hyperparameters model when fitting"
+                            f"Tuning {model_class.__name__} hyperparameters when fitting"
                         )
                         fitted_model = model.fit(
                             train_data,

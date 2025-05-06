@@ -188,7 +188,10 @@ class ImputerResults(ABC):
 
     @validate_call(config=VALIDATE_CONFIG)
     def predict(
-        self, X_test: pd.DataFrame, quantiles: Optional[List[float]] = None
+        self,
+        X_test: pd.DataFrame,
+        quantiles: Optional[List[float]] = None,
+        **kwargs: Any,
     ) -> Dict[float, pd.DataFrame]:
         """Predict imputed values at specified quantiles.
 
@@ -197,6 +200,7 @@ class ImputerResults(ABC):
         Args:
             X_test: DataFrame containing the test data.
             quantiles: List of quantiles to predict. If None, uses random quantile.
+            **kwargs: Additional model-specific parameters.
 
         Returns:
             Dictionary mapping quantiles to imputed values.
@@ -214,7 +218,7 @@ class ImputerResults(ABC):
             ) from quantile_error
 
         # Defer actual imputations to subclass with all parameters
-        imputations = self._predict(X_test, quantiles)
+        imputations = self._predict(X_test, quantiles, **kwargs)
         return imputations
 
     @abstractmethod

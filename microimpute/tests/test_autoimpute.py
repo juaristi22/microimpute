@@ -27,7 +27,10 @@ def test_autoimpute_basic():
         receiver_data=diabetes_receiver,
         predictors=predictors,
         imputed_variables=imputed_variables,
-        hyperparameters={"QRF": {"n_estimators": 100}},
+        hyperparameters={
+            "QRF": {"n_estimators": 100},
+            "Matching": {"constrained": True},
+        },
     )
 
     # Check that the imputations is a dictionary of dataframes
