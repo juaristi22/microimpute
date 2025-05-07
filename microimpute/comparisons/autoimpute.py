@@ -35,6 +35,7 @@ def autoimpute(
     random_state: Optional[int] = RANDOM_STATE,
     train_size: Optional[float] = TRAIN_SIZE,
     k_folds: Optional[int] = 5,
+    verbose: Optional[bool] = False,
 ) -> tuple[dict[float, pd.DataFrame], "Imputer", pd.DataFrame]:
     """Automatically select and apply the best imputation model.
 
@@ -62,6 +63,7 @@ def autoimpute(
         random_state : Random seed for reproducibility
         train_size : Proportion of data to use for training in preprocessing
         k_folds : Number of folds for cross-validation. Defaults to 5.
+        verbose : Whether to print detailed logs. Defaults to False.
 
     Returns:
         A tuple containing:
@@ -73,6 +75,10 @@ def autoimpute(
         ValueError: If inputs are invalid (e.g., invalid quantiles, missing columns)
         RuntimeError: For unexpected errors during imputation
     """
+    # Set up logging level based on verbose parameter
+    log_level = logging.INFO if verbose else logging.WARNING
+    log.setLevel(log_level)
+
     # Step 0: Input validation
     try:
         # Validate quantiles if provided
