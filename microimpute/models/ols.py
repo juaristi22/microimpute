@@ -37,13 +37,17 @@ class OLSResults(ImputerResults):
 
     @validate_call(config=VALIDATE_CONFIG)
     def _predict(
-        self, X_test: pd.DataFrame, quantiles: Optional[List[float]] = None
+        self,
+        X_test: pd.DataFrame,
+        quantiles: Optional[List[float]] = None,
+        random_quantile_sample: Optional[bool] = False,
     ) -> Dict[float, pd.DataFrame]:
         """Predict values at specified quantiles using the OLS model.
 
         Args:
             X_test: DataFrame containing the test data.
             quantiles: List of quantiles to predict.
+            random_quantile_sample: If True, use random quantile sampling for prediction.
 
         Returns:
             Dictionary mapping quantiles to predicted values.
@@ -58,6 +62,10 @@ class OLSResults(ImputerResults):
             X_test_with_const = sm.add_constant(X_test[self.predictors])
 
             if quantiles:
+                if random_quantile_sample:
+                    self.logger.warning(
+                        f"Predicting at random quantiles sampled from a beta distribution is not possible when specified quantiles are provided."
+                    )
                 self.logger.info(
                     f"Predicting at {len(quantiles)} quantiles: {quantiles}"
                 )
@@ -68,21 +76,24 @@ class OLSResults(ImputerResults):
                         mean_preds = model.predict(X_test_with_const)
                         se = np.sqrt(model.scale)
                         imputed_df[variable] = self._predict_quantile(
-                            mean_preds=mean_preds, se=se, mean_quantile=q
+                            mean_preds=mean_preds,
+                            se=se,
+                            mean_quantile=q,
+                            random_sample=False,
                         )
                     imputations[q] = pd.DataFrame(imputed_df)
             else:
                 q = 0.5
-                self.logger.info(
-                    f"Predicting from a beta distribution centerd at quantile: {q:.4f}"
-                )
                 imputed_df = pd.DataFrame()
                 for variable in self.imputed_variables:
                     model = self.models[variable]
                     mean_preds = model.predict(X_test_with_const)
                     se = np.sqrt(model.scale)
                     imputed_df[variable] = self._predict_quantile(
-                        mean_preds=mean_preds, se=se, mean_quantile=q
+                        mean_preds=mean_preds,
+                        se=se,
+                        mean_quantile=q,
+                        random_sample=random_quantile_sample,
                     )
                 imputations[q] = pd.DataFrame(imputed_df)
             return imputations
@@ -99,6 +110,7 @@ class OLSResults(ImputerResults):
         mean_preds: pd.Series,
         se: float,
         mean_quantile: float,
+        random_sample: bool,
         count_samples: int = 10,
     ) -> np.ndarray:
         """Predict values at a specified quantile.
@@ -108,6 +120,7 @@ class OLSResults(ImputerResults):
             se: Standard error of the predictions.
             mean_quantile: Quantile to predict (the quantile affects the center of the beta distribution from which to sample when imputing each data point).
             count_samples: Number of quantile samples to generate.
+            random_sample: If True, use random quantile sampling for prediction.
 
         Returns:
             Array of predicted values at the specified quantile.
@@ -116,25 +129,36 @@ class OLSResults(ImputerResults):
             RuntimeError: If prediction fails.
         """
         try:
-            random_generator = np.random.default_rng(self.seed)
+            if random_sample:
+                self.logger.info(
+                    f"Predicting at random quantiles sampled from a beta distribution with mean quantile {mean_quantile}"
+                )
+                random_generator = np.random.default_rng(self.seed)
 
-            # Calculate alpha parameter for beta distribution
-            a = mean_quantile / (1 - mean_quantile)
+                # Calculate alpha parameter for beta distribution
+                a = mean_quantile / (1 - mean_quantile)
 
-            # Generate count_samples beta distributed values with parameter a
-            beta_samples = random_generator.beta(a, 1, size=count_samples)
+                # Generate count_samples beta distributed values with parameter a
+                beta_samples = random_generator.beta(a, 1, size=count_samples)
 
-            # Convert to normal quantiles using norm.ppf
-            normal_quantiles = norm.ppf(beta_samples)
+                # Convert to normal quantiles using norm.ppf
+                normal_quantiles = norm.ppf(beta_samples)
 
-            # For each mean prediction, randomly select one of the quantiles
-            sampled_indices = random_generator.integers(
-                0, count_samples, size=len(mean_preds)
-            )
-            selected_quantiles = normal_quantiles[sampled_indices]
+                # For each mean prediction, randomly select one of the quantiles
+                sampled_indices = random_generator.integers(
+                    0, count_samples, size=len(mean_preds)
+                )
+                selected_quantiles = normal_quantiles[sampled_indices]
 
-            # Adjust each mean prediction by corresponding sampled quantile times standard error
-            return mean_preds + selected_quantiles * se
+                # Adjust each mean prediction by corresponding sampled quantile times standard error
+                return mean_preds + selected_quantiles * se
+            else:
+                self.logger.info(
+                    f"Predicting at specified quantile {mean_quantile}"
+                )
+                specified_quantile = norm.ppf(mean_quantile)
+                return mean_preds + specified_quantile * se
+
         except Exception as e:
             if isinstance(e, ValueError):
                 raise e

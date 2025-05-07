@@ -27,6 +27,7 @@ VALID_YEARS: List[int] = [
     2013,
     2016,
     2019,
+    2022,
 ]
 
 TRAIN_SIZE: float = 0.8
