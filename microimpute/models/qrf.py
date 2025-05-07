@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from pydantic import validate_call
 
-from microimpute.config import RANDOM_STATE, VALIDATE_CONFIG
+from microimpute.config import VALIDATE_CONFIG
 from microimpute.models.imputer import Imputer, ImputerResults
 from microimpute.utils import qrf
 
@@ -21,6 +21,7 @@ class QRFResults(ImputerResults):
         models: Dict[str, "QRF"],
         predictors: List[str],
         imputed_variables: List[str],
+        seed: int,
     ) -> None:
         """Initialize the QRF results.
 
@@ -28,19 +29,23 @@ class QRFResults(ImputerResults):
             model: Fitted QRF model.
             predictors: List of column names used as predictors.
             imputed_variables: List of column names to be imputed.
+            seed: Random seed for reproducibility.
         """
-        super().__init__(predictors, imputed_variables)
+        super().__init__(predictors, imputed_variables, seed)
         self.models = models
 
     @validate_call(config=VALIDATE_CONFIG)
     def _predict(
-        self, X_test: pd.DataFrame, quantiles: Optional[List[float]] = None
+        self,
+        X_test: pd.DataFrame,
+        quantiles: Optional[List[float]] = None,
+        mean_quantile: Optional[float] = 0.5,
     ) -> Dict[float, pd.DataFrame]:
         """Predict values at specified quantiles using the QRF model.
 
         Args:
             X_test: DataFrame containing the test data.
-            quantiles: List of quantiles to predict.
+            quantiles: List of quantiles to predict (the quantile affects the center of the beta distribution from which to sample when imputing each data point).
 
         Returns:
             Dictionary mapping quantiles to predicted values.
@@ -65,15 +70,16 @@ class QRFResults(ImputerResults):
                         )
                     imputations[q] = imputed_df
             else:
-                q = np.random.uniform(0, 1)
-                self.logger.info(f"Predicting at random quantile: {q:.4f}")
+                self.logger.info(
+                    f"Predicting from a beta distribution centerd at quantile: {mean_quantile:.4f}"
+                )
                 imputed_df = pd.DataFrame()
                 for variable in self.imputed_variables:
                     model = self.models[variable]
                     imputed_df = model.predict(
-                        X_test[self.predictors], mean_quantile=q
+                        X_test[self.predictors], mean_quantile=mean_quantile
                     )
-                imputations[q] = imputed_df
+                imputations[mean_quantile] = imputed_df
 
             self.logger.info(
                 f"QRF predictions completed for {len(X_test)} samples"
@@ -95,16 +101,9 @@ class QRF(Imputer):
     The underlying QRF implementation is from utils.qrf.
     """
 
-    def __init__(self, random_seed: int = RANDOM_STATE) -> None:
-        """Initialize the QRF model.
-
-        The random seed is set through the RANDOM_STATE constant from config.
-
-        Args:
-            random_seed: Seed for replicability.
-        """
+    def __init__(self) -> None:
+        """Initialize the QRF model."""
         super().__init__()
-        self.seed = random_seed
         self.models = {}
         self.logger.debug("Initializing QRF imputer")
 
@@ -171,6 +170,7 @@ class QRF(Imputer):
                 models=self.models,
                 predictors=predictors,
                 imputed_variables=imputed_variables,
+                seed=self.seed,
             )
         except Exception as e:
             self.logger.error(f"Error fitting QRF model: {str(e)}")

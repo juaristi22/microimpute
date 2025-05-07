@@ -33,6 +33,7 @@ class MatchingResults(ImputerResults):
         donor_data: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
+        seed: int,
         hyperparameters: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize the matching model.
@@ -42,9 +43,11 @@ class MatchingResults(ImputerResults):
             donor_data: DataFrame containing the donor data.
             predictors: List of column names to use as predictors.
             imputed_variables: List of column names to impute.
-            hyperparameters: Optional dictionary of hyperparameters for the matching function, specified after tunning.
+            seed: Random seed for reproducibility.
+            hyperparameters: Optional dictionary of hyperparameters for the
+                matching function, specified after tunning.
         """
-        super().__init__(predictors, imputed_variables)
+        super().__init__(predictors, imputed_variables, seed)
         self.matching_hotdeck = matching_hotdeck
         self.donor_data = donor_data
         self.hyperparameters = hyperparameters
@@ -222,7 +225,6 @@ class Matching(Imputer):
     def __init__(
         self,
         matching_hotdeck: MatchingHotdeckFn = nnd_hotdeck_using_rpy2,
-        seed: Optional[int] = RANDOM_STATE,
     ) -> None:
         """Initialize the matching model.
 
@@ -242,7 +244,6 @@ class Matching(Imputer):
 
         self.matching_hotdeck = matching_hotdeck
         self.donor_data: Optional[pd.DataFrame] = None
-        self.seed = seed
 
     @validate_call(config=VALIDATE_CONFIG)
     def _fit(
@@ -286,6 +287,7 @@ class Matching(Imputer):
                     donor_data=self.donor_data,
                     predictors=predictors,
                     imputed_variables=imputed_variables,
+                    seed=self.seed,
                     hyperparameters=best_params,
                 )
             else:
@@ -303,6 +305,7 @@ class Matching(Imputer):
                     donor_data=self.donor_data,
                     predictors=predictors,
                     imputed_variables=imputed_variables,
+                    seed=self.seed,
                     hyperparameters=matching_kwargs,
                 )
         except Exception as e:

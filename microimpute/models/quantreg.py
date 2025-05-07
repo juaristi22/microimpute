@@ -21,6 +21,7 @@ class QuantRegResults(ImputerResults):
         models: Dict[float, "QuantReg"],
         predictors: List[str],
         imputed_variables: List[str],
+        seed: int,
     ) -> None:
         """Initialize the QRF results.
 
@@ -28,8 +29,9 @@ class QuantRegResults(ImputerResults):
             models: Dict of quantiles and fitted QuantReg models.
             predictors: List of column names used as predictors.
             imputed_variables: List of column names to be imputed.
+            seed: Random seed for reproducibility.
         """
-        super().__init__(predictors, imputed_variables)
+        super().__init__(predictors, imputed_variables, seed)
         self.models = models
 
     @validate_call(config=VALIDATE_CONFIG)
@@ -179,9 +181,10 @@ class QuantReg(Imputer):
                         ).fit(q=q)
                     self.logger.info(f"Model for q={q} fitted successfully")
             else:
-                q = np.random.uniform(0, 1)
+                random_generator = np.random.default_rng(self.seed)
+                q = random_generator.uniform(0, 1)
                 self.logger.info(
-                    f"Fitting quantile regression for random q={q:.4f}"
+                    f"Fitting quantile regression for random quantile {q:.4f}"
                 )
                 for variable in imputed_variables:
                     Y = X_train[variable]
@@ -195,6 +198,7 @@ class QuantReg(Imputer):
                 models=self.models,
                 predictors=predictors,
                 imputed_variables=imputed_variables,
+                seed=self.seed,
             )
         except Exception as e:
             self.logger.error(f"Error fitting QuantReg model: {str(e)}")

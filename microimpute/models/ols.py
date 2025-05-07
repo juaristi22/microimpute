@@ -22,6 +22,7 @@ class OLSResults(ImputerResults):
         models: Dict[str, "OLS"],
         predictors: List[str],
         imputed_variables: List[str],
+        seed: int,
     ) -> None:
         """Initialize the OLS results.
 
@@ -29,8 +30,9 @@ class OLSResults(ImputerResults):
             model: Fitted OLS model.
             predictors: List of predictor variable names.
             imputed_variables: List of imputed variable names.
+            seed: Random seed for reproducibility.
         """
-        super().__init__(predictors, imputed_variables)
+        super().__init__(predictors, imputed_variables, seed)
         self.models = models
 
     @validate_call(config=VALIDATE_CONFIG)
@@ -63,18 +65,24 @@ class OLSResults(ImputerResults):
                     imputed_df = pd.DataFrame()
                     for variable in self.imputed_variables:
                         model = self.models[variable]
+                        mean_preds = model.predict(X_test_with_const)
+                        se = np.sqrt(model.scale)
                         imputed_df[variable] = self._predict_quantile(
-                            model, X_test_with_const, q
+                            mean_preds=mean_preds, se=se, mean_quantile=q
                         )
                     imputations[q] = pd.DataFrame(imputed_df)
             else:
-                q = np.random.uniform(0, 1)
-                self.logger.info(f"Predicting at random quantile: {q:.3f}")
+                q = 0.5
+                self.logger.info(
+                    f"Predicting from a beta distribution centerd at quantile: {q:.4f}"
+                )
                 imputed_df = pd.DataFrame()
                 for variable in self.imputed_variables:
                     model = self.models[variable]
+                    mean_preds = model.predict(X_test_with_const)
+                    se = np.sqrt(model.scale)
                     imputed_df[variable] = self._predict_quantile(
-                        model, X_test_with_const, q
+                        mean_preds=mean_preds, se=se, mean_quantile=q
                     )
                 imputations[q] = pd.DataFrame(imputed_df)
             return imputations
@@ -87,13 +95,19 @@ class OLSResults(ImputerResults):
 
     @validate_call(config=VALIDATE_CONFIG)
     def _predict_quantile(
-        self, model, X: pd.DataFrame, q: float
+        self,
+        mean_preds: pd.Series,
+        se: float,
+        mean_quantile: float,
+        count_samples: int = 10,
     ) -> np.ndarray:
         """Predict values at a specified quantile.
 
         Args:
-            X: Feature matrix with constant.
-            q: Quantile to predict.
+            mean_pred: Mean predictions from the model.
+            se: Standard error of the predictions.
+            mean_quantile: Quantile to predict (the quantile affects the center of the beta distribution from which to sample when imputing each data point).
+            count_samples: Number of quantile samples to generate.
 
         Returns:
             Array of predicted values at the specified quantile.
@@ -102,16 +116,33 @@ class OLSResults(ImputerResults):
             RuntimeError: If prediction fails.
         """
         try:
-            mean_pred = model.predict(X)
-            se = np.sqrt(model.scale)
+            random_generator = np.random.default_rng(self.seed)
 
-            return mean_pred + norm.ppf(q) * se
+            # Calculate alpha parameter for beta distribution
+            a = mean_quantile / (1 - mean_quantile)
+
+            # Generate count_samples beta distributed values with parameter a
+            beta_samples = random_generator.beta(a, 1, size=count_samples)
+
+            # Convert to normal quantiles using norm.ppf
+            normal_quantiles = norm.ppf(beta_samples)
+
+            # For each mean prediction, randomly select one of the quantiles
+            sampled_indices = random_generator.integers(
+                0, count_samples, size=len(mean_preds)
+            )
+            selected_quantiles = normal_quantiles[sampled_indices]
+
+            # Adjust each mean prediction by corresponding sampled quantile times standard error
+            return mean_preds + selected_quantiles * se
         except Exception as e:
             if isinstance(e, ValueError):
                 raise e
-            self.logger.error(f"Error predicting at quantile {q}: {str(e)}")
+            self.logger.error(
+                f"Error predicting at random quantiles with mean quantile {mean_quantile}: {str(e)}"
+            )
             raise RuntimeError(
-                f"Failed to predict at quantile {q}: {str(e)}"
+                f"Failed to predict at random quantiles with mean quantile {mean_quantile}: {str(e)}"
             ) from e
 
 
@@ -167,6 +198,7 @@ class OLS(Imputer):
                 models=self.models,
                 predictors=predictors,
                 imputed_variables=imputed_variables,
+                seed=self.seed,
             )
         except Exception as e:
             self.logger.error(f"Error fitting OLS model: {str(e)}")

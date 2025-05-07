@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional, Set
 import pandas as pd
 from pydantic import validate_call
 
-from microimpute.config import VALIDATE_CONFIG
+from microimpute.config import RANDOM_STATE, VALIDATE_CONFIG
 
 
 class Imputer(ABC):
@@ -26,10 +26,11 @@ class Imputer(ABC):
     the required methods.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, seed: Optional[int] = RANDOM_STATE) -> None:
         """Initialize the imputer model."""
         self.predictors: Optional[List[str]] = None
         self.imputed_variables: Optional[List[str]] = None
+        self.seed = seed
         self.logger = logging.getLogger(__name__)
 
     @validate_call(config=VALIDATE_CONFIG)
@@ -150,9 +151,11 @@ class ImputerResults(ABC):
         self,
         predictors: List[str],
         imputed_variables: List[str],
+        seed: int,
     ):
         self.predictors = predictors
         self.imputed_variables = imputed_variables
+        self.seed = seed
         self.logger = logging.getLogger(__name__)
 
     @validate_call(config=VALIDATE_CONFIG)
