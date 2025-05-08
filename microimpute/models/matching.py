@@ -1,13 +1,13 @@
 """Statistical matching imputation model using hot deck methods."""
 
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 from pydantic import validate_call
 from rpy2.robjects import pandas2ri
 
-from microimpute.config import VALIDATE_CONFIG
+from microimpute.config import RANDOM_STATE, VALIDATE_CONFIG
 from microimpute.models.imputer import Imputer, ImputerResults
 from microimpute.utils.statmatch_hotdeck import nnd_hotdeck_using_rpy2
 
@@ -33,6 +33,8 @@ class MatchingResults(ImputerResults):
         donor_data: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
+        seed: int,
+        hyperparameters: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize the matching model.
 
@@ -41,10 +43,14 @@ class MatchingResults(ImputerResults):
             donor_data: DataFrame containing the donor data.
             predictors: List of column names to use as predictors.
             imputed_variables: List of column names to impute.
+            seed: Random seed for reproducibility.
+            hyperparameters: Optional dictionary of hyperparameters for the
+                matching function, specified after tunning.
         """
-        super().__init__(predictors, imputed_variables)
+        super().__init__(predictors, imputed_variables, seed)
         self.matching_hotdeck = matching_hotdeck
         self.donor_data = donor_data
+        self.hyperparameters = hyperparameters
 
     @validate_call(config=VALIDATE_CONFIG)
     def _predict(
@@ -98,12 +104,22 @@ class MatchingResults(ImputerResults):
             # Perform the matching
             try:
                 self.logger.info("Calling R-based hot deck matching function")
-                fused0, fused1 = self.matching_hotdeck(
-                    receiver=X_test_copy,
-                    donor=self.donor_data,
-                    matching_variables=self.predictors,
-                    z_variables=self.imputed_variables,
-                )
+                # Call matching function with hyperparameters if available
+                if self.hyperparameters:
+                    fused0, fused1 = self.matching_hotdeck(
+                        receiver=X_test_copy,
+                        donor=self.donor_data,
+                        matching_variables=self.predictors,
+                        z_variables=self.imputed_variables,
+                        **self.hyperparameters,
+                    )
+                else:
+                    fused0, fused1 = self.matching_hotdeck(
+                        receiver=X_test_copy,
+                        donor=self.donor_data,
+                        matching_variables=self.predictors,
+                        z_variables=self.imputed_variables,
+                    )
             except Exception as matching_error:
                 self.logger.error(
                     f"Error in hot deck matching: {str(matching_error)}"
@@ -207,7 +223,8 @@ class Matching(Imputer):
     """
 
     def __init__(
-        self, matching_hotdeck: MatchingHotdeckFn = nnd_hotdeck_using_rpy2
+        self,
+        matching_hotdeck: MatchingHotdeckFn = nnd_hotdeck_using_rpy2,
     ) -> None:
         """Initialize the matching model.
 
@@ -234,6 +251,8 @@ class Matching(Imputer):
         X_train: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
+        tune_hyperparameters: bool = False,
+        **matching_kwargs: Any,
     ) -> MatchingResults:
         """Fit the matching model by storing the donor data and variable names.
 
@@ -241,6 +260,7 @@ class Matching(Imputer):
             X_train: DataFrame containing the donor data.
             predictors: List of column names to use as predictors.
             imputed_variables: List of column names to impute.
+            matching_kwargs: Additional keyword arguments for the matching function.
 
         Returns:
             The fitted model instance.
@@ -251,22 +271,148 @@ class Matching(Imputer):
         try:
             self.donor_data = X_train.copy()
 
-            self.logger.info(
-                f"Matching model ready with {len(X_train)} donor records"
-            )
-            self.logger.info(f"Using predictors: {predictors}")
-            self.logger.info(
-                f"Targeting imputed variables: {imputed_variables}"
-            )
+            if tune_hyperparameters:
+                self.logger.info(
+                    "Tuning hyperparameters for the matching model"
+                )
+                best_params = self._tune_hyperparameters(
+                    data=X_train,
+                    predictors=predictors,
+                    imputed_variables=imputed_variables,
+                )
+                self.logger.info(f"Best hyperparameters: {best_params}")
 
-            return MatchingResults(
-                matching_hotdeck=self.matching_hotdeck,
-                donor_data=self.donor_data,
-                predictors=predictors,
-                imputed_variables=imputed_variables,
-            )
+                return MatchingResults(
+                    matching_hotdeck=self.matching_hotdeck,
+                    donor_data=self.donor_data,
+                    predictors=predictors,
+                    imputed_variables=imputed_variables,
+                    seed=self.seed,
+                    hyperparameters=best_params,
+                )
+            else:
+                self.logger.info(
+                    f"Matching model ready with {len(X_train)} donor records and "
+                    f"optional parameters: {matching_kwargs}"
+                )
+                self.logger.info(f"Using predictors: {predictors}")
+                self.logger.info(
+                    f"Targeting imputed variables: {imputed_variables}"
+                )
+
+                return MatchingResults(
+                    matching_hotdeck=self.matching_hotdeck,
+                    donor_data=self.donor_data,
+                    predictors=predictors,
+                    imputed_variables=imputed_variables,
+                    seed=self.seed,
+                    hyperparameters=matching_kwargs,
+                )
         except Exception as e:
             self.logger.error(f"Error setting up matching model: {str(e)}")
             raise ValueError(
                 f"Failed to set up matching model: {str(e)}"
             ) from e
+
+    @validate_call(config=VALIDATE_CONFIG)
+    def _tune_hyperparameters(
+        self,
+        data: pd.DataFrame,
+        predictors: List[str],
+        imputed_variables: List[str],
+    ) -> Dict[str, Any]:
+        """Tune hyperparameters for the Matching model using Optuna.
+
+        Args:
+            X_train: DataFrame containing the training data.
+            predictors: List of column names to use as predictors.
+            imputed_variables: List of column names to impute.
+
+        Returns:
+            Dictionary of tuned hyperparameters.
+        """
+        import optuna
+        from sklearn.model_selection import train_test_split
+
+        # Suppress Optuna's logs during optimization
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+
+        # Create a validation split (80% train, 20% validation)
+        X_train, X_test = train_test_split(
+            data, test_size=0.2, random_state=self.seed
+        )
+
+        def objective(trial: optuna.Trial) -> float:
+            params = {
+                "dist_fun": trial.suggest_categorical(
+                    "dist_fun",
+                    [
+                        "Manhattan",
+                        "Euclidean",
+                        "Mahalanobis",
+                        "Gower",
+                        "minimax",
+                    ],
+                ),
+                "constrained": trial.suggest_categorical(
+                    "constrained", [False, True]
+                ),
+                "constr_alg": trial.suggest_categorical(
+                    "constr_alg", ["hungarian", "lpSolve"]
+                ),
+                "k": trial.suggest_int("k", 1, 10),
+            }
+
+            # Track errors for all variables
+            var_errors = []
+
+            # For each imputed variable
+            for var in imputed_variables:
+                # Extract target variable values
+                y_test = X_test[var]
+                X_test_var = X_test.copy().drop(var, axis=1)
+
+                # Perform the matching with the current parameters
+                fused0, fused1 = self.matching_hotdeck(
+                    receiver=X_test_var,
+                    donor=X_train,
+                    matching_variables=predictors,
+                    z_variables=[var],
+                    **params,
+                )
+
+                # Calculate error
+                y_pred = pandas2ri.rpy2py(fused0)[var]
+
+                # Normalize error by variable's standard deviation
+                std = np.std(y_test.values.flatten())
+                mse = np.mean(
+                    (y_pred.values.flatten() - y_test.values.flatten()) ** 2
+                )
+                normalized_mse = mse / (std**2) if std > 0 else mse
+
+                var_errors.append(normalized_mse)
+
+            # Return mean error across all variables
+            return np.mean(var_errors)
+
+        # Create and run the study
+        study = optuna.create_study(
+            direction="minimize",
+            sampler=optuna.samplers.TPESampler(seed=self.seed),
+        )
+
+        # Suppress warnings during optimization
+        import os
+
+        os.environ["PYTHONWARNINGS"] = "ignore"
+
+        study.optimize(objective, n_trials=30)
+
+        best_value = study.best_value
+        self.logger.info(f"Lowest average normalized MSE: {best_value}")
+
+        best_params = study.best_params
+        self.logger.info(f"Best hyperparameters found: {best_params}")
+
+        return best_params

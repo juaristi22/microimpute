@@ -41,26 +41,16 @@ mtc.ids: A matrix with two columns. Each row must contain the name or the index
 
 z.vars: A character vector with the names of the variables available only in
         data.don that should be "donated" to data.rec.
-networth
-
-dup.x: Logical. When TRUE the values of the matching variables in data.don are
-       also "donated" to data.rec. The names of the matching variables have to
-       be specified with the argument match.vars. To avoid confusion, the
-       matching variables added to data.rec are renamed by adding the suffix
-       "don". By default dup.x=FALSE.
-
-match.vars: A character vector with the names of the matching variables. It has
-           to be specified only when dup.x=TRUE. All other vars (no need to
-           specify)
 """
 
 
 @validate_call(config=VALIDATE_CONFIG)
 def nnd_hotdeck_using_rpy2(
-    receiver: Optional[pd.DataFrame] = None,
-    donor: Optional[pd.DataFrame] = None,
-    matching_variables: Optional[List[str]] = None,
-    z_variables: Optional[List[str]] = None,
+    receiver: pd.DataFrame,
+    donor: pd.DataFrame,
+    matching_variables: List[str],
+    z_variables: List[str],
+    **matching_kwargs,
 ) -> Tuple[Any, Any]:
     """Perform nearest neighbor distance hot deck matching using R's StatMatch package.
 
@@ -69,6 +59,7 @@ def nnd_hotdeck_using_rpy2(
         donor: DataFrame containing donor data.
         matching_variables: List of column names to use for matching.
         z_variables: List of column names to donate from donor to recipient.
+        **matching_kwargs: Optional hyperparameters for matching.
 
     Returns:
         Tuple containing two fused datasets:
@@ -82,24 +73,6 @@ def nnd_hotdeck_using_rpy2(
         RuntimeError: If R operations or statistical matching fails.
     """
     try:
-        # Validate inputs
-        if receiver is None or donor is None:
-            error_msg = "Receiver and donor must be provided"
-            log.error(error_msg)
-            raise ValueError(error_msg)
-
-        if matching_variables is None or not matching_variables:
-            error_msg = (
-                "Matching variables must be provided and cannot be empty"
-            )
-            log.error(error_msg)
-            raise ValueError(error_msg)
-
-        if z_variables is None or not z_variables:
-            error_msg = "z_variables must be provided and cannot be empty"
-            log.error(error_msg)
-            raise ValueError(error_msg)
-
         # Validate that matching variables exist in both datasets
         missing_in_receiver = [
             v for v in matching_variables if v not in receiver.columns
@@ -150,11 +123,20 @@ def nnd_hotdeck_using_rpy2(
         try:
             # Call the NND_hotdeck function from R
             log.info("Calling R's NND_hotdeck function")
-            out_NND = StatMatch.NND_hotdeck(
-                data_rec=receiver,
-                data_don=donor,
-                match_vars=pd.Series(matching_variables),
-            )
+            if matching_kwargs:
+                log.info(f"Using hyperparameters: {matching_kwargs}")
+                out_NND = StatMatch.NND_hotdeck(
+                    data_rec=receiver,
+                    data_don=donor,
+                    match_vars=pd.Series(matching_variables),
+                    **matching_kwargs,
+                )
+            else:
+                out_NND = StatMatch.NND_hotdeck(
+                    data_rec=receiver,
+                    data_don=donor,
+                    match_vars=pd.Series(matching_variables),
+                )
             log.info("NND_hotdeck completed successfully")
         except Exception as nnd_error:
             log.error(f"Error in R's NND_hotdeck function: {str(nnd_error)}")

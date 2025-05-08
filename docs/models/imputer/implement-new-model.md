@@ -182,7 +182,7 @@ from microimpute.comparisons import (
     get_imputations,
     compare_quantile_loss,
 )
-from microimpute.comparisons.plot import plot_loss_comparison
+from microimpute.visualizations.plotting import method_comparison_results
 
 # Define models to compare
 model_classes = [NewModel, OLS, QRF]
@@ -199,7 +199,15 @@ method_imputations = get_imputations(
 loss_comparison_df = compare_quantile_loss(Y_test, method_imputations, imputed_variables)
 
 # Plot the comparison
-plot_loss_comparison(loss_comparison_df)
+comparison_viz = method_comparison_results(
+        data=loss_comparison_df,
+        metric_name="Test Quantile Loss",
+        data_format="long",
+    )
+fig = comparison_viz.plot(
+    show_mean=True,
+)
+fig.show()
 ```
 
 ## Best practices for implementing new models

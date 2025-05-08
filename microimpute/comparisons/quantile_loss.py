@@ -83,9 +83,6 @@ def compute_quantile_loss(
         raise RuntimeError(f"Failed to compute quantile loss: {str(e)}") from e
 
 
-quantiles_legend: List[str] = [str(int(q * 100)) + "th" for q in QUANTILES]
-
-
 @validate_call(config=VALIDATE_CONFIG)
 def compare_quantile_loss(
     test_y: pd.DataFrame,
@@ -159,7 +156,7 @@ def compare_quantile_loss(
                     new_row = {
                         "Method": method,
                         "Imputed Variable": variable,
-                        "Percentile": str(int(quantile * 100)) + "th",
+                        "Percentile": quantile,
                         "Loss": q_loss.mean(),
                     }
 
@@ -175,11 +172,11 @@ def compare_quantile_loss(
                 # Compute the average loss across all variables
                 avg_var_loss = np.mean(variable_losses)
 
-                # Create a new row for "average"
+                # Create a new row for "mean_loss"
                 new_row = {
                     "Method": method,
-                    "Imputed Variable": "average",
-                    "Percentile": f"{int(quantile * 100)}th",
+                    "Imputed Variable": "mean_loss",
+                    "Percentile": quantile,
                     "Loss": avg_var_loss,
                 }
 
@@ -192,11 +189,11 @@ def compare_quantile_loss(
             # Compute the average loss across all quantiles
             avg_quant_loss = np.mean(quantile_losses)
 
-            # Create a new row for "average"
+            # Create a new row for "mean_loss"
             new_row = {
                 "Method": method,
-                "Imputed Variable": "average",
-                "Percentile": "average",
+                "Imputed Variable": "mean_loss",
+                "Percentile": "mean_loss",
                 "Loss": avg_quant_loss,
             }
 

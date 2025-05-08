@@ -26,6 +26,11 @@ parts:
         sections:
           - file: imputation-benchmarking/benchmarking-methods
           - file: imputation-benchmarking/imputing-across-surveys
+  - caption: AutoImpute
+    chapters:
+      - file: autoimpute/index
+        sections:
+          - file: autoimpute/autoimpute
   - caption: CPS example
     chapters:
       - file: examples/cps/index

@@ -8,7 +8,6 @@ __version__ = "0.1.0"
 # Import data handling functions
 from microimpute.comparisons.data import prepare_scf_data, preprocess_data
 from microimpute.comparisons.imputations import get_imputations
-from microimpute.comparisons.plot import plot_loss_comparison
 
 # Import comparison utilities
 from microimpute.comparisons.quantile_loss import (
@@ -27,9 +26,6 @@ from microimpute.config import (
 
 # Import evaluation modules
 from microimpute.evaluations.cross_validation import cross_validate_model
-from microimpute.evaluations.train_test_performance import (
-    plot_train_test_performance,
-)
 
 # Import main models and utilities
 from microimpute.models import (
@@ -39,4 +35,10 @@ from microimpute.models import (
     ImputerResults,
     Matching,
     QuantReg,
+)
+
+# Import visualization modules
+from microimpute.visualizations.plotting import (
+    method_comparison_results,
+    model_performance_results,
 )

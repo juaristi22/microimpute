@@ -43,6 +43,7 @@ jobs:
       - name: Install R packages
         run: |
           sudo Rscript -e 'install.packages("StatMatch", repos="https://cloud.r-project.org")'
+          sudo Rscript -e 'install.packages("clue", repos="https://cloud.r-project.org")'
       - name: Install Python dependencies
         run: |
           uv pip install -e ".[dev]" --system
@@ -73,6 +74,7 @@ jobs:
       - name: Install R packages
         run: |
           sudo Rscript -e 'install.packages("StatMatch", repos="https://cloud.r-project.org")'
+          sudo Rscript -e 'install.packages("clue", repos="https://cloud.r-project.org")'
       - name: Install dependencies
         run: |
           uv pip install -e ".[dev,docs]" --system

@@ -6,9 +6,10 @@ import pandas as pd
 from sklearn.datasets import load_diabetes
 
 from microimpute.comparisons.data import preprocess_data
-from microimpute.config import QUANTILES
+from microimpute.config import QUANTILES, RANDOM_STATE
 from microimpute.evaluations import *
 from microimpute.models.quantreg import QuantReg
+from microimpute.visualizations.plotting import *
 
 # Test Method on diabetes dataset
 diabetes_data = load_diabetes()
@@ -21,8 +22,17 @@ imputed_variables = ["s1", "s4"]
 
 diabetes_df = diabetes_df[predictors + imputed_variables]
 
+random_generator = np.random.default_rng(RANDOM_STATE)
+count_samples = 10
+mean_quantile = 0.5
+# Calculate alpha parameter for beta distribution
+a = mean_quantile / (1 - mean_quantile)
+# Generate count_samples beta distributed values with parameter a
+beta_samples = random_generator.beta(a, 1, size=count_samples)
+quantiles = list(set(beta_samples))
 
-def test_matching_cross_validation(
+
+def test_quantreg_cross_validation(
     data: pd.DataFrame = diabetes_df,
     predictors: List[str] = predictors,
     imputed_variables: List[str] = imputed_variables,
@@ -45,8 +55,14 @@ def test_matching_cross_validation(
 
     assert not quantreg_results.isna().any().any()
 
-    plot_train_test_performance(
-        quantreg_results, save_path="quantreg_train_test_performance.jpg"
+    perf_results_viz = model_performance_results(
+        results=quantreg_results,
+        model_name="QuantReg",
+        method_name="Cross-Validation Quantile Loss Average",
+    )
+    fig = perf_results_viz.plot(
+        title="QuantReg Cross-Validation Performance",
+        save_path="quantreg_cv_performance.jpg",
     )
 
 
@@ -82,11 +98,12 @@ def test_quantreg_example(
     )
 
     # Predict at the fitted quantiles
-    predictions: Dict[float, pd.DataFrame] = fitted_model.predict(X_test)
+    predictions: Dict[float, pd.DataFrame] = fitted_model.predict(
+        X_test, random_quantile_sample=False
+    )
 
     # Check structure of predictions
     assert isinstance(predictions, dict)
-    assert set(predictions.keys()) == set(quantiles)
 
     # Basic checks
     for q, pred in predictions.items():

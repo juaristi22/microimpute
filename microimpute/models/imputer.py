@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional, Set
 import pandas as pd
 from pydantic import validate_call
 
-from microimpute.config import VALIDATE_CONFIG
+from microimpute.config import RANDOM_STATE, VALIDATE_CONFIG
 
 
 class Imputer(ABC):
@@ -26,10 +26,11 @@ class Imputer(ABC):
     the required methods.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, seed: Optional[int] = RANDOM_STATE) -> None:
         """Initialize the imputer model."""
         self.predictors: Optional[List[str]] = None
         self.imputed_variables: Optional[List[str]] = None
+        self.seed = seed
         self.logger = logging.getLogger(__name__)
 
     @validate_call(config=VALIDATE_CONFIG)
@@ -150,9 +151,11 @@ class ImputerResults(ABC):
         self,
         predictors: List[str],
         imputed_variables: List[str],
+        seed: int,
     ):
         self.predictors = predictors
         self.imputed_variables = imputed_variables
+        self.seed = seed
         self.logger = logging.getLogger(__name__)
 
     @validate_call(config=VALIDATE_CONFIG)
@@ -188,7 +191,10 @@ class ImputerResults(ABC):
 
     @validate_call(config=VALIDATE_CONFIG)
     def predict(
-        self, X_test: pd.DataFrame, quantiles: Optional[List[float]] = None
+        self,
+        X_test: pd.DataFrame,
+        quantiles: Optional[List[float]] = None,
+        **kwargs: Any,
     ) -> Dict[float, pd.DataFrame]:
         """Predict imputed values at specified quantiles.
 
@@ -197,6 +203,7 @@ class ImputerResults(ABC):
         Args:
             X_test: DataFrame containing the test data.
             quantiles: List of quantiles to predict. If None, uses random quantile.
+            **kwargs: Additional model-specific parameters.
 
         Returns:
             Dictionary mapping quantiles to imputed values.
@@ -214,7 +221,7 @@ class ImputerResults(ABC):
             ) from quantile_error
 
         # Defer actual imputations to subclass with all parameters
-        imputations = self._predict(X_test, quantiles)
+        imputations = self._predict(X_test, quantiles, **kwargs)
         return imputations
 
     @abstractmethod

@@ -6,7 +6,7 @@ and organize results in a consistent format for comparison.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Type
 
 import numpy as np
 import pandas as pd
@@ -100,6 +100,7 @@ def get_imputations(
 
         method_imputations: Dict[str, Dict[float, Any]] = {}
 
+        fitted_models: Dict[str, Any] = {}
         for model_class in model_classes:
             model_name = model_class.__name__
             log.info(f"Processing model: {model_name}")
@@ -123,6 +124,8 @@ def get_imputations(
                     fitted_model = model.fit(
                         X_train, predictors, imputed_variables
                     )
+
+                fitted_models[model_name] = fitted_model
 
                 # Get predictions
                 log.info(f"Generating predictions with {model_name}")
