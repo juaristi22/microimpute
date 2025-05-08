@@ -116,11 +116,13 @@ class OLSResults(ImputerResults):
         """Predict values at a specified quantile.
 
         Args:
-            mean_pred: Mean predictions from the model.
+            mean_preds: Mean predictions from the model.
             se: Standard error of the predictions.
-            mean_quantile: Quantile to predict (the quantile affects the center of the beta distribution from which to sample when imputing each data point).
-            count_samples: Number of quantile samples to generate.
+            mean_quantile: Quantile to predict (the quantile affects the center
+                of the beta distribution from which to sample when imputing each data point).
             random_sample: If True, use random quantile sampling for prediction.
+            count_samples: Number of quantile samples to generate when
+                random_sample is True.
 
         Returns:
             Array of predicted values at the specified quantile.
