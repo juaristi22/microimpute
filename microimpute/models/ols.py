@@ -79,7 +79,7 @@ class OLSResults(ImputerResults):
                             mean_preds=mean_preds,
                             se=se,
                             mean_quantile=q,
-                            random_sample=False,
+                            random_sample=random_quantile_sample,
                         )
                     imputations[q] = pd.DataFrame(imputed_df)
             else:
@@ -131,7 +131,7 @@ class OLSResults(ImputerResults):
             RuntimeError: If prediction fails.
         """
         try:
-            if random_sample:
+            if random_sample == True:
                 self.logger.info(
                     f"Predicting at random quantiles sampled from a beta distribution with mean quantile {mean_quantile}"
                 )
