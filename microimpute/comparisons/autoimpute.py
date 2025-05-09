@@ -4,6 +4,7 @@ This module integrates all steps necessary for method selection and imputation o
 """
 
 import logging
+import warnings
 from functools import partial
 from typing import Any, Dict, List, Optional, Type
 
@@ -11,7 +12,7 @@ import joblib
 import pandas as pd
 from pydantic import validate_call
 from rpy2.robjects import pandas2ri
-from tqdm.auto import tqdm  # Better progress bars that work in notebooks too
+from tqdm.auto import tqdm
 
 from microimpute.comparisons import *
 from microimpute.comparisons.data import preprocess_data
@@ -83,6 +84,7 @@ def autoimpute(
     # Set up logging level based on verbose parameter
     log_level = logging.INFO if verbose else logging.WARNING
     log.setLevel(log_level)
+    warnings.filterwarnings("ignore")
 
     # Set up parallel processing
     n_jobs: Optional[int] = -1

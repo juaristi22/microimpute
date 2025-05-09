@@ -1,4 +1,4 @@
-# Example: imputing wealth on the Current Population Survey data set
+# Example: imputing wealth on the CPS data set
 
 This example demonstrates how to use the microimpute package to impute wealth variables from the Survey of Consumer Finances (SCF) onto the Current Population Survey (CPS). 
 
