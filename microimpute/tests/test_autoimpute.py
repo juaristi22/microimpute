@@ -3,7 +3,6 @@ Test the autoimpute function.
 """
 
 import pandas as pd
-from rpy2.robjects import pandas2ri
 from sklearn.datasets import load_diabetes
 
 from microimpute.comparisons.autoimpute import autoimpute

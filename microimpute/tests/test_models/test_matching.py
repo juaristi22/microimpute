@@ -10,7 +10,11 @@ from sklearn.metrics import mean_squared_error
 from microimpute.comparisons.data import preprocess_data
 from microimpute.config import QUANTILES
 from microimpute.evaluations import *
-from microimpute.models.matching import Matching
+
+try:
+    from microimpute.models.matching import Matching
+except ImportError:
+    pass
 from microimpute.visualizations.plotting import *
 
 # Test Method on diabetes dataset
