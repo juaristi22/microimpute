@@ -38,7 +38,16 @@ def diabetes_data() -> pd.DataFrame:
 
 
 # Define all imputer model classes to test
-ALL_IMPUTER_MODELS = [OLS, QuantReg, QRF, Matching]
+ALL_IMPUTER_MODELS = [OLS, QuantReg, QRF]
+
+try:
+    from microimpute.models.matching import Matching
+
+    # Add Matching model if available
+    ALL_IMPUTER_MODELS.append(Matching)
+except ImportError:
+    # If Matching model is not available, skip the test
+    pass
 
 
 # Parametrize tests to run for each model

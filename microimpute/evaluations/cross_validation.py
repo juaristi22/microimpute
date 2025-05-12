@@ -13,7 +13,6 @@ import joblib
 import numpy as np
 import pandas as pd
 from pydantic import validate_call
-from rpy2.robjects import pandas2ri
 from sklearn.model_selection import KFold
 
 from microimpute.comparisons.quantile_loss import quantile_loss

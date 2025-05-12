@@ -11,7 +11,6 @@ from typing import Any, Dict, List, Optional, Type
 import joblib
 import pandas as pd
 from pydantic import validate_call
-from rpy2.robjects import pandas2ri
 from tqdm.auto import tqdm
 
 from microimpute.comparisons import *
