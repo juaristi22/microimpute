@@ -5,7 +5,11 @@ This module contains different imputation models for benchmarking.
 
 # Import base classes
 from .imputer import Imputer, ImputerResults
-from .matching import Matching
+
+try:
+    from .matching import Matching
+except ImportError:
+    pass
 
 # Import specific model implementations
 from .ols import OLS

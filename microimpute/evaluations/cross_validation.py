@@ -18,7 +18,11 @@ from sklearn.model_selection import KFold
 
 from microimpute.comparisons.quantile_loss import quantile_loss
 from microimpute.config import QUANTILES, RANDOM_STATE, VALIDATE_CONFIG
-from microimpute.models.matching import Matching
+
+try:
+    from microimpute.models.matching import Matching
+except ImportError:
+    pass
 from microimpute.models.qrf import QRF
 from microimpute.models.quantreg import QuantReg
 
@@ -203,7 +207,7 @@ def cross_validate_model(
                         quantiles=quantiles,
                     )
                 elif (
-                    model_class == QRF or model_class == Matching
+                    model_class.__name__ in ("QRF", "Matching")
                 ) and tune_hyperparameters == True:
                     log.info(
                         f"Tuning {model_class.__name__} hyperparameters when fitting"
