@@ -33,9 +33,13 @@ from microimpute.models import (
     QRF,
     Imputer,
     ImputerResults,
-    Matching,
     QuantReg,
 )
+
+try:
+    from microimpute.models.matching import Matching
+except ImportError:
+    pass
 
 # Import visualization modules
 from microimpute.visualizations.plotting import (
