@@ -283,14 +283,18 @@ class Matching(Imputer):
                 )
                 self.logger.info(f"Best hyperparameters: {best_params}")
 
-                return MatchingResults(
-                    matching_hotdeck=self.matching_hotdeck,
-                    donor_data=self.donor_data,
-                    predictors=predictors,
-                    imputed_variables=imputed_variables,
-                    seed=self.seed,
-                    hyperparameters=best_params,
+                return (
+                    MatchingResults(
+                        matching_hotdeck=self.matching_hotdeck,
+                        donor_data=self.donor_data,
+                        predictors=predictors,
+                        imputed_variables=imputed_variables,
+                        seed=self.seed,
+                        hyperparameters=best_params,
+                    ),
+                    best_params,
                 )
+
             else:
                 self.logger.info(
                     f"Matching model ready with {len(X_train)} donor records and "

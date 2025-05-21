@@ -107,6 +107,10 @@ def cross_validate_model(
         # Create parallel-ready fold indices
         fold_indices = list(kf.split(data))
 
+        # Initialize tuned_hyperparameters
+        tuned_hyperparameters = {} if tune_hyperparameters else None
+        best_tuned_hyperparams = None
+
         # Define the function to process a single fold
         def process_single_fold(
             fold_idx_pair,
@@ -137,6 +141,8 @@ def cross_validate_model(
             # Instantiate the model
             log.info(f"Initializing {model_class.__name__} model")
             model = model_class()
+
+            fold_tuned_params = None
 
             # Handle different model fitting requirements
             if (
@@ -208,12 +214,14 @@ def cross_validate_model(
                     log.info(
                         f"Tuning {model_class.__name__} hyperparameters when fitting"
                     )
-                    fitted_model = model.fit(
+                    fitted_model, best_tuned_params = model.fit(
                         train_data,
                         predictors,
                         imputed_variables,
                         tune_hyperparameters=True,
                     )
+                    fold_tuned_params = best_tuned_params
+
                 else:
                     log.info(f"Fitting {model_class.__name__} model")
                     fitted_model = model.fit(
@@ -234,6 +242,7 @@ def cross_validate_model(
                 fold_train_imputations,
                 test_y,
                 train_y,
+                fold_tuned_params,
             )
 
         # Execute folds in parallel
@@ -255,14 +264,17 @@ def cross_validate_model(
 
         # Extract results
         for (
-            _,
+            fold_idx,
             fold_test_imputations,
             fold_train_imputations,
             test_y,
             train_y,
+            fold_tuned_params,
         ) in fold_results:
             test_y_values.append(test_y)
             train_y_values.append(train_y)
+            if tune_hyperparameters:
+                tuned_hyperparameters[fold_idx] = fold_tuned_params
 
             # Store results for each quantile
             for q in quantiles:
@@ -312,29 +324,68 @@ def cross_validate_model(
             avg_test_losses = {q: [] for q in quantiles}
             avg_train_losses = {q: [] for q in quantiles}
 
-            for result in loss_results:
-                q = result["quantile"]
-                fold_idx = result["fold"]
-                avg_test_losses[q].append(result["test_loss"])
-                avg_train_losses[q].append(result["train_loss"])
+            if (
+                model_class == QRF or model_class == Matching
+            ) and tune_hyperparameters == True:
+                best_fold = fold_indices[0][0]
+                best_loss = float("inf")
+                for result in loss_results:
+                    q = result["quantile"]
+                    fold_idx = result["fold"]
+                    avg_test_losses[q].append(result["test_loss"])
+                    avg_train_losses[q].append(result["train_loss"])
 
-                log.debug(
-                    f"Fold {fold_idx+1}, q={q}: Train loss = {result['train_loss']:.6f}, Test loss = {result['test_loss']:.6f}"
-                )
+                    log.debug(
+                        f"Fold {fold_idx+1}, q={q}: Train loss = {result['train_loss']:.6f}, Test loss = {result['test_loss']:.6f}"
+                    )
+                    if q == 0.5:
+                        if result["test_loss"] < best_loss:
+                            best_loss = result["test_loss"]
+                            best_fold = fold_idx
+                best_tuned_hyperparams = tuned_hyperparameters[best_fold]
+            else:
+                for result in loss_results:
+                    q = result["quantile"]
+                    fold_idx = result["fold"]
+                    avg_test_losses[q].append(result["test_loss"])
+                    avg_train_losses[q].append(result["train_loss"])
+
+                    log.debug(
+                        f"Fold {fold_idx+1}, q={q}: Train loss = {result['train_loss']:.6f}, Test loss = {result['test_loss']:.6f}"
+                    )
         else:
             # Calculate losses sequentially for simpler cases
             avg_test_losses = {q: [] for q in quantiles}
             avg_train_losses = {q: [] for q in quantiles}
 
-            for k in range(len(test_y_values)):
-                for q in quantiles:
-                    result = compute_fold_loss(k, q)
-                    avg_test_losses[q].append(result["test_loss"])
-                    avg_train_losses[q].append(result["train_loss"])
+            if (
+                model_class == QRF or model_class == Matching
+            ) and tune_hyperparameters == True:
+                best_fold = fold_indices[0][0]
+                best_loss = float("inf")
+                for k in range(len(test_y_values)):
+                    for q in quantiles:
+                        result = compute_fold_loss(k, q)
+                        avg_test_losses[q].append(result["test_loss"])
+                        avg_train_losses[q].append(result["train_loss"])
 
-                    log.debug(
-                        f"Fold {k+1}, q={q}: Train loss = {result['train_loss']:.6f}, Test loss = {result['test_loss']:.6f}"
-                    )
+                        log.debug(
+                            f"Fold {k+1}, q={q}: Train loss = {result['train_loss']:.6f}, Test loss = {result['test_loss']:.6f}"
+                        )
+                    if result["test_loss"] < best_loss:
+                        best_fold = k
+                        best_loss = result["test_loss"]
+                best_tuned_hyperparams = tuned_hyperparameters[best_fold]
+            else:
+                for k in range(len(test_y_values)):
+                    for q in quantiles:
+                        result = compute_fold_loss(k, q)
+                        avg_test_losses[q].append(result["test_loss"])
+                        avg_train_losses[q].append(result["train_loss"])
+
+                        log.debug(
+                            f"Fold {k+1}, q={q}: Train loss = {result['train_loss']:.6f}, Test loss = {result['test_loss']:.6f}"
+                        )
 
         # Calculate the average loss across all folds for each quantile
         log.info("Calculating final average metrics")
@@ -360,7 +411,10 @@ def cross_validate_model(
         log.info(f"Average Test Loss: {test_mean:.6f}")
         log.info(f"Train/Test Ratio: {train_test_ratio:.6f}")
 
-        return final_results
+        if tune_hyperparameters:
+            return final_results, best_tuned_hyperparams
+        else:
+            return final_results
 
     except ValueError as e:
         # Re-raise validation errors directly

@@ -267,7 +267,7 @@ def autoimpute(
                 pandas2ri.activate()
                 numpy2ri.activate()
 
-            return model_name, cross_validate_model(
+            cv_result = cross_validate_model(
                 model_class=model,
                 data=data,
                 predictors=predictors,
@@ -275,8 +275,19 @@ def autoimpute(
                 quantiles=quantiles,
                 n_splits=k_folds,
                 random_state=random_state,
+                tune_hyperparameters=tune_hyperparams,
                 model_hyperparams=hyperparameters,
             )
+
+            if (
+                tune_hyperparams
+                and isinstance(cv_result, tuple)
+                and len(cv_result) == 2
+            ):
+                final_results, best_params = cv_result
+                return model_name, final_results, best_params
+            else:
+                return model_name, cv_result
 
         # Special handling for models that use rpy2
         # Use sequential processing for Matching model to avoid thread context issues
@@ -312,8 +323,15 @@ def autoimpute(
         )
 
         # Process results
-        for model_name, cv_result in results:
-            method_test_losses[model_name] = cv_result.loc["test"]
+        if tune_hyperparameters == True:
+            hyperparams = {}
+            for model_name, cv_result, best_tuned_hyperparams in results:
+                method_test_losses[model_name] = cv_result.loc["test"]
+                if model_name == "QRF" or model_name == "Matching":
+                    hyperparams[model_name] = best_tuned_hyperparams
+        else:
+            for model_name, cv_result in results:
+                method_test_losses[model_name] = cv_result.loc["test"]
 
         method_results_df = pd.DataFrame.from_dict(
             method_test_losses, orient="index"
@@ -362,9 +380,21 @@ def autoimpute(
                 quantiles=[imputation_q],
             )
         else:
-            fitted_model = model.fit(
-                training_data, predictors, imputed_variables
-            )
+            if (
+                chosen_model.__name__ == "Matching"
+                or chosen_model.__name__ == "QRF"
+            ) and tune_hyperparameters == True:
+                # For Matching and QRF, we need to pass the best hyperparameters
+                fitted_model = model.fit(
+                    training_data,
+                    predictors,
+                    imputed_variables,
+                    **hyperparams[chosen_model.__name__],
+                )
+            else:
+                fitted_model = model.fit(
+                    training_data, predictors, imputed_variables
+                )
 
         # Predict with explicit quantiles
         imputations = fitted_model.predict(
