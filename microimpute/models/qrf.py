@@ -79,7 +79,7 @@ class QRFResults(ImputerResults):
                 imputed_df = pd.DataFrame()
                 for variable in self.imputed_variables:
                     model = self.models[variable]
-                    imputed_df = model.predict(
+                    imputed_df[variable] = model.predict(
                         X_test[self.predictors], mean_quantile=mean_quantile
                     )
                 imputations[mean_quantile] = imputed_df
@@ -142,6 +142,30 @@ class QRF(Imputer):
                         imputed_variables=imputed_variables,
                     )
 
+                    # Extract training data
+                    X = X_train[predictors]
+                    # Initialize and fit a QRF model for each variable
+                    for variable in imputed_variables:
+                        model = qrf.QRF(seed=self.seed)
+                        y = pd.DataFrame(X_train[variable])
+                        # Fit the QRF model
+                        model.fit(X, y, **qrf_kwargs)
+
+                        self.logger.info(
+                            f"QRF model fitted successfully with {len(X)} training samples"
+                        )
+
+                        self.models[variable] = model
+                    return (
+                        QRFResults(
+                            models=self.models,
+                            predictors=predictors,
+                            imputed_variables=imputed_variables,
+                            seed=self.seed,
+                        ),
+                        qrf_kwargs,
+                    )
+
                 except Exception as e:
                     self.logger.error(
                         f"Error tuning hyperparameters: {str(e)}"
@@ -150,31 +174,32 @@ class QRF(Imputer):
                         f"Failed to tune hyperparameters: {str(e)}"
                     ) from e
 
-            self.logger.info(
-                f"Fitting QRF model with {len(predictors)} predictors and "
-                f"optional parameters: {qrf_kwargs}"
-            )
-
-            # Extract training data
-            X = X_train[predictors]
-            # Initialize and fit a QRF model for each variable
-            for variable in imputed_variables:
-                model = qrf.QRF(seed=self.seed)
-                y = pd.DataFrame(X_train[variable])
-                # Fit the QRF model
-                model.fit(X, y, **qrf_kwargs)
-
+            else:
                 self.logger.info(
-                    f"QRF model fitted successfully with {len(X)} training samples"
+                    f"Fitting QRF model with {len(predictors)} predictors and "
+                    f"optional parameters: {qrf_kwargs}"
                 )
 
-                self.models[variable] = model
-            return QRFResults(
-                models=self.models,
-                predictors=predictors,
-                imputed_variables=imputed_variables,
-                seed=self.seed,
-            )
+                # Extract training data
+                X = X_train[predictors]
+                # Initialize and fit a QRF model for each variable
+                for variable in imputed_variables:
+                    model = qrf.QRF(seed=self.seed)
+                    y = pd.DataFrame(X_train[variable])
+                    # Fit the QRF model
+                    model.fit(X, y, **qrf_kwargs)
+
+                    self.logger.info(
+                        f"QRF model fitted successfully with {len(X)} training samples"
+                    )
+
+                    self.models[variable] = model
+                return QRFResults(
+                    models=self.models,
+                    predictors=predictors,
+                    imputed_variables=imputed_variables,
+                    seed=self.seed,
+                )
         except Exception as e:
             self.logger.error(f"Error fitting QRF model: {str(e)}")
             raise RuntimeError(f"Failed to fit QRF model: {str(e)}") from e

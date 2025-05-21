@@ -168,7 +168,7 @@ def test_matching_hyperparameter_tuning(
     default_fitted = default_model.fit(X_train, predictors, imputed_variables)
 
     # Fit with hyperparameter tuning
-    tuned_fitted = tuned_model.fit(
+    tuned_fitted, best_params = tuned_model.fit(
         X_train,
         predictors,
         imputed_variables,
