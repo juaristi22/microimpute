@@ -261,10 +261,10 @@ def test_qrf_hyperparameter_tuning(
 
 
 def test_qrf_imputes_multiple_variables(
-        data: pd.DataFrame = diabetes_df,
-        predictors: List[str] = predictors,
-        imputed_variables: List[str] = imputed_variables,
-    ) -> None:
+    data: pd.DataFrame = diabetes_df,
+    predictors: List[str] = predictors,
+    imputed_variables: List[str] = imputed_variables,
+) -> None:
     """
     Test that QRF can impute multiple variables.
 
