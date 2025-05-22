@@ -5,7 +5,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from pydantic import validate_call
-from rpy2.robjects import pandas2ri
 
 from microimpute.config import RANDOM_STATE, VALIDATE_CONFIG
 from microimpute.models.imputer import Imputer, ImputerResults
@@ -70,6 +69,8 @@ class MatchingResults(ImputerResults):
                 input data is invalid.
             RuntimeError: If matching or prediction fails.
         """
+        from rpy2.robjects import pandas2ri
+
         try:
             self.logger.info(
                 f"Performing matching for {len(X_test)} recipient records"
@@ -337,6 +338,7 @@ class Matching(Imputer):
             Dictionary of tuned hyperparameters.
         """
         import optuna
+        from rpy2.robjects import pandas2ri
         from sklearn.model_selection import train_test_split
 
         # Suppress Optuna's logs during optimization

@@ -3,7 +3,7 @@
 A package for benchmarking different imputation methods using microdata.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.2"
 
 # Import data handling functions
 from microimpute.comparisons.data import prepare_scf_data, preprocess_data
@@ -28,13 +28,7 @@ from microimpute.config import (
 from microimpute.evaluations.cross_validation import cross_validate_model
 
 # Import main models and utilities
-from microimpute.models import (
-    OLS,
-    QRF,
-    Imputer,
-    ImputerResults,
-    QuantReg,
-)
+from microimpute.models import OLS, QRF, Imputer, ImputerResults, QuantReg
 
 try:
     from microimpute.models.matching import Matching
