@@ -258,3 +258,40 @@ def test_qrf_hyperparameter_tuning(
         assert (
             avg_tuned_mse <= avg_default_mse * 1.1
         ), "Tuned model performance significantly worse than default"
+
+
+def test_qrf_imputes_multiple_variables(
+    data: pd.DataFrame = diabetes_df,
+    predictors: List[str] = predictors,
+    imputed_variables: List[str] = imputed_variables,
+) -> None:
+    """
+    Test that QRF can impute multiple variables.
+
+    This test verifies that:
+    1. The model can handle multiple imputed variables
+    2. The predictions are structured correctly
+
+    Args:
+        None
+    """
+    X_train, X_test, dummy_info = preprocess_data(data)
+
+    # Initialize QRF model
+    model = QRF()
+
+    # Fit the model with RF hyperparameters
+    fitted_model = model.fit(
+        X_train,
+        predictors,
+        imputed_variables,
+        n_estimators=100,  # Number of trees
+        min_samples_leaf=5,  # Min samples in leaf nodes
+    )
+
+    # Predict at multiple quantiles
+    predictions: Dict[float, pd.DataFrame] = fitted_model.predict(X_test)
+
+    # Check structure of predictions
+    assert isinstance(predictions, dict)
+    assert predictions[0.5].shape[1] == len(imputed_variables)

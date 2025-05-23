@@ -6,7 +6,6 @@ each fold to provide robust performance estimates.
 """
 
 import logging
-from functools import partial
 from typing import Dict, List, Optional, Tuple, Type
 
 import joblib
@@ -17,11 +16,7 @@ from sklearn.model_selection import KFold
 
 from microimpute.comparisons.quantile_loss import quantile_loss
 from microimpute.config import QUANTILES, RANDOM_STATE, VALIDATE_CONFIG
-
-try:
-    from microimpute.models.matching import Matching
-except ImportError:
-    pass
+from microimpute.models.matching import Matching
 from microimpute.models.qrf import QRF
 from microimpute.models.quantreg import QuantReg
 

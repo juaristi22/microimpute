@@ -9,20 +9,9 @@ from typing import Any, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-import rpy2.robjects as ro
 from pydantic import validate_call
-from rpy2.robjects import numpy2ri, pandas2ri
-from rpy2.robjects.packages import importr
 
 from microimpute.config import VALIDATE_CONFIG
-
-# Enable R-Python DataFrame and array conversion
-pandas2ri.activate()
-numpy2ri.activate()
-utils = importr("utils")
-utils.chooseCRANmirror(ind=1)
-StatMatch = importr("StatMatch")
-
 
 log = logging.getLogger(__name__)
 
@@ -72,6 +61,17 @@ def nnd_hotdeck_using_rpy2(
         ValueError: If z_variables are not found in donor dataset.
         RuntimeError: If R operations or statistical matching fails.
     """
+    import rpy2.robjects as ro
+    from rpy2.robjects import numpy2ri, pandas2ri
+    from rpy2.robjects.packages import importr
+
+    # Enable R-Python DataFrame and array conversion
+    pandas2ri.activate()
+    numpy2ri.activate()
+    utils = importr("utils")
+    utils.chooseCRANmirror(ind=1)
+    StatMatch = importr("StatMatch")
+
     try:
         # Validate that matching variables exist in both datasets
         missing_in_receiver = [
