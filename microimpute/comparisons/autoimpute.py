@@ -258,14 +258,6 @@ def autoimpute(
             model_name = model.__name__
             log.info(f"Evaluating {model_name}...")
 
-            # For Matching model using R, we need to activate converters in this thread
-            if model_name == "Matching":
-                # Explicitly activate pandas-to-R conversion for this thread
-                from rpy2.robjects import numpy2ri, pandas2ri
-
-                pandas2ri.activate()
-                numpy2ri.activate()
-
             cv_result = cross_validate_model(
                 model_class=model,
                 data=data,
