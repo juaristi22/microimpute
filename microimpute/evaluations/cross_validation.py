@@ -30,7 +30,7 @@ def cross_validate_model(
     predictors: List[str],
     imputed_variables: List[str],
     quantiles: Optional[List[float]] = QUANTILES,
-    n_splits: int = 5,
+    n_splits: Optional[int] = 5,
     random_state: Optional[int] = RANDOM_STATE,
     model_hyperparams: Optional[dict] = None,
     tune_hyperparameters: Optional[bool] = False,
