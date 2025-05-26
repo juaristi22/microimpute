@@ -69,8 +69,6 @@ class MatchingResults(ImputerResults):
                 input data is invalid.
             RuntimeError: If matching or prediction fails.
         """
-        from rpy2.robjects import pandas2ri
-
         try:
             self.logger.info(
                 f"Performing matching for {len(X_test)} recipient records"
@@ -131,14 +129,11 @@ class MatchingResults(ImputerResults):
 
             # Convert R objects to pandas DataFrame
             try:
-                self.logger.debug("Converting R result to pandas DataFrame")
-                fused0_pd = pandas2ri.rpy2py(fused0)
-
                 # Verify imputed variables exist in the result
                 missing_imputed = [
                     var
                     for var in self.imputed_variables
-                    if var not in fused0_pd.columns
+                    if var not in fused0.columns
                 ]
                 if missing_imputed:
                     self.logger.error(
@@ -149,7 +144,7 @@ class MatchingResults(ImputerResults):
                     )
 
                 self.logger.info(
-                    f"Matching completed, fused dataset has {len(fused0_pd)} records"
+                    f"Matching completed, fused dataset has {len(fused0)} records"
                 )
             except Exception as convert_error:
                 self.logger.error(
@@ -174,7 +169,7 @@ class MatchingResults(ImputerResults):
                             self.logger.debug(
                                 f"Adding result for imputed variable {variable} at quantile {q}"
                             )
-                            imputed_df[variable] = fused0_pd[variable]
+                            imputed_df[variable] = fused0[variable]
                         imputations[q] = imputed_df
                 else:
                     # If no quantiles specified, use a default one
@@ -184,7 +179,7 @@ class MatchingResults(ImputerResults):
                     )
                     imputed_df = pd.DataFrame()
                     for variable in self.imputed_variables:
-                        imputed_df[variable] = fused0_pd[variable]
+                        imputed_df[variable] = fused0[variable]
                     imputations[q] = imputed_df
 
                 # Verify output shapes
@@ -338,7 +333,6 @@ class Matching(Imputer):
             Dictionary of tuned hyperparameters.
         """
         import optuna
-        from rpy2.robjects import pandas2ri
         from sklearn.model_selection import train_test_split
 
         # Suppress Optuna's logs during optimization
@@ -389,7 +383,7 @@ class Matching(Imputer):
                 )
 
                 # Calculate error
-                y_pred = pandas2ri.rpy2py(fused0)[var]
+                y_pred = fused0[var]
 
                 # Normalize error by variable's standard deviation
                 std = np.std(y_test.values.flatten())
