@@ -569,25 +569,40 @@ def postprocess_imputations(
             for orig_col, dummy_cols in dummy_info.get(
                 "column_mapping", {}
             ).items():
-                if orig_col not in df_processed.columns:
-                    logger.info(
-                        f"Original column {orig_col} not found in processed DataFrame, it must have been part of the predicor variables and not imputed."
-                    )
-                    continue
                 if orig_col in dummy_info.get("original_dtypes", {}):
                     orig_dtype = dummy_info["original_dtypes"][orig_col]
+
+                    # Check if this variable was imputed by seeing if its dummy columns are present
+                    is_imputed = False
+
+                    if orig_dtype == "bool":
+                        # For boolean variables, check if the original column is in the DataFrame
+                        is_imputed = orig_col in df_processed.columns
+                    elif orig_dtype in ["categorical", "numeric categorical"]:
+                        # For categorical variables, check if all dummy columns are present
+                        available_dummies = [
+                            col
+                            for col in dummy_cols
+                            if col in df_processed.columns
+                        ]
+                        # Consider it imputed if we have at least one dummy column for this variable
+                        is_imputed = len(available_dummies) > 0
+
+                    if not is_imputed:
+                        logger.debug(
+                            f"Skipping {orig_col} - not in imputed variables"
+                        )
+                        continue
+
                     logger.debug(f"Converting {orig_col} back to {orig_dtype}")
 
                     if orig_dtype == "bool":
                         # Convert back to boolean from float (0.0/1.0 encoding)
-                        if orig_col in df_processed.columns:
-                            # Convert imputed float values to boolean (>0.5 threshold)
-                            df_processed[orig_col] = (
-                                df_processed[orig_col] > 0.5
-                            )
-                            logger.debug(
-                                f"Converted {orig_col} back to boolean from float"
-                            )
+                        # Convert imputed float values to boolean (>0.5 threshold)
+                        df_processed[orig_col] = df_processed[orig_col] > 0.5
+                        logger.debug(
+                            f"Converted {orig_col} back to boolean from float"
+                        )
 
                     elif (
                         orig_dtype == "categorical"
