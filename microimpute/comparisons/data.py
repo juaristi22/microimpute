@@ -388,6 +388,27 @@ def preprocess_data(
                 and col not in bool_columns
             ]
 
+            # Identify numeric columns that represent categorical data
+            numeric_categorical_columns = [
+                col
+                for col in data.columns
+                if pd.api.types.is_numeric_dtype(data[col])
+                and data[col].nunique()
+                < 10  # Parse as category if unique count < 10
+                and col
+                not in bool_columns  # Exclude already processed boolean columns
+            ]
+
+            if numeric_categorical_columns:
+                logger.warning(
+                    f"Found {len(numeric_categorical_columns)} numeric columns with unique values < 10, treating as categorical: {numeric_categorical_columns}. Converting to dummy variables."
+                )
+                for col in numeric_categorical_columns:
+                    dummy_info["original_dtypes"][col] = "numeric categorical"
+                    dummy_info["original_categories"][col] = (
+                        data[col].unique().tolist()
+                    )
+
             if string_columns:
                 logger.info(
                     f"Found {len(string_columns)} categorical columns to convert: {string_columns}"
@@ -400,14 +421,16 @@ def preprocess_data(
                         data[col].unique().tolist()
                     )
 
+            if string_columns or numeric_categorical_columns:
+                dummy_columns = string_columns + numeric_categorical_columns
                 # Use pandas get_dummies to create one-hot encoded features
-                dummy_data = pd.get_dummies(data[string_columns], dtype=float)
+                dummy_data = pd.get_dummies(data[dummy_columns], dtype=float)
                 logger.debug(
                     f"Created {dummy_data.shape[1]} dummy variables from {len(string_columns)} string columns"
                 )
 
                 # Create mapping from original columns to their resulting dummy columns
-                for orig_col in string_columns:
+                for orig_col in dummy_columns:
                     # Find all dummy columns that came from this original column
                     related_dummies = [
                         col
@@ -417,7 +440,7 @@ def preprocess_data(
                     dummy_info["column_mapping"][orig_col] = related_dummies
 
                 # Drop original string columns and join the dummy variables
-                numeric_data = data.drop(columns=string_columns)
+                numeric_data = data.drop(columns=dummy_columns)
                 logger.debug(
                     f"Removed original string columns, data shape: {numeric_data.shape}"
                 )
@@ -561,8 +584,11 @@ def postprocess_imputations(
                                 f"Converted {orig_col} back to boolean from float"
                             )
 
-                    elif orig_dtype == "categorical":
-                        # Convert back to categorical
+                    elif (
+                        orig_dtype == "categorical"
+                        or orig_dtype == "numeric categorical"
+                    ):
+                        # Convert back to categorical or numeric categorical
                         categories = dummy_info["original_categories"][
                             orig_col
                         ]

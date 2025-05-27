@@ -10,8 +10,9 @@ All model implementations should extend these classes to ensure a consistent int
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Union
 
+import numpy as np
 import pandas as pd
 from pydantic import validate_call
 
@@ -69,7 +70,7 @@ class Imputer(ABC):
         X_train: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
-        weight_col: Optional[str] = None,
+        weight_col: Optional[Union[str, np.array]] = None,
         **kwargs: Any,
     ) -> Any:  # Returns ImputerResults
         """Fit the model to the training data.
@@ -78,8 +79,8 @@ class Imputer(ABC):
             X_train: DataFrame containing the training data.
             predictors: List of column names to use as predictors.
             imputed_variables: List of column names to impute.
-            weight_col: Optional name of the column containing sampling
-                weights. When provided, `X_train` will be sampled with
+            weight_col: Optional name of the column or column array containing
+                sampling weights. When provided, `X_train` will be sampled with
                 replacement using this column as selection probabilities
                 before fitting the model.
             **kwargs: Additional model-specific parameters.
@@ -108,11 +109,14 @@ class Imputer(ABC):
             raise ValueError(f"Invalid input data for model: {str(e)}") from e
 
         if weight_col is not None:
-            if weight_col not in X_train.columns:
-                raise ValueError(
-                    f"Weight column '{weight_col}' not found in training data"
-                )
-            weights = X_train[weight_col]
+            if isinstance(weight_col, str):
+                if weight_col not in X_train.columns:
+                    raise ValueError(
+                        f"Weight column '{weight_col}' not found in training data"
+                    )
+                weights = X_train[weight_col]
+            else:
+                weights = weight_col
             if (weights <= 0).any():
                 raise ValueError("Weights must be positive")
             weights_normalized = weights / weights.sum()

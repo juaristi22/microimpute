@@ -213,7 +213,7 @@ def test_weighted_training(
             X_train,
             ["age", "sex", "bmi", "bp"],
             ["s1"],
-            weight_col="wgt",
+            weight_col=X_train["wgt"],
             quantiles=QUANTILES,
         )
     else:
