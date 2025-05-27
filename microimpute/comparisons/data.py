@@ -569,6 +569,11 @@ def postprocess_imputations(
             for orig_col, dummy_cols in dummy_info.get(
                 "column_mapping", {}
             ).items():
+                if orig_col not in df_processed.columns:
+                    logger.info(
+                        f"Original column {orig_col} not found in processed DataFrame, it must have been part of the predicor variables and not imputed."
+                    )
+                    continue
                 if orig_col in dummy_info.get("original_dtypes", {}):
                     orig_dtype = dummy_info["original_dtypes"][orig_col]
                     logger.debug(f"Converting {orig_col} back to {orig_dtype}")
