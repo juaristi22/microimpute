@@ -192,3 +192,33 @@ def test_imputation_categorical_bool_vars() -> None:
     imputations = postprocess_imputations(ols_predictions, dummy_info)
     assert imputations[0.5]["categorical"].dtype == "object"
     assert imputations[0.5]["bool"].dtype == "bool"
+
+
+@pytest.mark.parametrize(
+    "model_class", ALL_IMPUTER_MODELS, ids=lambda cls: cls.__name__
+)
+def test_weighted_training(
+    model_class: Type[Imputer], diabetes_data: pd.DataFrame
+) -> None:
+    """Ensure models can be trained using sampling weights."""
+
+    X_train, _, dummy_info = preprocess_data(diabetes_data)
+    # Create a simple positive weight column after preprocessing
+    X_train["wgt"] = range(1, len(X_train) + 1)
+
+    model = model_class()
+
+    if model_class.__name__ == "QuantReg":
+        fitted = model.fit(
+            X_train,
+            ["age", "sex", "bmi", "bp"],
+            ["s1"],
+            weight_col="wgt",
+            quantiles=QUANTILES,
+        )
+    else:
+        fitted = model.fit(
+            X_train, ["age", "sex", "bmi", "bp"], ["s1"], weight_col="wgt"
+        )
+
+    assert fitted is not None

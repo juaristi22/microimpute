@@ -36,6 +36,7 @@ def autoimpute(
     receiver_data: pd.DataFrame,
     predictors: List[str],
     imputed_variables: List[str],
+    weight_col: Optional[str] = None,
     models: Optional[List[Type]] = None,
     quantiles: Optional[List[float]] = QUANTILES,
     hyperparameters: Optional[Dict[str, Dict[str, Any]]] = None,
@@ -60,6 +61,7 @@ def autoimpute(
             predict imputed variables
         imputed_variables : List of column names of variables to be imputed in
             the receiver data
+        weight_col : Optional column name for sampling weights in donor data.
         models : List of imputer model classes to compare.
             If None, uses [QRF, OLS, QuantReg, Matching]
         quantiles : List of quantiles to predict for each imputed variable.
@@ -247,6 +249,7 @@ def autoimpute(
             data: pd.DataFrame,
             predictors: List[str],
             imputed_variables: List[str],
+            weight_col: Optional[str],
             quantiles: List[float],
             k_folds: Optional[int] = 5,
             random_state: Optional[bool] = RANDOM_STATE,
@@ -277,6 +280,7 @@ def autoimpute(
                 data=data,
                 predictors=predictors,
                 imputed_variables=imputed_variables,
+                weight_col=weight_col,
                 quantiles=quantiles,
                 n_splits=k_folds,
                 random_state=random_state,
@@ -313,6 +317,7 @@ def autoimpute(
                     training_data,
                     predictors,
                     imputed_variables,
+                    weight_col,
                     quantiles,
                     k_folds,
                     RANDOM_STATE,
@@ -382,6 +387,7 @@ def autoimpute(
                 training_data,
                 predictors,
                 imputed_variables,
+                weight_col=weight_col,
                 quantiles=[imputation_q],
             )
         else:
@@ -394,11 +400,15 @@ def autoimpute(
                     training_data,
                     predictors,
                     imputed_variables,
+                    weight_col=weight_col,
                     **hyperparams[chosen_model.__name__],
                 )
             else:
                 fitted_model = model.fit(
-                    training_data, predictors, imputed_variables
+                    training_data,
+                    predictors,
+                    imputed_variables,
+                    weight_col=weight_col,
                 )
 
         # Predict with explicit quantiles

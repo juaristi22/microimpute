@@ -69,6 +69,7 @@ class Imputer(ABC):
         X_train: pd.DataFrame,
         predictors: List[str],
         imputed_variables: List[str],
+        weight_col: Optional[str] = None,
         **kwargs: Any,
     ) -> Any:  # Returns ImputerResults
         """Fit the model to the training data.
@@ -77,6 +78,10 @@ class Imputer(ABC):
             X_train: DataFrame containing the training data.
             predictors: List of column names to use as predictors.
             imputed_variables: List of column names to impute.
+            weight_col: Optional name of the column containing sampling
+                weights. When provided, `X_train` will be sampled with
+                replacement using this column as selection probabilities
+                before fitting the model.
             **kwargs: Additional model-specific parameters.
 
         Returns:
@@ -101,6 +106,22 @@ class Imputer(ABC):
                     raise ValueError(error_msg)
         except Exception as e:
             raise ValueError(f"Invalid input data for model: {str(e)}") from e
+
+        if weight_col is not None:
+            if weight_col not in X_train.columns:
+                raise ValueError(
+                    f"Weight column '{weight_col}' not found in training data"
+                )
+            weights = X_train[weight_col]
+            if (weights <= 0).any():
+                raise ValueError("Weights must be positive")
+            weights_normalized = weights / weights.sum()
+            X_train = X_train.sample(
+                n=len(X_train),
+                replace=True,
+                weights=weights_normalized,
+                random_state=self.seed,
+            ).reset_index(drop=True)
 
         # Save predictors and imputed variables
         self.predictors = predictors
