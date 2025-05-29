@@ -364,7 +364,17 @@ def preprocess_data(
             bool_columns = [
                 col
                 for col in data.columns
-                if pd.api.types.is_bool_dtype(data[col])
+                if (
+                    pd.api.types.is_bool_dtype(data[col])
+                    or (
+                        pd.api.types.is_integer_dtype(data[col])
+                        and set(data[col].unique()) == {0, 1}
+                    )
+                    or (
+                        pd.api.types.is_float_dtype(data[col])
+                        and set(data[col].unique()) == {0.0, 1.0}
+                    )
+                )
             ]
 
             if bool_columns:
@@ -372,10 +382,13 @@ def preprocess_data(
                     f"Found {len(bool_columns)} boolean columns to convert: {bool_columns}"
                 )
                 for col in bool_columns:
-                    dummy_info["original_dtypes"][col] = "bool"
+                    dummy_info["original_dtypes"][col] = (
+                        "bool",
+                        data[col].dtype,
+                    )
                     # For boolean columns, map the column to itself since we don't create dummies
                     dummy_info["column_mapping"][col] = [col]
-                    data[col] = data[col].astype(float)
+                    data[col] = data[col].astype("float64")
 
             # Identify string and object columns (excluding already processed booleans)
             string_columns = [
@@ -404,10 +417,14 @@ def preprocess_data(
                     f"Found {len(numeric_categorical_columns)} numeric columns with unique values < 10, treating as categorical: {numeric_categorical_columns}. Converting to dummy variables."
                 )
                 for col in numeric_categorical_columns:
-                    dummy_info["original_dtypes"][col] = "numeric categorical"
-                    dummy_info["original_categories"][col] = (
-                        data[col].unique().tolist()
+                    dummy_info["original_categories"][col] = [
+                        float(i) for i in data[col].unique().tolist()
+                    ]
+                    dummy_info["original_dtypes"][col] = (
+                        "numeric categorical",
+                        data[col].dtype,
                     )
+                    data[col] = data[col].astype("float64")
 
             if string_columns:
                 logger.info(
@@ -416,15 +433,22 @@ def preprocess_data(
 
                 # Store original categories and dtypes for categorical columns
                 for col in string_columns:
-                    dummy_info["original_dtypes"][col] = "categorical"
+                    dummy_info["original_dtypes"][col] = (
+                        "categorical",
+                        data[col].dtype,
+                    )
                     dummy_info["original_categories"][col] = (
                         data[col].unique().tolist()
                     )
 
-            if string_columns or numeric_categorical_columns:
+            if string_columns:
                 dummy_columns = string_columns + numeric_categorical_columns
                 # Use pandas get_dummies to create one-hot encoded features
-                dummy_data = pd.get_dummies(data[dummy_columns], dtype=float)
+                dummy_data = pd.get_dummies(
+                    data[dummy_columns], dtype="float64"
+                )
+                for col in dummy_data.columns:
+                    dummy_data[col] = dummy_data[col].astype("float64")
                 logger.debug(
                     f"Created {dummy_data.shape[1]} dummy variables from {len(string_columns)} string columns"
                 )
@@ -437,7 +461,11 @@ def preprocess_data(
                         for col in dummy_data.columns
                         if col.startswith(f"{orig_col}_")
                     ]
-                    dummy_info["column_mapping"][orig_col] = related_dummies
+                    dummy_info["column_mapping"][orig_col] = (
+                        related_dummies
+                        if len(related_dummies) > 0
+                        else [orig_col]
+                    )
 
                 # Drop original string columns and join the dummy variables
                 numeric_data = data.drop(columns=dummy_columns)
@@ -539,6 +567,7 @@ def postprocess_imputations(
 
     This function reverses the encoding applied by preprocess_data,
     converting dummy variables back to their original boolean or categorical forms.
+    For numeric categorical variables, values are rounded to the nearest valid category.
 
     Args:
         imputations: Dictionary mapping quantiles to DataFrames of imputed values
@@ -565,27 +594,37 @@ def postprocess_imputations(
             )
             df_processed = df.copy()
 
-            # Handle conversion back to original data types
             for orig_col, dummy_cols in dummy_info.get(
                 "column_mapping", {}
             ).items():
                 if orig_col in dummy_info.get("original_dtypes", {}):
-                    orig_dtype = dummy_info["original_dtypes"][orig_col]
+                    orig_dtype_info = dummy_info["original_dtypes"][orig_col]
 
-                    # Check if this variable was imputed by seeing if its dummy columns are present
+                    # Extract dtype category and original pandas dtype
+                    if (
+                        isinstance(orig_dtype_info, tuple)
+                        and len(orig_dtype_info) == 2
+                    ):
+                        dtype_category, original_pandas_dtype = orig_dtype_info
+                    else:
+                        # Fallback for old format
+                        logger.warning(
+                            f"Unexpected dtype format for {orig_col}: {orig_dtype_info}"
+                        )
+                        continue
+
+                    # Check if this variable was imputed based on its type
                     is_imputed = False
-
-                    if orig_dtype == "bool":
-                        # For boolean variables, check if the original column is in the DataFrame
+                    if dtype_category in ["bool", "numeric categorical"]:
+                        # For bool and numeric categorical, check if original column is present
                         is_imputed = orig_col in df_processed.columns
-                    elif orig_dtype in ["categorical", "numeric categorical"]:
-                        # For categorical variables, check if all dummy columns are present
+                    elif dtype_category == "categorical":
+                        # For regular categorical, check if dummy columns are present
                         available_dummies = [
                             col
                             for col in dummy_cols
                             if col in df_processed.columns
                         ]
-                        # Consider it imputed if we have at least one dummy column for this variable
                         is_imputed = len(available_dummies) > 0
 
                     if not is_imputed:
@@ -594,60 +633,137 @@ def postprocess_imputations(
                         )
                         continue
 
-                    logger.debug(f"Converting {orig_col} back to {orig_dtype}")
+                    logger.debug(
+                        f"Converting {orig_col} back to {dtype_category} with original dtype {original_pandas_dtype}"
+                    )
 
-                    if orig_dtype == "bool":
-                        # Convert back to boolean from float (0.0/1.0 encoding)
-                        # Convert imputed float values to boolean (>0.5 threshold)
+                    if dtype_category == "bool":
+                        # Convert back to boolean from float (>0.5 threshold for discretization)
                         df_processed[orig_col] = df_processed[orig_col] > 0.5
+                        # Convert to original boolean dtype
+                        df_processed[orig_col] = df_processed[orig_col].astype(
+                            original_pandas_dtype
+                        )
                         logger.debug(
-                            f"Converted {orig_col} back to boolean from float"
+                            f"Converted {orig_col} back to boolean type {original_pandas_dtype}"
                         )
 
-                    elif (
-                        orig_dtype == "categorical"
-                        or orig_dtype == "numeric categorical"
-                    ):
-                        # Convert back to categorical or numeric categorical
+                    # Handle numeric categorical columns - round to nearest valid category
+                    elif dtype_category == "numeric categorical":
                         categories = dummy_info["original_categories"][
                             orig_col
                         ]
                         logger.debug(
-                            f"Converting back to categorical with categories: {categories}"
+                            f"Rounding {orig_col} to nearest categories: {categories}"
                         )
 
-                        # Find the category with highest probability
+                        def round_to_nearest_category(value):
+                            if pd.isna(value):
+                                return categories[
+                                    0
+                                ]  # Default to first category for NaN
+                            return min(
+                                categories,
+                                key=lambda x: abs(float(x) - float(value)),
+                            )
+
+                        df_processed[orig_col] = df_processed[orig_col].apply(
+                            round_to_nearest_category
+                        )
+
+                        # Convert back to original numeric type
+                        try:
+                            df_processed[orig_col] = df_processed[
+                                orig_col
+                            ].astype(original_pandas_dtype)
+                            logger.debug(
+                                f"Converted {orig_col} back to numeric categorical type: {original_pandas_dtype}"
+                            )
+                        except (ValueError, TypeError) as e:
+                            logger.warning(
+                                f"Could not convert {orig_col} to {original_pandas_dtype}: {e}"
+                            )
+                            # Fallback: ensure it's numeric
+                            df_processed[orig_col] = pd.to_numeric(
+                                df_processed[orig_col], errors="coerce"
+                            )
+                            # Fill any NaN with first category
+                            df_processed[orig_col] = df_processed[
+                                orig_col
+                            ].fillna(categories[0])
+                            # Try to convert to int if all values are integers
+                            if (df_processed[orig_col] % 1 == 0).all():
+                                try:
+                                    df_processed[orig_col] = df_processed[
+                                        orig_col
+                                    ].astype("int64")
+                                except:
+                                    pass  # Keep as float if int conversion fails
+
+                    # Handle regular categorical columns that use dummy variables
+                    elif dtype_category == "categorical":
+                        # Find available dummy columns
                         available_dummies = [
                             col
                             for col in dummy_cols
                             if col in df_processed.columns
                         ]
 
-                        if available_dummies:
-                            # Get probabilities for each dummy column
+                        if len(available_dummies) > 0:
+                            logger.debug(
+                                f"Converting dummy columns back to categorical {orig_col}"
+                            )
+
+                            categories = dummy_info["original_categories"][
+                                orig_col
+                            ]
+
                             dummy_subset = df_processed[available_dummies]
 
                             # Find the dummy column with highest value for each row
                             max_idx = dummy_subset.idxmax(axis=1)
 
+                            # Create mapping from dummy columns to their categories
                             category_mapping = {}
-                            # Map dummy columns to their categories
                             for cat in categories:
                                 dummy_name = f"{orig_col}_{cat}"
                                 if dummy_name in available_dummies:
                                     category_mapping[dummy_name] = cat
+
                             df_processed[orig_col] = max_idx.map(
                                 category_mapping
                             )
 
-                            # Handle cases where mapping failed (NaN values) - use first category as default
-                            if df_processed[orig_col].isna().any():
-                                default_category = categories[0]
-                                df_processed[orig_col] = df_processed[
-                                    orig_col
-                                ].fillna(default_category)
+                            nan_mask = df_processed[orig_col].isna()
+                            if nan_mask.any():
+                                # For rows with NaN, find the category with highest average probability
+                                avg_probs = dummy_subset[nan_mask].mean(axis=0)
+                                if len(avg_probs) > 0:
+                                    best_dummy = avg_probs.idxmax()
+                                    default_category = category_mapping.get(
+                                        best_dummy, categories[0]
+                                    )
+                                else:
+                                    default_category = categories[0]
+                                df_processed.loc[nan_mask, orig_col] = (
+                                    default_category
+                                )
                                 logger.warning(
                                     f"Some values could not be mapped for {orig_col}, using default: {default_category}"
+                                )
+
+                            # Convert to original categorical type if needed
+                            try:
+                                if original_pandas_dtype != "object":
+                                    df_processed[orig_col] = df_processed[
+                                        orig_col
+                                    ].astype(original_pandas_dtype)
+                                    logger.debug(
+                                        f"Converted {orig_col} back to categorical type: {original_pandas_dtype}"
+                                    )
+                            except (ValueError, TypeError) as e:
+                                logger.warning(
+                                    f"Could not convert {orig_col} to {original_pandas_dtype}: {e}"
                                 )
 
                             # Drop the dummy columns
