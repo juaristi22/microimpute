@@ -414,7 +414,7 @@ def preprocess_data(
 
             if numeric_categorical_columns:
                 logger.warning(
-                    f"Found {len(numeric_categorical_columns)} numeric columns with unique values < 10, treating as categorical: {numeric_categorical_columns}. Converting to dummy variables."
+                    f"Found {len(numeric_categorical_columns)} numeric columns with unique values < 10, treating as categorical: {numeric_categorical_columns}. Converting to numeric variable."
                 )
                 for col in numeric_categorical_columns:
                     dummy_info["original_categories"][col] = [
@@ -442,10 +442,9 @@ def preprocess_data(
                     )
 
             if string_columns:
-                dummy_columns = string_columns + numeric_categorical_columns
                 # Use pandas get_dummies to create one-hot encoded features
                 dummy_data = pd.get_dummies(
-                    data[dummy_columns], dtype="float64"
+                    data[string_columns], dtype="float64"
                 )
                 for col in dummy_data.columns:
                     dummy_data[col] = dummy_data[col].astype("float64")
@@ -454,7 +453,7 @@ def preprocess_data(
                 )
 
                 # Create mapping from original columns to their resulting dummy columns
-                for orig_col in dummy_columns:
+                for orig_col in string_columns:
                     # Find all dummy columns that came from this original column
                     related_dummies = [
                         col
@@ -468,13 +467,15 @@ def preprocess_data(
                     )
 
                 # Drop original string columns and join the dummy variables
-                numeric_data = data.drop(columns=dummy_columns)
+                numeric_data = data.drop(columns=string_columns)
                 logger.debug(
                     f"Removed original string columns, data shape: {numeric_data.shape}"
                 )
 
                 # Combine numeric columns with dummy variables
                 data = pd.concat([numeric_data, dummy_data], axis=1)
+                for col in data.columns:
+                    data[col] = data[col].astype("float64")
                 logger.info(
                     f"Data shape after dummy variable conversion: {data.shape}"
                 )

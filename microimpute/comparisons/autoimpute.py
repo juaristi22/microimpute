@@ -41,9 +41,10 @@ def autoimpute(
     quantiles: Optional[List[float]] = QUANTILES,
     hyperparameters: Optional[Dict[str, Dict[str, Any]]] = None,
     tune_hyperparameters: Optional[bool] = False,
+    normalize_data: Optional[bool] = False,
     random_state: Optional[int] = RANDOM_STATE,
     train_size: Optional[float] = TRAIN_SIZE,
-    k_folds: Optional[int] = 4,
+    k_folds: Optional[int] = 5,
     verbose: Optional[bool] = False,
 ) -> tuple[dict[float, pd.DataFrame], "Imputer", pd.DataFrame]:
     """Automatically select and apply the best imputation model.
@@ -168,31 +169,56 @@ def autoimpute(
         # Keep track of original imputed variable names for final assignment
         original_imputed_variables = imputed_variables.copy()
 
-        training_data[predictors], predictors_dummy_info, _ = preprocess_data(
-            training_data[predictors],
-            full_data=True,
-            train_size=train_size,
-            test_size=(1 - train_size),
-            normalize=True,
-        )
-        (
-            training_data[imputed_variables],
-            imputed_dummy_info,
-            normalizing_params,
-        ) = preprocess_data(
-            training_data[imputed_variables],
-            full_data=True,
-            train_size=train_size,
-            test_size=(1 - train_size),
-            normalize=True,
-        )
-        imputing_data, _, _ = preprocess_data(
-            imputing_data[predictors],
-            full_data=True,
-            train_size=train_size,
-            test_size=(1 - train_size),
-            normalize=True,
-        )
+        if normalize_data:
+            training_data[predictors], predictors_dummy_info, _ = (
+                preprocess_data(
+                    training_data[predictors],
+                    full_data=True,
+                    train_size=train_size,
+                    test_size=(1 - train_size),
+                    normalize=normalize_data,
+                )
+            )
+            (training_data[imputed_variables], imputed_dummy_info, _) = (
+                preprocess_data(
+                    training_data[imputed_variables],
+                    full_data=True,
+                    train_size=train_size,
+                    test_size=(1 - train_size),
+                    normalize=normalize_data,
+                )
+            )
+            imputing_data, _, _ = preprocess_data(
+                imputing_data[predictors],
+                full_data=True,
+                train_size=train_size,
+                test_size=(1 - train_size),
+                normalize=normalize_data,
+            )
+        else:
+            training_data[predictors], predictors_dummy_info = preprocess_data(
+                training_data[predictors],
+                full_data=True,
+                train_size=train_size,
+                test_size=(1 - train_size),
+                normalize=normalize_data,
+            )
+            (training_data[imputed_variables], imputed_dummy_info) = (
+                preprocess_data(
+                    training_data[imputed_variables],
+                    full_data=True,
+                    train_size=train_size,
+                    test_size=(1 - train_size),
+                    normalize=normalize_data,
+                )
+            )
+            imputing_data, _ = preprocess_data(
+                imputing_data[predictors],
+                full_data=True,
+                train_size=train_size,
+                test_size=(1 - train_size),
+                normalize=normalize_data,
+            )
 
         # Update predictors based on dummy variable creation
         if predictors_dummy_info:
@@ -422,20 +448,6 @@ def autoimpute(
             imputing_data, quantiles=[imputation_q]
         )
 
-        # Unnormalize the imputations
-        mean = pd.Series(
-            {col: p["mean"] for col, p in normalizing_params.items()}
-        )
-        std = pd.Series(
-            {col: p["std"] for col, p in normalizing_params.items()}
-        )
-        unnormalized_imputations = {}
-        for q, df in imputations.items():
-            cols = df.columns  # the imputed variables
-            df_unnorm = df.mul(std[cols], axis=1)  # × std
-            df_unnorm = df_unnorm.add(mean[cols], axis=1)  # + mean
-            unnormalized_imputations[q] = df_unnorm
-
         # Check if we need to postprocess boolean or categorical variables
         has_bool_or_categorical = imputed_dummy_info and any(
             imputed_dummy_info.get("original_dtypes", {}).get(col)
@@ -443,15 +455,37 @@ def autoimpute(
             for col in imputed_dummy_info.get("original_dtypes", {})
         )
 
-        if has_bool_or_categorical:
-            log.info(
-                "Post-processing boolean and categorical imputed variables..."
+        if normalize_data:
+            # Unnormalize the imputations
+            mean = pd.Series(
+                {col: p["mean"] for col, p in normalizing_params.items()}
             )
-            final_imputations = postprocess_imputations(
-                unnormalized_imputations, imputed_dummy_info
+            std = pd.Series(
+                {col: p["std"] for col, p in normalizing_params.items()}
             )
+            unnormalized_imputations = {}
+            for q, df in imputations.items():
+                cols = df.columns  # the imputed variables
+                df_unnorm = df.mul(std[cols], axis=1)  # × std
+                df_unnorm = df_unnorm.add(mean[cols], axis=1)  # + mean
+                unnormalized_imputations[q] = df_unnorm
+            if has_bool_or_categorical:
+                log.info(
+                    "Post-processing boolean and categorical imputed variables..."
+                )
+                final_imputations = postprocess_imputations(
+                    unnormalized_imputations, imputed_dummy_info
+                )
         else:
-            final_imputations = unnormalized_imputations
+            if has_bool_or_categorical:
+                log.info(
+                    "Post-processing boolean and categorical imputed variables..."
+                )
+                final_imputations = postprocess_imputations(
+                    imputations, imputed_dummy_info
+                )
+            else:
+                final_imputations = imputations
 
         log.info(
             f"Imputation generation completed for {len(receiver_data)} samples using the best method: {best_method} and the median quantile. "
