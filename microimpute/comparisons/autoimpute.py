@@ -179,14 +179,16 @@ def autoimpute(
                     normalize=normalize_data,
                 )
             )
-            (training_data[imputed_variables], imputed_dummy_info, _) = (
-                preprocess_data(
-                    training_data[imputed_variables],
-                    full_data=True,
-                    train_size=train_size,
-                    test_size=(1 - train_size),
-                    normalize=normalize_data,
-                )
+            (
+                training_data[imputed_variables],
+                imputed_dummy_info,
+                normalizing_params,
+            ) = preprocess_data(
+                training_data[imputed_variables],
+                full_data=True,
+                train_size=train_size,
+                test_size=(1 - train_size),
+                normalize=normalize_data,
             )
             imputing_data, _, _ = preprocess_data(
                 imputing_data[predictors],
@@ -299,10 +301,6 @@ def autoimpute(
                 Tuple containing model name and cross-validation results DataFrame
             """
             model_name = model.__name__
-            if model_name == "Matching":
-                model_tune_hyperparams = False
-            else:
-                model_tune_hyperparams = tune_hyperparams
             log.info(f"Evaluating {model_name}...")
 
             cv_result = cross_validate_model(
@@ -314,19 +312,17 @@ def autoimpute(
                 quantiles=quantiles,
                 n_splits=k_folds,
                 random_state=random_state,
-                tune_hyperparameters=model_tune_hyperparams,
+                tune_hyperparameters=tune_hyperparams,
                 model_hyperparams=hyperparameters,
             )
 
             if (
-                model_tune_hyperparams
+                tune_hyperparams
                 and isinstance(cv_result, tuple)
                 and len(cv_result) == 2
             ):
                 final_results, best_params = cv_result
                 return model_name, final_results, best_params
-            elif tune_hyperparams == True and model_tune_hyperparams == False:
-                return model_name, cv_result, {}
             else:
                 return model_name, cv_result
 
@@ -369,7 +365,7 @@ def autoimpute(
             hyperparams = {}
             for model_name, cv_result, best_tuned_hyperparams in results:
                 method_test_losses[model_name] = cv_result.loc["test"]
-                if model_name == "QRF":  # or model_name == "Matching":
+                if model_name == "QRF" or model_name == "Matching":
                     hyperparams[model_name] = best_tuned_hyperparams
         else:
             for model_name, cv_result in results:
@@ -476,6 +472,8 @@ def autoimpute(
                 final_imputations = postprocess_imputations(
                     unnormalized_imputations, imputed_dummy_info
                 )
+            else:
+                final_imputations = unnormalized_imputations
         else:
             if has_bool_or_categorical:
                 log.info(
