@@ -14,7 +14,10 @@ from pydantic import validate_call
 from tqdm.auto import tqdm
 
 from microimpute.comparisons import *
-from microimpute.comparisons.data import preprocess_data
+from microimpute.comparisons.data import (
+    postprocess_imputations,
+    preprocess_data,
+)
 from microimpute.config import (
     QUANTILES,
     RANDOM_STATE,
@@ -33,10 +36,12 @@ def autoimpute(
     receiver_data: pd.DataFrame,
     predictors: List[str],
     imputed_variables: List[str],
+    weight_col: Optional[str] = None,
     models: Optional[List[Type]] = None,
     quantiles: Optional[List[float]] = QUANTILES,
     hyperparameters: Optional[Dict[str, Dict[str, Any]]] = None,
     tune_hyperparameters: Optional[bool] = False,
+    normalize_data: Optional[bool] = False,
     random_state: Optional[int] = RANDOM_STATE,
     train_size: Optional[float] = TRAIN_SIZE,
     k_folds: Optional[int] = 5,
@@ -57,6 +62,7 @@ def autoimpute(
             predict imputed variables
         imputed_variables : List of column names of variables to be imputed in
             the receiver data
+        weight_col : Optional column name for sampling weights in donor data.
         models : List of imputer model classes to compare.
             If None, uses [QRF, OLS, QuantReg, Matching]
         quantiles : List of quantiles to predict for each imputed variable.
@@ -160,35 +166,73 @@ def autoimpute(
         training_data = donor_data.copy()
         imputing_data = receiver_data.copy()
 
-        training_data[predictors], dummy_info = preprocess_data(
-            training_data[predictors],
-            full_data=True,
-            train_size=train_size,
-            test_size=(1 - train_size),
-        )
-        training_data[imputed_variables], dummy_info, normalizing_params = (
-            preprocess_data(
+        # Keep track of original imputed variable names for final assignment
+        original_imputed_variables = imputed_variables.copy()
+
+        if normalize_data:
+            training_data[predictors], predictors_dummy_info, _ = (
+                preprocess_data(
+                    training_data[predictors],
+                    full_data=True,
+                    train_size=train_size,
+                    test_size=(1 - train_size),
+                    normalize=normalize_data,
+                )
+            )
+            (
+                training_data[imputed_variables],
+                imputed_dummy_info,
+                normalizing_params,
+            ) = preprocess_data(
                 training_data[imputed_variables],
                 full_data=True,
                 train_size=train_size,
                 test_size=(1 - train_size),
-                normalizing_features=True,
+                normalize=normalize_data,
             )
-        )
-        imputing_data, dummy_info = preprocess_data(
-            imputing_data[predictors],
-            full_data=True,
-            train_size=train_size,
-            test_size=(1 - train_size),
-        )
+            imputing_data, _, _ = preprocess_data(
+                imputing_data[predictors],
+                full_data=True,
+                train_size=train_size,
+                test_size=(1 - train_size),
+                normalize=normalize_data,
+            )
+        else:
+            training_data[predictors], predictors_dummy_info = preprocess_data(
+                training_data[predictors],
+                full_data=True,
+                train_size=train_size,
+                test_size=(1 - train_size),
+                normalize=normalize_data,
+            )
+            (training_data[imputed_variables], imputed_dummy_info) = (
+                preprocess_data(
+                    training_data[imputed_variables],
+                    full_data=True,
+                    train_size=train_size,
+                    test_size=(1 - train_size),
+                    normalize=normalize_data,
+                )
+            )
+            imputing_data, _ = preprocess_data(
+                imputing_data[predictors],
+                full_data=True,
+                train_size=train_size,
+                test_size=(1 - train_size),
+                normalize=normalize_data,
+            )
 
-        if dummy_info:
-            # Retrieve new predictors and imputed variables after processed data
-            for orig_col, dummy_cols in dummy_info.items():
+        # Update predictors based on dummy variable creation
+        if predictors_dummy_info:
+            for orig_col, dummy_cols in predictors_dummy_info.items():
                 if orig_col in predictors:
                     predictors.remove(orig_col)
                     predictors.extend(dummy_cols)
-                elif orig_col in imputed_variables:
+
+        # Update imputed variables based on dummy variable creation
+        if imputed_dummy_info:
+            for orig_col, dummy_cols in imputed_dummy_info.items():
+                if orig_col in imputed_variables:
                     imputed_variables.remove(orig_col)
                     imputed_variables.extend(dummy_cols)
 
@@ -233,6 +277,7 @@ def autoimpute(
             data: pd.DataFrame,
             predictors: List[str],
             imputed_variables: List[str],
+            weight_col: Optional[str],
             quantiles: List[float],
             k_folds: Optional[int] = 5,
             random_state: Optional[bool] = RANDOM_STATE,
@@ -263,6 +308,7 @@ def autoimpute(
                 data=data,
                 predictors=predictors,
                 imputed_variables=imputed_variables,
+                weight_col=weight_col,
                 quantiles=quantiles,
                 n_splits=k_folds,
                 random_state=random_state,
@@ -299,6 +345,7 @@ def autoimpute(
                     training_data,
                     predictors,
                     imputed_variables,
+                    weight_col,
                     quantiles,
                     k_folds,
                     RANDOM_STATE,
@@ -368,6 +415,7 @@ def autoimpute(
                 training_data,
                 predictors,
                 imputed_variables,
+                weight_col=weight_col,
                 quantiles=[imputation_q],
             )
         else:
@@ -380,11 +428,15 @@ def autoimpute(
                     training_data,
                     predictors,
                     imputed_variables,
+                    weight_col=weight_col,
                     **hyperparams[chosen_model.__name__],
                 )
             else:
                 fitted_model = model.fit(
-                    training_data, predictors, imputed_variables
+                    training_data,
+                    predictors,
+                    imputed_variables,
+                    weight_col=weight_col,
                 )
 
         # Predict with explicit quantiles
@@ -392,19 +444,46 @@ def autoimpute(
             imputing_data, quantiles=[imputation_q]
         )
 
-        # Unnormalize the imputations
-        mean = pd.Series(
-            {col: p["mean"] for col, p in normalizing_params.items()}
+        # Check if we need to postprocess boolean or categorical variables
+        has_bool_or_categorical = imputed_dummy_info and any(
+            imputed_dummy_info.get("original_dtypes", {}).get(col)
+            in ["bool", "categorical"]
+            for col in imputed_dummy_info.get("original_dtypes", {})
         )
-        std = pd.Series(
-            {col: p["std"] for col, p in normalizing_params.items()}
-        )
-        unnormalized_imputations = {}
-        for q, df in imputations.items():
-            cols = df.columns  # the imputed variables
-            df_unnorm = df.mul(std[cols], axis=1)  # × std
-            df_unnorm = df_unnorm.add(mean[cols], axis=1)  # + mean
-            unnormalized_imputations[q] = df_unnorm
+
+        if normalize_data:
+            # Unnormalize the imputations
+            mean = pd.Series(
+                {col: p["mean"] for col, p in normalizing_params.items()}
+            )
+            std = pd.Series(
+                {col: p["std"] for col, p in normalizing_params.items()}
+            )
+            unnormalized_imputations = {}
+            for q, df in imputations.items():
+                cols = df.columns  # the imputed variables
+                df_unnorm = df.mul(std[cols], axis=1)  # × std
+                df_unnorm = df_unnorm.add(mean[cols], axis=1)  # + mean
+                unnormalized_imputations[q] = df_unnorm
+            if has_bool_or_categorical:
+                log.info(
+                    "Post-processing boolean and categorical imputed variables..."
+                )
+                final_imputations = postprocess_imputations(
+                    unnormalized_imputations, imputed_dummy_info
+                )
+            else:
+                final_imputations = unnormalized_imputations
+        else:
+            if has_bool_or_categorical:
+                log.info(
+                    "Post-processing boolean and categorical imputed variables..."
+                )
+                final_imputations = postprocess_imputations(
+                    imputations, imputed_dummy_info
+                )
+            else:
+                final_imputations = imputations
 
         log.info(
             f"Imputation generation completed for {len(receiver_data)} samples using the best method: {best_method} and the median quantile. "
@@ -414,13 +493,13 @@ def autoimpute(
             main_progress.set_description("Complete")
             main_progress.close()
 
-        median_imputations = unnormalized_imputations[
+        median_imputations = final_imputations[
             0.5
         ]  # this may not work if we change the value of imputation_q
         # Add the imputed variables to the receiver data
         try:
             missing_imputed_vars = []
-            for var in imputed_variables:
+            for var in original_imputed_variables:
                 if var in median_imputations.columns:
                     receiver_data[var] = median_imputations[var]
                 else:
@@ -434,7 +513,7 @@ def autoimpute(
             raise ValueError(error_msg)
 
         return (
-            unnormalized_imputations,
+            final_imputations,
             receiver_data,
             fitted_model,
             method_results_df,
