@@ -414,7 +414,7 @@ def preprocess_data(
 
             if numeric_categorical_columns:
                 logger.warning(
-                    f"Found {len(numeric_categorical_columns)} numeric columns with unique values < 10, treating as categorical: {numeric_categorical_columns}. Converting to numeric variable."
+                    f"Found {len(numeric_categorical_columns)} numeric columns with unique values < 10, treating as categorical: {numeric_categorical_columns}. Converting to dummy variables."
                 )
                 for col in numeric_categorical_columns:
                     dummy_info["original_categories"][col] = [
@@ -424,6 +424,7 @@ def preprocess_data(
                         "numeric categorical",
                         data[col].dtype,
                     )
+                    data[col] = data[col].astype("category")
 
             if string_columns:
                 logger.info(
@@ -446,7 +447,10 @@ def preprocess_data(
                     string_columns + numeric_categorical_columns
                 )
                 dummy_data = pd.get_dummies(
-                    data[categorical_columns], dtype="float64"
+                    data[categorical_columns],
+                    columns=categorical_columns,
+                    dtype="float64",
+                    drop_first=True,
                 )
                 for col in dummy_data.columns:
                     dummy_data[col] = dummy_data[col].astype("float64")
@@ -455,7 +459,7 @@ def preprocess_data(
                 )
 
                 # Create mapping from original columns to their resulting dummy columns
-                for orig_col in string_columns + numeric_categorical_columns:
+                for orig_col in categorical_columns:
                     # Find all dummy columns that came from this original column
                     related_dummies = [
                         col
@@ -469,9 +473,7 @@ def preprocess_data(
                     )
 
                 # Drop original string and numeric categorical columns and join the dummy variables
-                numeric_data = data.drop(
-                    columns=string_columns + numeric_categorical_columns
-                )
+                numeric_data = data.drop(columns=categorical_columns)
                 logger.debug(
                     f"Removed original string and numeric categorical columns, data shape: {numeric_data.shape}"
                 )
@@ -586,6 +588,37 @@ def postprocess_imputations(
         ValueError: If dummy_info is missing required information
         RuntimeError: If conversion back to original types fails
     """
+
+    def _get_reference_category(
+        orig_col: str, available_dummies: List[str], original_categories: List
+    ) -> Any:
+        """Identify the reference category that was dropped during dummy encoding."""
+        dummy_categories = []
+        for dummy_col in available_dummies:
+            # Remove the original column name and underscore prefix
+            category_part = dummy_col.replace(f"{orig_col}_", "", 1)
+            try:
+                # Try to convert back to original type if it was numeric
+                if category_part.replace(".", "").replace("-", "").isdigit():
+                    dummy_categories.append(float(category_part))
+                else:
+                    dummy_categories.append(category_part)
+            except:
+                dummy_categories.append(category_part)
+
+        # Find which original category is missing (the reference category)
+        reference_category = None
+        for cat in original_categories:
+            if cat not in dummy_categories:
+                reference_category = cat
+                break
+
+        return (
+            reference_category
+            if reference_category is not None
+            else original_categories[0]
+        )
+
     logger.debug(
         f"Post-processing {len(imputations)} quantile imputations with dummy_info keys: {dummy_info.keys()}"
     )
@@ -656,7 +689,6 @@ def postprocess_imputations(
                             f"Converted {orig_col} back to boolean type {original_pandas_dtype}"
                         )
 
-                    # Handle regular and numeric categorical columns that use dummy variables
                     elif dtype_category in [
                         "categorical",
                         "numeric categorical",
@@ -676,11 +708,12 @@ def postprocess_imputations(
                             categories = dummy_info["original_categories"][
                                 orig_col
                             ]
-
                             dummy_subset = df_processed[available_dummies]
 
-                            # Find the dummy column with highest value for each row
-                            max_idx = dummy_subset.idxmax(axis=1)
+                            # Identify the reference category (the one that was dropped)
+                            reference_category = _get_reference_category(
+                                orig_col, available_dummies, categories
+                            )
 
                             # Create mapping from dummy columns to their categories
                             category_mapping = {}
@@ -689,27 +722,39 @@ def postprocess_imputations(
                                 if dummy_name in available_dummies:
                                     category_mapping[dummy_name] = cat
 
-                            df_processed[orig_col] = max_idx.map(
-                                category_mapping
-                            )
+                            # Find the dummy column with highest value for each row
+                            max_idx = dummy_subset.idxmax(axis=1)
+                            max_values = dummy_subset.max(axis=1)
 
+                            # If max dummy value is < 0.5, assign to reference category
+                            threshold = 0.5
+
+                            # Initialize with reference category
+                            df_processed[orig_col] = reference_category
+
+                            # Only assign to dummy categories where max value exceeds threshold
+                            high_confidence_mask = max_values >= threshold
+                            if high_confidence_mask.any():
+                                df_processed.loc[
+                                    high_confidence_mask, orig_col
+                                ] = max_idx[high_confidence_mask].map(
+                                    category_mapping
+                                )
+
+                            # Handle any NaN values that might occur from mapping
                             nan_mask = df_processed[orig_col].isna()
                             if nan_mask.any():
-                                # For rows with NaN, find the category with highest average probability
-                                avg_probs = dummy_subset[nan_mask].mean(axis=0)
-                                if len(avg_probs) > 0:
-                                    best_dummy = avg_probs.idxmax()
-                                    default_category = category_mapping.get(
-                                        best_dummy, categories[0]
-                                    )
-                                else:
-                                    default_category = categories[0]
                                 df_processed.loc[nan_mask, orig_col] = (
-                                    default_category
+                                    reference_category
                                 )
                                 logger.warning(
-                                    f"Some values could not be mapped for {orig_col}, using default: {default_category}"
+                                    f"Some values could not be mapped for {orig_col}, using reference category: {reference_category}"
                                 )
+
+                            logger.info(
+                                f"Assigned {high_confidence_mask.sum()} observations to dummy categories, "
+                                f"{(~high_confidence_mask).sum()} to reference category '{reference_category}'"
+                            )
 
                             # Convert to original categorical type if needed
                             try:

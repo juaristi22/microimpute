@@ -545,8 +545,10 @@ This transformation is particularly valuable for wealth data, where values can s
 donor_data = scf_data[predictors + imputed_variables + weights]
 receiver_data = cps_data[predictors + household_weights]
 
-donor_data[predictors + imputed_variables], dummy_info, normalizing_params = preprocess_data(donor_data[predictors + imputed_variables], normalize=True, full_data=True)
-receiver_data[predictors], dummy_info_cps, _ = preprocess_data(receiver_data[predictors], normalize=True, full_data=True)
+donor_data, dummy_info, normalizing_params = preprocess_data(donor_data[predictors + imputed_variables], normalize=True, full_data=True)
+donor_data[weights[0]] = scf_data[weights[0]]
+receiver_data, dummy_info_cps, _ = preprocess_data(receiver_data[predictors], normalize=True, full_data=True)
+receiver_data["household_weight"] = cps_data["household_weight"]
 
 mean = pd.Series(
     {col: p["mean"] for col, p in normalizing_params.items()}
