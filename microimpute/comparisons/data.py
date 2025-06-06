@@ -424,7 +424,6 @@ def preprocess_data(
                         "numeric categorical",
                         data[col].dtype,
                     )
-                    data[col] = data[col].astype("float64")
 
             if string_columns:
                 logger.info(
@@ -441,19 +440,22 @@ def preprocess_data(
                         data[col].unique().tolist()
                     )
 
-            if string_columns:
+            if string_columns or numeric_categorical_columns:
                 # Use pandas get_dummies to create one-hot encoded features
+                categorical_columns = (
+                    string_columns + numeric_categorical_columns
+                )
                 dummy_data = pd.get_dummies(
-                    data[string_columns], dtype="float64"
+                    data[categorical_columns], dtype="float64"
                 )
                 for col in dummy_data.columns:
                     dummy_data[col] = dummy_data[col].astype("float64")
                 logger.debug(
-                    f"Created {dummy_data.shape[1]} dummy variables from {len(string_columns)} string columns"
+                    f"Created {dummy_data.shape[1]} dummy variables from {len(categorical_columns)} categorical columns"
                 )
 
                 # Create mapping from original columns to their resulting dummy columns
-                for orig_col in string_columns:
+                for orig_col in string_columns + numeric_categorical_columns:
                     # Find all dummy columns that came from this original column
                     related_dummies = [
                         col
@@ -466,10 +468,12 @@ def preprocess_data(
                         else [orig_col]
                     )
 
-                # Drop original string columns and join the dummy variables
-                numeric_data = data.drop(columns=string_columns)
+                # Drop original string and numeric categorical columns and join the dummy variables
+                numeric_data = data.drop(
+                    columns=string_columns + numeric_categorical_columns
+                )
                 logger.debug(
-                    f"Removed original string columns, data shape: {numeric_data.shape}"
+                    f"Removed original string and numeric categorical columns, data shape: {numeric_data.shape}"
                 )
 
                 # Combine numeric columns with dummy variables
@@ -616,11 +620,14 @@ def postprocess_imputations(
 
                     # Check if this variable was imputed based on its type
                     is_imputed = False
-                    if dtype_category in ["bool", "numeric categorical"]:
-                        # For bool and numeric categorical, check if original column is present
+                    if dtype_category == "bool":
+                        # For bool, check if original column is present
                         is_imputed = orig_col in df_processed.columns
-                    elif dtype_category == "categorical":
-                        # For regular categorical, check if dummy columns are present
+                    elif dtype_category in [
+                        "categorical",
+                        "numeric categorical",
+                    ]:
+                        # For regular and numeric categorical, check if dummy columns are present
                         available_dummies = [
                             col
                             for col in dummy_cols
@@ -649,60 +656,11 @@ def postprocess_imputations(
                             f"Converted {orig_col} back to boolean type {original_pandas_dtype}"
                         )
 
-                    # Handle numeric categorical columns - round to nearest valid category
-                    elif dtype_category == "numeric categorical":
-                        categories = dummy_info["original_categories"][
-                            orig_col
-                        ]
-                        logger.debug(
-                            f"Rounding {orig_col} to nearest categories: {categories}"
-                        )
-
-                        def round_to_nearest_category(value):
-                            if pd.isna(value):
-                                return categories[
-                                    0
-                                ]  # Default to first category for NaN
-                            return min(
-                                categories,
-                                key=lambda x: abs(float(x) - float(value)),
-                            )
-
-                        df_processed[orig_col] = df_processed[orig_col].apply(
-                            round_to_nearest_category
-                        )
-
-                        # Convert back to original numeric type
-                        try:
-                            df_processed[orig_col] = df_processed[
-                                orig_col
-                            ].astype(original_pandas_dtype)
-                            logger.debug(
-                                f"Converted {orig_col} back to numeric categorical type: {original_pandas_dtype}"
-                            )
-                        except (ValueError, TypeError) as e:
-                            logger.warning(
-                                f"Could not convert {orig_col} to {original_pandas_dtype}: {e}"
-                            )
-                            # Fallback: ensure it's numeric
-                            df_processed[orig_col] = pd.to_numeric(
-                                df_processed[orig_col], errors="coerce"
-                            )
-                            # Fill any NaN with first category
-                            df_processed[orig_col] = df_processed[
-                                orig_col
-                            ].fillna(categories[0])
-                            # Try to convert to int if all values are integers
-                            if (df_processed[orig_col] % 1 == 0).all():
-                                try:
-                                    df_processed[orig_col] = df_processed[
-                                        orig_col
-                                    ].astype("int64")
-                                except:
-                                    pass  # Keep as float if int conversion fails
-
-                    # Handle regular categorical columns that use dummy variables
-                    elif dtype_category == "categorical":
+                    # Handle regular and numeric categorical columns that use dummy variables
+                    elif dtype_category in [
+                        "categorical",
+                        "numeric categorical",
+                    ]:
                         # Find available dummy columns
                         available_dummies = [
                             col
