@@ -279,7 +279,6 @@ from policyengine_us_data import CPS_2024
 cps_data = CPS_2024()
 #cps_data.generate()
 cps = cps_data.load_dataset()
-print("loaded!")
 
 cps_race_mapping = {
     1: 1,  # White only -> WHITE
@@ -419,7 +418,7 @@ To assess the imputation results, a comparison the distribution of wealth in the
 Wealth distributions are typically highly skewed, with a long right tail representing a small number of households with very high net worth. A successful imputation should preserve this characteristic skewness while maintaining realistic values across the entire distribution. Examining both the raw distributions and log-transformed versions of wealth values can better capture important information for evaluation.
 
 ```python
-def plot_log_transformed_distributions(
+def plot_log_transformed_net_worth_distributions(
     scf_data: pd.DataFrame,
     imputed_data: pd.DataFrame,
     title: Optional[str] = None,
@@ -534,7 +533,7 @@ imputed_data_weighted = imputed_data.sample(
 ).reset_index(drop=True)
 
 
-plot_log_transformed_distributions(scf_data_weighted, imputed_data_weighted).show()
+plot_log_transformed_net_worth_distributions(scf_data_weighted, imputed_data_weighted).show()
 ```
 
 ![png](./autoimpute_best_model_imputations.png)
@@ -581,21 +580,16 @@ def impute_scf_to_cps(model: Type[Imputer],
                       weights: List[str]) -> pd.DataFrame:
     """Impute SCF data into CPS data using the specified model."""
     model = model()
-    print("Created model")
     fitted_model = model.fit(
         X_train=donor_data,
         predictors=predictors,
         imputed_variables=imputed_variables,
         weight_col=weights[0],
     )
-    print("Fitted model")
     imputations = fitted_model.predict(X_test=receiver_data)
-    print("Generated imputations")
 
     cps_imputed = cps_data.copy()
-    print("Copied original receiver data")
     cps_imputed["networth"] = imputations[0.5]["networth"]
-    print("Added imputed networth to receiver data")
 
     return cps_imputed
 
@@ -661,7 +655,6 @@ matching_cps_imputed_weighted = matching_cps_imputed.sample(
 
 
 qrf_model = QRF()
-print("Created model")
 fitted_model, best_params = qrf_model.fit(
     X_train=donor_data,
     predictors=predictors,
@@ -669,14 +662,10 @@ fitted_model, best_params = qrf_model.fit(
     weight_col=weights[0],
     tune_hyperparameters=True,
 )
-print("Fitted model")
 imputations = fitted_model.predict(X_test=receiver_data)
-print("Generated imputations")
 
 qrf_cps_imputed = cps_data.copy()
-print("Copied original receiver data")
 qrf_cps_imputed["networth"] = imputations[0.5]["networth"]
-print("Added imputed networth to receiver data")
 
 qrf_cps_imputed["networth"] = qrf_cps_imputed["networth"].mul(std["networth"])
 qrf_cps_imputed["networth"] = qrf_cps_imputed["networth"].add(mean["networth"])
@@ -688,7 +677,7 @@ qrf_cps_imputed_weighted = qrf_cps_imputed.sample(
 ).reset_index(drop=True)
 
 
-def plot_all_models_log_distributions(
+def plot_all_models_net_worth_log_distributions(
     scf_data: pd.DataFrame,
     model_results: dict,
     title: Optional[str] = None,
@@ -871,7 +860,7 @@ model_results = {
 }
 
 # Create and show the combined plot
-combined_fig = plot_all_models_log_distributions(scf_data_weighted, model_results)
+combined_fig = plot_all_models_net_worth_log_distributions(scf_data_weighted, model_results)
 combined_fig.show()
 ```
 ![png](./imputations_model_comparison.png)
