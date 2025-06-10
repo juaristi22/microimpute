@@ -360,7 +360,11 @@ cps_data["household_weight"] = cps["household_weight"]
 
 household_weights = ["household_weight"]
 
-print(cps_data.shape)
+from policyengine_us import Microsimulation
+sim = Microsimulation(dataset=CPS_2022)
+net_disposable_income = sim.calculate("household_net_income")
+
+cps_data["household_net_income"] = net_disposable_income
 ```
 
 ## Running wealth imputation with autoimpute
@@ -549,6 +553,7 @@ donor_data, dummy_info, normalizing_params = preprocess_data(donor_data[predicto
 donor_data[weights[0]] = scf_data[weights[0]]
 receiver_data, dummy_info_cps, _ = preprocess_data(receiver_data[predictors], normalize=True, full_data=True)
 receiver_data["household_weight"] = cps_data["household_weight"]
+receiver_data["household_net_income"] = cps_data["household_net_income"]
 
 mean = pd.Series(
     {col: p["mean"] for col, p in normalizing_params.items()}
@@ -872,3 +877,67 @@ combined_fig.show()
 ![png](./imputations_model_comparison.png)
 
 Comparing the wealth distributions that result from imputing from the SCF on to the CPS with four different models, we can visually recognize the different strengths and limitations of each of them. The implications of using one model instead of another for imputation will be further explored by evaluating the impact wealth imputed data has on microsimulation results.
+
+## Wealth distributions by disposable income deciles
+
+Lastly, to confidently say that our wealth imputations are coherent with other household characteristics, we can compare the average net worth values per disposable income decile for each of the four methods used. 
+
+```python
+income_col  = "household_net_income"
+wealth_col  = "networth"          # e.g. "net_wealth"
+
+decile_means = []
+
+for model, df in model_results.items():
+    tmp = df.copy()
+
+    # Create 1–10 decile indicator (unweighted)
+    tmp["income_decile"] = (
+        pd.qcut(tmp[income_col], 10, labels=False) + 1
+    )
+
+    # Mean wealth in each decile
+    out = (
+        tmp.groupby("income_decile")[wealth_col]
+           .mean()
+           .reset_index(name="mean_wealth")
+    )
+    out["Model"] = model
+    decile_means.append(out)
+
+avg_df = pd.concat(decile_means, ignore_index=True)
+avg_df["income_decile"] = avg_df["income_decile"].astype(int)
+
+fig = px.bar(
+    avg_df,
+    x="income_decile",
+    y="mean_wealth",
+    color="Model",
+    barmode="group",
+    labels={
+        "income_decile": "Net-income decile (1 = lowest, 10 = highest)",
+        "mean_wealth":   "Average household net worth ($)",
+    },
+    title=(
+        "Average household net worth by net-income decile<br>"
+        "<sup>Comparison of imputation models</sup>"
+    ),
+)
+
+fig.update_layout(
+    xaxis=dict(dtick=1, tick0=1),
+    paper_bgcolor="#F0F0F0",
+    plot_bgcolor="#F0F0F0",
+    yaxis_tickformat="$,.0f",
+    hovermode="x unified",
+)
+
+fig.update_xaxes(showgrid=False)
+fig.update_yaxes(showgrid=False)
+
+fig.show()
+```
+
+![png](./by_income_decile_comparisons.png)
+
+QRF clearly presents the most consistent and plausable realtionship to disposable income, with a gradually increasing average as the deciles increase. This plot also supports the behavior observed above showing the extreme negative and positive predictions that OLS and QuantReg produce at the left and right tails, respectively, and Matching's underprediction at every decile. 
